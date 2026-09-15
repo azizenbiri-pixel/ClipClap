@@ -1,15 +1,78 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ClipClap</title>
-    <!-- Script Tailwind pour les styles néon -->
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="bg-black">
-    <div id="root"></div>
-    <!-- Charge ton nouveau fichier App.jsx -->
-    <script type="module" src="/src/App.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClipClap</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/lucide-react@0.263.1/dist/umd/lucide-react.min.js"></script>
+</head>
+<body class="bg-[#0a0a1a] text-white">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    function ClipClapApp() {
+      const [page, setPage] = useState('feed');
+
+      return (
+        <div class="flex flex-col h-screen max-w-md mx-auto bg-[#0a0a1a] text-white relative border-x border-pink-500/20 shadow-[0_0_50px_rgba(255,0,128,0.15)]">
+          
+          {/* Contenu principal */}
+          <div class="flex-1 overflow-y-auto pb-16 flex flex-col items-center justify-center p-4">
+            {page === 'feed' ? (
+              <div class="text-center space-y-4">
+                <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-tr from-pink-500 to-cyan-400 p-1 animate-pulse">
+                  <div class="w-full h-full bg-[#0a0a1a] rounded-full flex items-center justify-center">
+                    <span class="text-3xl">🎵</span>
+                  </div>
+                </div>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 bg-clip-text text-transparent">
+                  ClipClap Feed
+                </h1>
+                <p class="text-gray-400 text-sm">Glisse vers le bas pour voir la vidéo suivante</p>
+              </div>
+            ) : (
+              <div class="text-center space-y-4 w-full">
+                <div class="w-20 h-20 mx-auto rounded-full bg-pink-500/20 border-2 border-pink-500 flex items-center justify-center shadow-[0_0_15px_rgba(255,0,128,0.5)]">
+                  <span class="text-2xl">👤</span>
+                </div>
+                <h2 class="text-xl font-bold text-cyan-400">@mon_profil_neon</h2>
+                <div class="flex justify-center gap-6 text-sm py-2 border-y border-white/10">
+                  <div><strong class="block text-pink-500">120</strong> Abonnements</div>
+                  <div><strong class="block text-cyan-400">4.5k</strong> Abonnés</div>
+                  <div><strong class="block text-purple-400">12k</strong> J'aime</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Barre de navigation bas */}
+          <div class="absolute bottom-0 left-0 right-0 h-16 bg-[#0a0a1a]/90 backdrop-blur-md border-t border-white/10 flex justify-around items-center z-50">
+            <button 
+              onClick={() => setPage('feed')} 
+              class={`flex flex-col items-center gap-1 ${page === 'feed' ? 'text-pink-500 font-bold' : 'text-gray-400'}`}>
+              <span>🏠</span>
+              <span class="text-[10px]">Accueil</span>
+            </button>
+            <button 
+              onClick={() => setPage('profile')} 
+              class={`flex flex-col items-center gap-1 ${page === 'profile' ? 'text-cyan-400 font-bold' : 'text-gray-400'}`}>
+              <span>👤</span>
+              <span class="text-[10px]">Profil</span>
+            </button>
+          </div>
+
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<ClipClapApp />);
+  </script>
+</body>
 </html>
