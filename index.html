@@ -14,37 +14,39 @@
       font-family: 'Plus Jakarta Sans', sans-serif; 
       -webkit-tap-highlight-color: transparent;
     }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-[#0b0719] text-white select-none overflow-hidden">
+<body class="bg-[#07040f] text-white select-none overflow-hidden">
   <div id="root"></div>
 
   <script type="text/babel">
-  const SPLASH_LOGO_URL = "IMG_0807.png";
+    const { useState, useEffect, useRef } = React;
 
+    const SPLASH_LOGO_URL = "IMG_0807.png";
 
-
-    const POSTS = [
+    const INITIAL_POSTS = [
       {
         id: 1,
         user: "@neon_vibes",
-        desc: "Lumières de la ville 🌌 #neon #city #vibes #fyp",
-        music: "Son original - Neon Vibes 🎵",
+        desc: "Lumières de la ville 🌌 #neon #city #vibes",
         likes: 12400,
-        comments: 842,
-        bookmarks: 320,
-        shares: 156,
+        comments: 342,
+        shares: 89,
+        liked: false,
+        bookmarked: false,
         video: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4"
       },
       {
         id: 2,
         user: "@cyber_dancer",
         desc: "Session freestyle sous les néons 💃✨ #dance #cyberpunk",
-        music: "Cyberpunk Beats 2077 🎶",
         likes: 45200,
-        comments: 1200,
-        bookmarks: 1450,
-        shares: 430,
+        comments: 1205,
+        shares: 540,
+        liked: false,
+        bookmarked: false,
         video: "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4"
       }
     ];
@@ -52,129 +54,103 @@
     function ClipClapApp() {
       const [showSplash, setShowSplash] = useState(true);
       const [progress, setProgress] = useState(0);
-      const [activeTab, setActiveTab] = useState('feed');
+      const [posts, setPosts] = useState(INITIAL_POSTS);
       const [currentIndex, setCurrentIndex] = useState(0);
-
-      // États interactifs
-      const [likedPosts, setLikedPosts] = useState({});
-      const [savedPosts, setSavedPosts] = useState({});
-      const [likeCounts, setLikeCounts] = useState(
-        POSTS.reduce((acc, post) => ({ ...acc, [post.id]: post.likes }), {})
-      );
-      const [savedCounts, setSavedCounts] = useState(
-        POSTS.reduce((acc, post) => ({ ...acc, [post.id]: post.bookmarks }), {})
-      );
-      const [following, setFollowing] = useState({});
+      const [activeTab, setActiveTab] = useState('feed');
       const [toastMessage, setToastMessage] = useState("");
-
-      // Profil
-      const [userName, setUserName] = useState("Aziz Enbiri");
-      const [userTag, setUserTag] = useState("@azizenbiri");
-      const [userBio, setUserBio] = useState("Créateur de contenu néon ⚡");
-      const [isEditingProfile, setIsEditingProfile] = useState(false);
-
-      // Swipe Touch
+      
       const touchStartY = useRef(0);
+      const touchEndY = useRef(0);
 
       useEffect(() => {
+        const totalDuration = 2500;
+        const stepTime = 50; 
+        const increment = (stepTime / totalDuration) * 100;
+
         const interval = setInterval(() => {
           setProgress(prev => {
             if (prev >= 100) {
               clearInterval(interval);
-              setTimeout(() => setShowSplash(false), 300);
+              setTimeout(() => setShowSplash(false), 200);
               return 100;
             }
-            return prev + 5;
+            return prev + increment;
           });
-        }, 50);
+        }, stepTime);
+
         return () => clearInterval(interval);
       }, []);
 
       const showToast = (msg) => {
         setToastMessage(msg);
-        setTimeout(() => setToastMessage(""), 2200);
+        setTimeout(() => setToastMessage(""), 2000);
       };
 
-      const handleLike = (postId, e) => {
-        e.stopPropagation();
-        const isLiked = likedPosts[postId];
-        setLikedPosts(prev => ({ ...prev, [postId]: !isLiked }));
-        setLikeCounts(prev => ({
-          ...prev,
-          [postId]: isLiked ? prev[postId] - 1 : prev[postId] + 1
-        }));
+      const handleTouchStart = (e) => {
+        touchStartY.current = e.touches[0].clientY;
       };
 
-      const handleSave = (postId, e) => {
-        e.stopPropagation();
-        const isSaved = savedPosts[postId];
-        setSavedPosts(prev => ({ ...prev, [postId]: !isSaved }));
-        setSavedCounts(prev => ({
-          ...prev,
-          [postId]: isSaved ? prev[postId] - 1 : prev[postId] + 1
-        }));
-        showToast(isSaved ? "Vidéo retirée des favoris" : "Vidéo enregistrée ! 📌");
-      };
-
-      const handleFollow = (user, e) => {
-        e.stopPropagation();
-        setFollowing(prev => {
-          const newState = !prev[user];
-          showToast(newState ? `Abonné à ${user} ! ✨` : `Désabonné de ${user}`);
-          return { ...prev, [user]: newState };
-        });
-      };
-
-      const handleShare = (e) => {
-        e.stopPropagation();
-        if (navigator.share) {
-          navigator.share({ title: 'ClipClap', url: window.location.href });
-        } else {
-          navigator.clipboard.writeText(window.location.href);
-          showToast("Lien de la vidéo copié ! 🔗");
-        }
-      };
-
-      // Swipe up/down
-      const handleTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
       const handleTouchEnd = (e) => {
-        const touchEndY = e.changedTouches[0].clientY;
-        const distance = touchStartY.current - touchEndY;
-        if (distance > 50) {
-          setCurrentIndex(prev => (prev + 1) % POSTS.length);
-        } else if (distance < -50) {
-          setCurrentIndex(prev => (prev - 1 + POSTS.length) % POSTS.length);
+        touchEndY.current = e.changedTouches[0].clientY;
+        const diff = touchStartY.current - touchEndY.current;
+
+        if (Math.abs(diff) > 50) {
+          if (diff > 0 && currentIndex < posts.length - 1) {
+            setCurrentIndex(prev => prev + 1);
+          } else if (diff < 0 && currentIndex > 0) {
+            setCurrentIndex(prev => prev - 1);
+          }
         }
       };
 
-      // 1. Splash Screen
+      const toggleLike = (id) => {
+        setPosts(posts.map(p => {
+          if (p.id === id) {
+            return {
+              ...p,
+              liked: !p.liked,
+              likes: p.liked ? p.likes - 1 : p.likes + 1
+            };
+          }
+          return p;
+        }));
+      };
+
+      const toggleBookmark = (id) => {
+        setPosts(posts.map(p => {
+          if (p.id === id) {
+            return { ...p, bookmarked: !p.bookmarked };
+          }
+          return p;
+        }));
+      };
+
+      // 1. SPLASH SCREEN (2.5 SECONDES)
       if (showSplash) {
         return (
           <div class="h-dvh w-full max-w-md mx-auto bg-gradient-to-b from-[#181033] via-[#0d071d] to-[#07040f] flex flex-col items-center justify-between py-16 px-6 relative overflow-hidden border-x border-purple-900/20">
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-pink-500/15 blur-[90px] rounded-full pointer-events-none"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[#ff3b96]/15 blur-[90px] rounded-full pointer-events-none"></div>
             <div></div>
-            <div class="flex flex-col items-center text-center z-10 space-y-3">
-              <div class="relative mb-2">
-                <svg width="110" height="110" viewBox="0 0 100 100" fill="none">
-                  <path d="M18 32 L78 18 L86 32 L26 46 Z" fill="url(#pink-grad)" />
-                  <path d="M32 28 L40 43" stroke="#ffffff" stroke-width="3.5" opacity="0.9" stroke-linecap="round" />
-                  <path d="M52 23 L60 38" stroke="#ffffff" stroke-width="3.5" opacity="0.9" stroke-linecap="round" />
-                  <rect x="18" y="42" width="68" height="46" rx="12" fill="none" stroke="url(#pink-grad)" stroke-width="5" />
-                  <polygon points="54,57 54,73 68,65" fill="#ffffff" />
-                  <circle cx="36" cy="65" r="11" fill="#0d071d" stroke="#ff3b96" stroke-width="2" />
-                  <text x="31" y="70" fill="#ff74b8" font-size="11" font-weight="bold">🎵</text>
-                  <defs>
-                    <linearGradient id="pink-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#ff3b96" />
-                      <stop offset="100%" stop-color="#9d3bff" />
-                    </linearGradient>
-                  </defs>
-                </svg>
+
+            <div class="flex flex-col items-center text-center z-10 space-y-4">
+              <img 
+                src={SPLASH_LOGO_URL} 
+                alt="ClipClap Logo" 
+                class="w-32 h-32 object-contain drop-shadow-[0_0_20px_#ff3b96] rounded-2xl" 
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  document.getElementById('fallback-logo').style.display = 'block';
+                }}
+              />
+              <div id="fallback-logo" class="hidden relative mb-2">
+                <div class="w-24 h-24 rounded-3xl bg-gradient-to-tr from-[#ff3b96] to-purple-600 flex items-center justify-center text-4xl shadow-[0_0_25px_#ff3b96]">
+                  🎬
+                </div>
               </div>
-              <h1 class="text-4xl font-extrabold text-white tracking-tight drop-shadow-[0_0_12px_rgba(255,255,255,0.7)]">ClipClap</h1>
+              <h1 class="text-4xl font-extrabold text-white tracking-tight drop-shadow-[0_0_15px_#ff3b96]">ClipClap</h1>
               <p class="text-[10px] font-bold tracking-[0.22em] text-[#ff3b96] uppercase pt-1">Short Video Social Network</p>
-              <p class="text-[11px] text-purple-200/70 font-normal">Connecting Stories, Creating Ripples</p>
             </div>
+
             <div class="w-full max-w-[240px] z-10">
               <div class="w-full h-[5px] bg-purple-950/90 rounded-full overflow-hidden border border-purple-800/30">
                 <div class="h-full bg-gradient-to-r from-[#ff3b96] to-[#9d3bff] rounded-full shadow-[0_0_10px_#ff3b96] transition-all duration-75" style={{ width: `${progress}%` }}></div>
@@ -184,160 +160,91 @@
         );
       }
 
-      const currentPost = POSTS[currentIndex];
+      const currentPost = posts[currentIndex];
 
+      // 2. FLUX VIDÉO PLEIN ÉCRAN CLASSIQUE
       return (
-        <div class="h-dvh w-full max-w-md mx-auto bg-[#0b0719] flex flex-col relative overflow-hidden">
+        <div class="h-dvh w-full max-w-md mx-auto bg-black flex flex-col relative overflow-hidden border-x border-white/5">
           
-          {/* Notification Toast */}
           {toastMessage && (
             <div class="absolute top-6 left-1/2 -translate-x-1/2 z-50 bg-[#ff3b96] text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg">
               {toastMessage}
             </div>
           )}
 
-          {/* Zone de contenu principal */}
-          <div class="flex-1 relative overflow-hidden">
-            {activeTab === 'feed' ? (
-              <div 
-                onTouchStart={handleTouchStart}
-                onTouchEnd={handleTouchEnd}
-                class="h-full w-full relative flex flex-col justify-end p-6 select-none bg-black"
-              >
-                {/* Vraie vidéo en arrière-plan */}
-                <video 
-                  key={currentPost.id}
-                  src={currentPost.video}
-                  class="absolute inset-0 w-full h-full object-cover"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                />
-                
-                <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/90 pointer-events-none"></div>
-
-                {/* Barre latérale d'actions */}
-                <div class="absolute right-4 bottom-16 flex flex-col items-center gap-4 z-20">
-                  
-                  {/* Avatar + bouton Suivre (+) */}
-                  <div class="relative mb-2">
-                    <div class="w-12 h-12 rounded-full border-2 border-[#ff3b96] overflow-hidden bg-purple-900 flex items-center justify-center text-xl font-bold">
-                      👤
-                    </div>
-                    <button 
-                      onClick={(e) => handleFollow(currentPost.user, e)}
-                      class={`absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-all shadow-md ${following[currentPost.user] ? 'bg-green-500 text-white' : 'bg-[#ff3b96] text-white'}`}
-                    >
-                      {following[currentPost.user] ? '✓' : '+'}
-                    </button>
-                  </div>
-
-                  {/* Bouton J'aime */}
-                  <button onClick={(e) => handleLike(currentPost.id, e)} class="flex flex-col items-center">
-                    <div class={`w-11 h-11 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border text-lg transition-all active:scale-125 ${likedPosts[currentPost.id] ? 'border-[#ff3b96] text-[#ff3b96] shadow-[0_0_15px_#ff3b96]' : 'border-white/30 text-white'}`}>
-                      ♥
-                    </div>
-                    <span class="text-xs mt-1 font-bold text-white drop-shadow">{likeCounts[currentPost.id]}</span>
-                  </button>
-
-                  {/* Bouton Commentaires */}
-                  <button onClick={() => showToast("Commentaires bientôt actifs ! 💬")} class="flex flex-col items-center">
-                    <div class="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/30 text-cyan-400 text-lg">
-                      💬
-                    </div>
-                    <span class="text-xs mt-1 font-bold text-white drop-shadow">{currentPost.comments}</span>
-                  </button>
-
-                  {/* Bouton Enregistrer / Favoris 📌 */}
-                  <button onClick={(e) => handleSave(currentPost.id, e)} class="flex flex-col items-center">
-                    <div class={`w-11 h-11 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border text-lg transition-all active:scale-125 ${savedPosts[currentPost.id] ? 'border-yellow-400 text-yellow-400 shadow-[0_0_15px_#facc15]' : 'border-white/30 text-white'}`}>
-                      📌
-                    </div>
-                    <span class="text-xs mt-1 font-bold text-white drop-shadow">{savedCounts[currentPost.id]}</span>
-                  </button>
-
-                  {/* Bouton Partager */}
-                  <button onClick={handleShare} class="flex flex-col items-center">
-                    <div class="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/30 text-purple-300 text-lg active:scale-110">
-                      🔗
-                    </div>
-                    <span class="text-xs mt-1 font-bold text-white drop-shadow">{currentPost.shares}</span>
-                  </button>
-                </div>
-
-                {/* Description du post */}
-                <div class="relative z-10 space-y-2 pr-16 mb-4">
-                  <h3 class="font-bold text-lg text-cyan-400 drop-shadow">{currentPost.user}</h3>
-                  <p class="text-sm text-gray-100 drop-shadow">{currentPost.desc}</p>
-                  <p class="text-xs text-[#ff3b96] flex items-center gap-1 drop-shadow">🎵 {currentPost.music}</p>
-                </div>
-              </div>
-            ) : (
-              /* Vue Profil */
-              <div class="h-full w-full p-6 overflow-y-auto bg-[#0b0719] space-y-6">
-                <div class="text-center space-y-3 mt-6">
-                  <div class="w-24 h-24 mx-auto rounded-full p-1 bg-gradient-to-tr from-[#ff3b96] to-cyan-400 shadow-[0_0_20px_rgba(255,59,150,0.4)]">
-                    <div class="w-full h-full bg-[#0b0719] rounded-full flex items-center justify-center text-3xl">
-                      👾
-                    </div>
-                  </div>
-
-                  {isEditingProfile ? (
-                    <div class="space-y-2 max-w-xs mx-auto pt-2">
-                      <input 
-                        type="text" 
-                        value={userName} 
-                        onChange={(e) => setUserName(e.target.value)}
-                        class="bg-black/60 border border-[#ff3b96] rounded-xl px-3 py-1.5 text-center w-full text-white font-bold"
-                      />
-                      <input 
-                        type="text" 
-                        value={userTag} 
-                        onChange={(e) => setUserTag(e.target.value)}
-                        class="bg-black/60 border border-cyan-400 rounded-xl px-3 py-1.5 text-center w-full text-cyan-400 text-xs"
-                      />
-                      <input 
-                        type="text" 
-                        value={userBio} 
-                        onChange={(e) => setUserBio(e.target.value)}
-                        class="bg-black/60 border border-purple-500 rounded-xl px-3 py-1.5 text-center w-full text-gray-300 text-xs"
-                      />
-                    </div>
-                  ) : (
-                    <div>
-                      <h2 class="text-2xl font-bold text-white">{userName}</h2>
-                      <p class="text-sm text-cyan-400">{userTag}</p>
-                      <p class="text-xs text-gray-400 mt-1">{userBio}</p>
-                    </div>
-                  )}
-                </div>
-
-                <div class="flex justify-around py-4 border-y border-white/10 text-center">
-                  <div><div class="font-bold text-[#ff3b96]">24</div><div class="text-xs text-gray-400">Vidéos</div></div>
-                  <div><div class="font-bold text-cyan-400">12.8k</div><div class="text-xs text-gray-400">Abonnés</div></div>
-                  <div><div class="font-bold text-purple-400">95.4k</div><div class="text-xs text-gray-400">J'aime</div></div>
-                </div>
-
-                <button 
-                  onClick={() => setIsEditingProfile(!isEditingProfile)}
-                  class="w-full py-3 rounded-xl bg-gradient-to-r from-[#ff3b96] to-purple-600 font-semibold shadow-[0_0_15px_rgba(255,59,150,0.4)] active:scale-95 transition"
-                >
-                  {isEditingProfile ? "Enregistrer les modifications" : "Éditer le profil"}
-                </button>
-              </div>
-            )}
+          {/* En-tête haut */}
+          <div class="absolute top-0 left-0 right-0 p-5 flex justify-between items-center z-30 bg-gradient-to-b from-black/80 to-transparent">
+            <span class="text-xl font-extrabold tracking-tight text-white drop-shadow-[0_0_8px_#ff3b96]">ClipClap</span>
+            <div class="flex gap-4 text-sm font-bold text-gray-400">
+              <span class="text-white border-b-2 border-[#ff3b96] pb-0.5">Pour toi</span>
+              <span onClick={() => showToast("Onglet Suivis bientôt dispo")}>Abonnements</span>
+            </div>
+            <button onClick={() => showToast("Recherche...")} class="text-lg">🔍</button>
           </div>
 
-          {/* Navigation bas fixée */}
-          <div class="h-16 shrink-0 bg-[#0b0719] border-t border-white/10 flex justify-around items-center z-50">
-            <button onClick={() => setActiveTab('feed')} class={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'feed' ? 'text-[#ff3b96] font-bold' : 'text-gray-400'}`}>
+          {/* Zone vidéo interactive avec Swipe */}
+          <div 
+            class="flex-1 w-full h-full relative"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            <video 
+              key={currentPost.id}
+              src={currentPost.video} 
+              class="w-full h-full object-cover" 
+              autoPlay 
+              loop 
+              playsInline 
+            />
+
+            {/* Overlay d'informations */}
+            <div class="absolute bottom-6 left-4 right-16 z-20 space-y-2">
+              <h3 class="font-extrabold text-base text-white drop-shadow-md">{currentPost.user}</h3>
+              <p class="text-xs text-gray-200 line-clamp-2 drop-shadow-md">{currentPost.desc}</p>
+            </div>
+
+            {/* Boutons d'interaction à droite */}
+            <div class="absolute bottom-6 right-3 z-20 flex flex-col items-center gap-5">
+              <button onClick={() => toggleLike(currentPost.id)} class="flex flex-col items-center gap-1">
+                <div class={`w-11 h-11 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-xl border border-white/10 ${currentPost.liked ? 'text-[#ff3b96]' : 'text-white'}`}>
+                  {currentPost.liked ? '❤️' : '🤍'}
+                </div>
+                <span class="text-[10px] font-bold">{currentPost.likes}</span>
+              </button>
+
+              <button onClick={() => showToast("Commentaires...")} class="flex flex-col items-center gap-1">
+                <div class="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-xl border border-white/10">
+                  💬
+                </div>
+                <span class="text-[10px] font-bold">{currentPost.comments}</span>
+              </button>
+
+              <button onClick={() => toggleBookmark(currentPost.id)} class="flex flex-col items-center gap-1">
+                <div class={`w-11 h-11 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-xl border border-white/10 ${currentPost.bookmarked ? 'text-yellow-400' : 'text-white'}`}>
+                  {currentPost.bookmarked ? '⭐' : '🔖'}
+                </div>
+                <span class="text-[10px] font-bold">Fav</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Navigation bas */}
+          <div class="h-16 shrink-0 bg-black/90 backdrop-blur-lg border-t border-white/10 flex justify-around items-center z-30">
+            <button class="flex flex-col items-center justify-center w-full h-full text-[#ff3b96] font-bold">
               <span class="text-xl">🏠</span>
-              <span class="text-[11px]">Accueil</span>
+              <span class="text-[10px]">Accueil</span>
             </button>
-            <button onClick={() => setActiveTab('profile')} class={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'profile' ? 'text-cyan-400 font-bold' : 'text-gray-400'}`}>
+
+            <button 
+              onClick={() => showToast("Module de publication prêt")}
+              class="flex items-center justify-center w-12 h-9 rounded-xl bg-gradient-to-r from-[#ff3b96] to-purple-600 text-white font-extrabold text-xl shadow-[0_0_12px_rgba(255,59,150,0.6)] active:scale-90 transition"
+            >
+              +
+            </button>
+
+            <button onClick={() => showToast("Profil créateur")} class="flex flex-col items-center justify-center w-full h-full text-gray-400">
               <span class="text-xl">👤</span>
-              <span class="text-[11px]">Profil</span>
+              <span class="text-[10px]">Profil</span>
             </button>
           </div>
 
