@@ -1,252 +1,28 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ClipClap</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-    html, body {
-      height: 100%; width: 100%; margin: 0; padding: 0;
-      overflow: hidden; background-color: #0b0719;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-  </style>
 </head>
-<body class="text-white select-none">
-  <div id="root" class="h-full w-full"></div>
+<body class="bg-black text-white">
+  <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
-
-    const playSound = (type = 'click') => {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        if (ctx.state === 'suspended') ctx.resume();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.05);
-        gain.gain.setValueAtTime(0.15, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.05);
-      } catch(e) {}
-    };
-
-    const INITIAL_POSTS = [
-      {
-        id: 1,
-        user: "@neon_vibes",
-        desc: "Lumières de la ville 🌌 #neon #city #vibes #fyp",
-        music: "Son original - Neon Vibes 🎵",
-        likes: 12400,
-        comments: 842,
-        bookmarks: 320,
-        shares: 156,
-        views: "145.2K",
-        video: "https://www.w3schools.com/html/mov_bbb.mp4"
-      },
-      {
-        id: 2,
-        user: "@cyber_dancer",
-        desc: "Session freestyle sous les néons 💃✨ #dance #cyberpunk",
-        music: "Cyberpunk Beats 2077 🎶",
-        likes: 45200,
-        comments: 1200,
-        bookmarks: 1450,
-        shares: 430,
-        views: "520.8K",
-        video: "https://www.w3schools.com/html/movie.mp4"
-      }
-    ];
-
-    function ClipClapApp() {
-      const [showSplash, setShowSplash] = useState(true);
-      const [progress, setProgress] = useState(0);
-      const [activeTab, setActiveTab] = useState('feed');
-      const [posts, setPosts] = useState(INITIAL_POSTS);
-      const [currentIndex, setCurrentIndex] = useState(0);
-      const [likedPosts, setLikedPosts] = useState({});
-      const [likeCounts, setLikeCounts] = useState(() => 
-        posts.reduce((acc, post) => ({ ...acc, [post.id]: post.likes }), {})
-      );
-      const [following, setFollowing] = useState({});
-      const [toastMessage, setToastMessage] = useState("");
-      const [showUploadModal, setShowUploadModal] = useState(false);
-      const [newCaption, setNewCaption] = useState("");
-      const [selectedFile, setSelectedFile] = useState(null);
-
-      const [userName, setUserName] = useState("Aziz Enbiri");
-      const [userTag, setUserTag] = useState("@azizenbiri");
-      const [userBio, setUserBio] = useState("Créateur de contenu néon ⚡");
-      const [isEditingProfile, setIsEditingProfile] = useState(false);
-
-      const touchStartX = useRef(0);
-      const touchStartY = useRef(0);
-      const videoRef = useRef(null);
-
-      useEffect(() => {
-        const interval = setInterval(() => {
-          setProgress(prev => {
-            if (prev >= 100) {
-              clearInterval(interval);
-              setTimeout(() => setShowSplash(false), 200);
-              return 100;
-            }
-            return prev + 15;
-          });
-        }, 30);
-        return () => clearInterval(interval);
-      }, []);
-
-      const showToast = (msg) => {
-        setToastMessage(msg);
-        setTimeout(() => setToastMessage(""), 2000);
-      };
-
-      const handleLike = (postId, e) => {
-        e.stopPropagation();
-        playSound();
-        const isLiked = likedPosts[postId];
-        setLikedPosts(prev => ({ ...prev, [postId]: !isLiked }));
-        setLikeCounts(prev => ({
-          ...prev,
-          [postId]: isLiked ? prev[postId] - 1 : prev[postId] + 1
-        }));
-      };
-
-      const handleFollow = (user, e) => {
-        e.stopPropagation();
-        playSound();
-        setFollowing(prev => ({ ...prev, [user]: !prev[user] }));
-        showToast(following[user] ? "Désabonné" : `Abonné à ${user} ! ✨`);
-      };
-
-      const handleTouchStart = (e) => {
-        touchStartX.current = e.touches[0].clientX;
-        touchStartY.current = e.touches[0].clientY;
-      };
-
-      const handleTouchEnd = (e) => {
-        const touchEndX = e.changedTouches[0].clientX;
-        const touchEndY = e.changedTouches[0].clientY;
-        const diffX = touchStartX.current - touchEndX;
-        const diffY = touchStartY.current - touchEndY;
-
-        if (Math.abs(diffY) > 50 && Math.abs(diffX) < 60) {
-          playSound();
-          if (diffY > 0) {
-            setCurrentIndex(prev => (prev + 1) % posts.length);
-          } else {
-            setCurrentIndex(prev => (prev - 1 + posts.length) % posts.length);
-          }
-        }
-      };
-
-      if (showSplash) {
-        return (
-          <div className="h-full w-full max-w-md mx-auto bg-gradient-to-b from-[#181033] via-[#0d071d] to-[#07040f] flex flex-col items-center justify-between py-16 px-6 relative overflow-hidden">
-            <div></div>
-            <div className="flex flex-col items-center text-center z-10 space-y-3">
-              <h1 className="text-4xl font-extrabold text-white tracking-tight drop-shadow-[0_0_12px_rgba(255,255,255,0.7)]">ClipClap</h1>
-              <p className="text-[10px] font-bold tracking-[0.22em] text-[#ff3b96] uppercase pt-1">Short Video Social Network</p>
-            </div>
-            <div className="w-full max-w-[240px] z-10">
-              <div className="w-full h-[5px] bg-purple-950 rounded-full overflow-hidden border border-purple-800/30">
-                <div className="h-full bg-gradient-to-r from-[#ff3b96] to-[#9d3bff] rounded-full" style={{ width: `${progress}%` }}></div>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      const currentPost = posts[currentIndex];
-
+    function App() {
       return (
-        <div className="h-full w-full max-w-md mx-auto bg-[#0b0719] flex flex-col relative overflow-hidden">
-          {toastMessage && (
-            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 bg-[#ff3b96] text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg">
-              {toastMessage}
-            </div>
-          )}
-
-          {showUploadModal && (
-            <div className="absolute inset-0 z-50 bg-black/90 p-6 flex flex-col justify-between" onClick={(e) => e.stopPropagation()}>
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold">Créer un Clip 🎬</h2>
-                <button onClick={() => setShowUploadModal(false)} className="text-gray-400 text-2xl">✕</button>
-              </div>
-              <form onSubmit={(e) => { e.preventDefault(); setShowUploadModal(false); showToast("Publié ! 🚀"); }} className="space-y-4 my-auto">
-                <div className="border-2 border-dashed border-[#ff3b96]/50 rounded-2xl p-6 text-center">
-                  <input type="file" accept="video/*" id="f-in" className="hidden" onChange={(e) => setSelectedFile(e.target.files[0])} />
-                  <label htmlFor="f-in" className="cursor-pointer text-cyan-400 text-sm font-semibold">{selectedFile ? selectedFile.name : "Sélectionner une vidéo 📹"}</label>
-                </div>
-                <input type="text" placeholder="Légende..." value={newCaption} onChange={(e) => setNewCaption(e.target.value)} className="w-full bg-white/10 rounded-xl p-3 text-sm border border-white/10 focus:outline-none" />
-                <button type="submit" className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#ff3b96] to-purple-600 font-bold">Publier</button>
-              </form>
-              <div></div>
-            </div>
-          )}
-
-          <div className="flex-1 relative overflow-hidden pb-16">
-            {activeTab === 'feed' ? (
-              <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className="h-full w-full relative flex flex-col justify-end p-6 bg-black">
-                <video ref={videoRef} key={currentPost.id} src={currentPost.video} className="absolute inset-0 w-full h-full object-cover pointer-events-none" autoPlay loop playsInline />
-                
-                <div className="absolute right-4 bottom-20 flex flex-col items-center gap-4 z-30" onClick={(e) => e.stopPropagation()}>
-                  <button onClick={(e) => handleLike(currentPost.id, e)} className="flex flex-col items-center">
-                    <div className={`w-11 h-11 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border text-lg ${likedPosts[currentPost.id] ? 'border-[#ff3b96] text-[#ff3b96]' : 'border-white/30 text-white'}`}>♥</div>
-                    <span className="text-xs mt-1 font-bold text-white">{likeCounts[currentPost.id]}</span>
-                  </button>
-                  <button onClick={() => showToast("Commentaires 💬")} className="flex flex-col items-center">
-                    <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/30 text-cyan-400 text-lg">💬</div>
-                    <span className="text-xs mt-1 font-bold text-white">{currentPost.comments}</span>
-                  </button>
-                </div>
-
-                <div className="relative z-30 space-y-1 pr-16 mb-4 pointer-events-none">
-                  <h3 className="font-bold text-lg text-cyan-400">{currentPost.user}</h3>
-                  <p className="text-sm text-gray-100">{currentPost.desc}</p>
-                </div>
-              </div>
-            ) : (
-              <div className="h-full w-full p-6 bg-[#0b0719] space-y-6 overflow-y-auto">
-                <div className="text-center space-y-3 mt-6">
-                  <div className="w-24 h-24 mx-auto rounded-full bg-purple-900 flex items-center justify-center text-3xl">👾</div>
-                  <h2 className="text-2xl font-bold">{userName}</h2>
-                  <p className="text-sm text-cyan-400">{userTag}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="absolute bottom-0 left-0 right-0 h-16 bg-[#0b0719] border-t border-white/10 flex justify-around items-center z-40">
-            <button onClick={() => setActiveTab('feed')} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'feed' ? 'text-[#ff3b96] font-bold' : 'text-gray-400'}`}>
-              <span className="text-xl">🏠</span>
-              <span className="text-[10px]">Accueil</span>
-            </button>
-            <div className="flex items-center justify-center w-full h-full">
-              <button onClick={() => setShowUploadModal(true)} className="w-12 h-9 rounded-xl bg-gradient-to-r from-[#ff3b96] to-cyan-400 text-white font-extrabold text-xl shadow-lg">+</button>
-            </div>
-            <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'profile' ? 'text-cyan-400 font-bold' : 'text-gray-400'}`}>
-              <span className="text-xl">👤</span>
-              <span className="text-[10px]">Profil</span>
-            </button>
-          </div>
+        <div className="flex flex-col items-center justify-center h-screen">
+          <h1 className="text-3xl font-bold">ClipClap</h1>
+          <p className="text-gray-400">Bienvenue sur ton application</p>
         </div>
       );
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<ClipClapApp />);
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
 </body>
 </html>
