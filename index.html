@@ -135,6 +135,7 @@
 
       const touchStartX = useRef(0);
       const touchStartY = useRef(0);
+      const isSwiping = useRef(false);
       const videoRef = useRef(null);
 
       useEffect(() => {
@@ -157,7 +158,7 @@
         return () => clearInterval(interval);
       }, []);
 
-      // Force la relance automatique de la vidéo lors d'un changement d'index ou d'onglet
+      // Relance automatique garantie dès que l'index change ou qu'on est sur le feed
       useEffect(() => {
         if (!showSplash && videoRef.current) {
           if (viewingCreator || activeTab !== 'feed') {
@@ -165,7 +166,6 @@
             setIsPlaying(false);
           } else {
             videoRef.current.muted = isMuted;
-            videoRef.current.currentTime = 0;
             const playPromise = videoRef.current.play();
             if (playPromise !== undefined) {
               playPromise.then(() => {
@@ -184,6 +184,8 @@
       };
 
       const togglePlayPause = () => {
+        // Si l'utilisateur vient de faire un glissement (swipe), on ignore le clic
+        if (isSwiping.current) return;
         if (!videoRef.current) return;
         playSound('click');
 
@@ -288,6 +290,7 @@
       const handleTouchStart = (e) => {
         touchStartX.current = e.touches[0].clientX;
         touchStartY.current = e.touches[0].clientY;
+        isSwiping.current = false;
       };
 
       const handleTouchEnd = (e) => {
@@ -296,6 +299,11 @@
 
         const diffX = touchStartX.current - touchEndX;
         const diffY = touchStartY.current - touchEndY;
+
+        // Si le geste dépasse 30px, on considère que c'est un swipe
+        if (Math.abs(diffX) > 30 || Math.abs(diffY) > 30) {
+          isSwiping.current = true;
+        }
 
         if (diffX > 60 && Math.abs(diffY) < 50) {
           playSound('click');
