@@ -24,6 +24,7 @@
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
+    // Fonction de génération de son (Audio API)
     const playSound = (type = 'click') => {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -53,7 +54,7 @@
         bookmarks: 320,
         shares: 156,
         views: "145.2K",
-        video: "https://www.w3schools.com/html/mov_bbb.mp4"
+        video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-neon-lights-41926-large.mp4"
       },
       {
         id: 2,
@@ -65,14 +66,16 @@
         bookmarks: 1450,
         shares: 430,
         views: "520.8K",
-        video: "https://www.w3schools.com/html/movie.mp4"
+        video: "https://assets.mixkit.co/videos/preview/mixkit-woman-dancing-with-neon-lights-in-the-background-42990-large.mp4"
       }
     ];
 
     function ClipClapApp() {
       const [showSplash, setShowSplash] = useState(true);
       const [progress, setProgress] = useState(0);
+      const [isMuted, setIsMuted] = useState(true);
       const [activeTab, setActiveTab] = useState('feed');
+
       const [posts, setPosts] = useState(INITIAL_POSTS);
       const [currentIndex, setCurrentIndex] = useState(0);
       const [likedPosts, setLikedPosts] = useState({});
@@ -81,9 +84,11 @@
       );
       const [following, setFollowing] = useState({});
       const [toastMessage, setToastMessage] = useState("");
+
       const [showUploadModal, setShowUploadModal] = useState(false);
       const [newCaption, setNewCaption] = useState("");
       const [selectedFile, setSelectedFile] = useState(null);
+      const [viewingCreator, setViewingCreator] = useState(null);
 
       const [userName, setUserName] = useState("Aziz Enbiri");
       const [userTag, setUserTag] = useState("@azizenbiri");
@@ -102,7 +107,7 @@
               setTimeout(() => setShowSplash(false), 200);
               return 100;
             }
-            return prev + 15;
+            return prev + 20;
           });
         }, 30);
         return () => clearInterval(interval);
@@ -111,6 +116,15 @@
       const showToast = (msg) => {
         setToastMessage(msg);
         setTimeout(() => setToastMessage(""), 2000);
+      };
+
+      const toggleMute = (e) => {
+        e.stopPropagation();
+        playSound();
+        const nextMuted = !isMuted;
+        setIsMuted(nextMuted);
+        if (videoRef.current) videoRef.current.muted = nextMuted;
+        showToast(nextMuted ? "Son coupé 🔇" : "Son activé 🔊");
       };
 
       const handleLike = (postId, e) => {
@@ -141,6 +155,14 @@
         const touchEndY = e.changedTouches[0].clientY;
         const diffX = touchStartX.current - touchEndX;
         const diffY = touchStartY.current - touchEndY;
+
+        if (Math.abs(diffX) < 10 && Math.abs(diffY) < 10) return;
+
+        if (diffX < -50 && Math.abs(diffY) < 60) {
+          playSound();
+          setViewingCreator(posts[currentIndex]);
+          return;
+        }
 
         if (Math.abs(diffY) > 50 && Math.abs(diffX) < 60) {
           playSound();
@@ -185,7 +207,27 @@
                 <h2 className="text-xl font-bold">Créer un Clip 🎬</h2>
                 <button onClick={() => setShowUploadModal(false)} className="text-gray-400 text-2xl">✕</button>
               </div>
-              <form onSubmit={(e) => { e.preventDefault(); setShowUploadModal(false); showToast("Publié ! 🚀"); }} className="space-y-4 my-auto">
+              <form onSubmit={(e) => { 
+                e.preventDefault(); 
+                const newP = {
+                  id: Date.now(),
+                  user: userTag,
+                  desc: newCaption || "Ma nouvelle vidéo 🎬",
+                  music: `Son original - ${userName} 🎵`,
+                  likes: 1,
+                  comments: 0,
+                  shares: 0,
+                  views: "1",
+                  video: selectedFile ? URL.createObjectURL(selectedFile) : currentPost.video
+                };
+                setPosts([newP, ...posts]);
+                setLikeCounts(prev => ({ ...prev, [newP.id]: 1 }));
+                setShowUploadModal(false);
+                setNewCaption("");
+                setSelectedFile(null);
+                setCurrentIndex(0);
+                showToast("Publié avec succès ! 🚀"); 
+              }} className="space-y-4 my-auto">
                 <div className="border-2 border-dashed border-[#ff3b96]/50 rounded-2xl p-6 text-center">
                   <input type="file" accept="video/*" id="f-in" className="hidden" onChange={(e) => setSelectedFile(e.target.files[0])} />
                   <label htmlFor="f-in" className="cursor-pointer text-cyan-400 text-sm font-semibold">{selectedFile ? selectedFile.name : "Sélectionner une vidéo 📹"}</label>
@@ -200,8 +242,15 @@
           <div className="flex-1 relative overflow-hidden pb-16">
             {activeTab === 'feed' ? (
               <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className="h-full w-full relative flex flex-col justify-end p-6 bg-black">
-                <video ref={videoRef} key={currentPost.id} src={currentPost.video} className="absolute inset-0 w-full h-full object-cover pointer-events-none" autoPlay loop playsInline />
+                <video ref={videoRef} key={currentPost.id} src={currentPost.video} className="absolute inset-0 w-full h-full object-cover pointer-events-none" autoPlay loop playsInline muted={isMuted} />
                 
+                <div className="absolute top-4 left-0 right-0 flex justify-between items-center px-6 z-20">
+                  <span className="text-[10px] text-white/60 uppercase">Swipe vertical</span>
+                  <button onClick={toggleMute} className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-xs font-bold text-cyan-300">
+                    {isMuted ? '🔇 Son coupé' : '🔊 Son actif'}
+                  </button>
+                </div>
+
                 <div className="absolute right-4 bottom-20 flex flex-col items-center gap-4 z-30" onClick={(e) => e.stopPropagation()}>
                   <button onClick={(e) => handleLike(currentPost.id, e)} className="flex flex-col items-center">
                     <div className={`w-11 h-11 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border text-lg ${likedPosts[currentPost.id] ? 'border-[#ff3b96] text-[#ff3b96]' : 'border-white/30 text-white'}`}>♥</div>
