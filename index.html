@@ -53,7 +53,6 @@
         bookmarks: 320,
         shares: 156,
         views: "145.2K",
-        video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-neon-lights-41926-large.mp4"
       },
       {
         id: 2,
@@ -65,15 +64,12 @@
         bookmarks: 1450,
         shares: 430,
         views: "520.8K",
-        video: "https://assets.mixkit.co/videos/preview/mixkit-woman-dancing-with-neon-lights-in-the-background-42990-large.mp4"
       }
     ];
 
     function ClipClapApp() {
       const [showSplash, setShowSplash] = useState(true);
       const [progress, setProgress] = useState(0);
-      const [isMuted, setIsMuted] = useState(true);
-      const [isPlaying, setIsPlaying] = useState(true);
       const [activeTab, setActiveTab] = useState('feed');
 
       const [posts, setPosts] = useState(INITIAL_POSTS);
@@ -87,7 +83,6 @@
 
       const [showUploadModal, setShowUploadModal] = useState(false);
       const [newCaption, setNewCaption] = useState("");
-      const [selectedFile, setSelectedFile] = useState(null);
       const [viewingCreator, setViewingCreator] = useState(null);
 
       const [userName, setUserName] = useState("Aziz Enbiri");
@@ -97,7 +92,6 @@
 
       const touchStartX = useRef(0);
       const touchStartY = useRef(0);
-      const videoRef = useRef(null);
 
       useEffect(() => {
         const interval = setInterval(() => {
@@ -113,43 +107,9 @@
         return () => clearInterval(interval);
       }, []);
 
-      useEffect(() => {
-        if (!showSplash && videoRef.current) {
-          if (viewingCreator || activeTab !== 'feed' || showUploadModal) {
-            videoRef.current.pause();
-          } else {
-            videoRef.current.muted = isMuted;
-            videoRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-          }
-        }
-      }, [currentIndex, isMuted, showSplash, viewingCreator, activeTab, showUploadModal]);
-
       const showToast = (msg) => {
         setToastMessage(msg);
         setTimeout(() => setToastMessage(""), 2000);
-      };
-
-      const togglePlayPause = (e) => {
-        if (e) e.stopPropagation();
-        if (!videoRef.current) return;
-        playSound();
-
-        if (videoRef.current.paused) {
-          videoRef.current.play();
-          setIsPlaying(true);
-        } else {
-          videoRef.current.pause();
-          setIsPlaying(false);
-        }
-      };
-
-      const toggleMute = (e) => {
-        e.stopPropagation();
-        playSound();
-        const nextMuted = !isMuted;
-        setIsMuted(nextMuted);
-        if (videoRef.current) videoRef.current.muted = nextMuted;
-        showToast(nextMuted ? "Son coupé 🔇" : "Son activé 🔊");
       };
 
       const handleLike = (postId, e) => {
@@ -182,7 +142,6 @@
         const diffY = touchStartY.current - touchEndY;
 
         if (Math.abs(diffX) < 10 && Math.abs(diffY) < 10) {
-          togglePlayPause(e);
           return;
         }
 
@@ -245,20 +204,17 @@
                   likes: 1,
                   comments: 0,
                   shares: 0,
-                  views: "1",
-                  video: selectedFile ? URL.createObjectURL(selectedFile) : currentPost.video
+                  views: "1"
                 };
                 setPosts([newP, ...posts]);
                 setLikeCounts(prev => ({ ...prev, [newP.id]: 1 }));
                 setShowUploadModal(false);
                 setNewCaption("");
-                setSelectedFile(null);
                 setCurrentIndex(0);
                 showToast("Publié avec succès ! 🚀"); 
               }} className="space-y-4 my-auto">
-                <div className="border-2 border-dashed border-[#ff3b96]/50 rounded-2xl p-6 text-center">
-                  <input type="file" accept="video/*" id="f-in" className="hidden" onChange={(e) => setSelectedFile(e.target.files[0])} />
-                  <label htmlFor="f-in" className="cursor-pointer text-cyan-400 text-sm font-semibold">{selectedFile ? selectedFile.name : "Sélectionner une vidéo 📹"}</label>
+                <div className="border-2 border-dashed border-[#ff3b96]/50 rounded-2xl p-6 text-center text-cyan-400 text-sm font-semibold">
+                  Espace de création 📹
                 </div>
                 <input type="text" placeholder="Légende..." value={newCaption} onChange={(e) => setNewCaption(e.target.value)} className="w-full bg-white/10 rounded-xl p-3 text-sm border border-white/10 focus:outline-none" />
                 <button type="submit" className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#ff3b96] to-purple-600 font-bold">Publier</button>
@@ -285,14 +241,10 @@
 
           <div className="flex-1 relative overflow-hidden pb-16">
             {activeTab === 'feed' ? (
-              <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className="h-full w-full relative flex flex-col justify-end p-6 bg-black">
-                <video ref={videoRef} key={currentPost.id} src={currentPost.video} className="absolute inset-0 w-full h-full object-cover pointer-events-none" autoPlay loop playsInline muted={isMuted} />
+              <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className="h-full w-full relative flex flex-col justify-end p-6 bg-gradient-to-b from-[#120a2a] via-[#0b0719] to-[#05030a]">
                 
-                <div className="absolute top-4 left-0 right-0 flex justify-between items-center px-6 z-20">
+                <div className="absolute top-4 left-0 right-0 flex justify-center items-center px-6 z-20">
                   <span className="text-[10px] text-white/60 uppercase">Swipe vertical / Droite</span>
-                  <button onClick={toggleMute} className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 text-xs font-bold text-cyan-300">
-                    {isMuted ? '🔇 Son coupé' : '🔊 Son actif'}
-                  </button>
                 </div>
 
                 <div className="absolute right-4 bottom-20 flex flex-col items-center gap-4 z-30" onClick={(e) => e.stopPropagation()}>
