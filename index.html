@@ -152,16 +152,22 @@
         return () => clearInterval(interval);
       }, []);
 
+      // Gestion de la lecture/pause et de la coupure du son quand le profil est ouvert
       useEffect(() => {
         if (!showSplash && videoRef.current) {
-          videoRef.current.muted = isMuted;
-          setIsPlaying(true);
-          const playPromise = videoRef.current.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(() => {});
+          if (viewingCreator || activeTab !== 'feed') {
+            videoRef.current.pause();
+            setIsPlaying(false);
+          } else {
+            videoRef.current.muted = isMuted;
+            setIsPlaying(true);
+            const playPromise = videoRef.current.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(() => {});
+            }
           }
         }
-      }, [currentIndex, isMuted, showSplash]);
+      }, [currentIndex, isMuted, showSplash, viewingCreator, activeTab]);
 
       const showToast = (msg) => {
         setToastMessage(msg);
@@ -282,7 +288,7 @@
         const diffX = touchStartX.current - touchEndX;
         const diffY = touchStartY.current - touchEndY;
 
-        // Glisser vers la gauche -> Profil
+        // Glisser vers la gauche -> Ouvrir le profil et mettre la vidéo en pause
         if (diffX > 60 && Math.abs(diffY) < 50) {
           playSound('click');
           setViewingCreator(posts[currentIndex]);
@@ -313,7 +319,7 @@
         const diffX = touchStartX.current - touchEndX;
         const diffY = touchStartY.current - touchEndY;
 
-        // Glisser vers la droite -> Retour
+        // Glisser vers la droite -> Fermer le profil et relancer la vidéo
         if (diffX < -60 && Math.abs(diffY) < 50) {
           playSound('click');
           setViewingCreator(null);
@@ -580,7 +586,7 @@
 
             <button onClick={() => { playSound('click'); setActiveTab('profile'); }} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'profile' ? 'text-cyan-400 font-bold' : 'text-gray-400'}`}>
               <span className="text-xl">👤</span>
-              <span class="text-[10px]">Profil</span>
+              <span className="text-[10px]">Profil</span>
             </button>
           </div>
 
