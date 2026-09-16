@@ -91,7 +91,8 @@
 
     function ClipClapApp() {
       const [showSplash, setShowSplash] = useState(true);
-      const [isMuted, setIsMuted] = useState(false); // Activé par défaut
+      const [progress, setProgress] = useState(0);
+      const [isMuted, setIsMuted] = useState(false);
       const [activeTab, setActiveTab] = useState('feed');
 
       const [posts, setPosts] = useState(() => {
@@ -130,12 +131,22 @@
         localStorage.setItem('clipclap_posts', JSON.stringify(posts));
       }, [posts]);
 
-      const handleStartApp = () => {
-        setIsMuted(false);
-        playSound('click');
-        setShowSplash(false);
-      };
+      // Défilement automatique du splash screen jusqu'à 100%
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setProgress(prev => {
+            if (prev >= 100) {
+              clearInterval(interval);
+              setTimeout(() => setShowSplash(false), 300);
+              return 100;
+            }
+            return prev + 5;
+          });
+        }, 50);
+        return () => clearInterval(interval);
+      }, []);
 
+      // Lancement automatique de la vidéo avec le son
       useEffect(() => {
         if (!showSplash && videoRef.current) {
           videoRef.current.muted = isMuted;
@@ -268,9 +279,7 @@
 
       if (showSplash) {
         return (
-          <div 
-            class="h-dvh w-full max-w-md mx-auto bg-gradient-to-b from-[#181033] via-[#0d071d] to-[#07040f] flex flex-col items-center justify-between py-16 px-6 relative overflow-hidden border-x border-purple-900/20"
-          >
+          <div class="h-dvh w-full max-w-md mx-auto bg-gradient-to-b from-[#181033] via-[#0d071d] to-[#07040f] flex flex-col items-center justify-between py-16 px-6 relative overflow-hidden border-x border-purple-900/20">
             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-pink-500/15 blur-[90px] rounded-full pointer-events-none"></div>
             <div></div>
             <div class="flex flex-col items-center text-center z-10 space-y-3">
@@ -295,13 +304,12 @@
               <p class="text-[10px] font-bold tracking-[0.22em] text-[#ff3b96] uppercase pt-1">Short Video Social Network</p>
               <p class="text-[11px] text-purple-200/70 font-normal">Connecting Stories, Creating Ripples</p>
             </div>
-            
-            <button 
-              onClick={handleStartApp} 
-              class="w-full max-w-[240px] z-10 py-3.5 rounded-full bg-gradient-to-r from-[#ff3b96] to-[#9d3bff] font-extrabold text-white text-sm shadow-[0_0_20px_rgba(255,59,150,0.6)] animate-pulse active:scale-95 transition"
-            >
-              Lancer l'application 🔊
-            </button>
+
+            <div class="w-full max-w-[240px] z-10 space-y-2 text-center">
+              <div class="w-full h-[5px] bg-purple-950/90 rounded-full overflow-hidden border border-purple-800/30">
+                <div class="h-full bg-gradient-to-r from-[#ff3b96] to-[#9d3bff] rounded-full shadow-[0_0_10px_#ff3b96] transition-all duration-75" style={{ width: `${progress}%` }}></div>
+              </div>
+            </div>
           </div>
         );
       }
