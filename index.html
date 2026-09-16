@@ -135,7 +135,6 @@
 
       const touchStartX = useRef(0);
       const touchStartY = useRef(0);
-      const isSwiping = useRef(false);
       const videoRef = useRef(null);
 
       useEffect(() => {
@@ -158,7 +157,6 @@
         return () => clearInterval(interval);
       }, []);
 
-      // Relance automatique garantie dès que l'index change ou qu'on est sur le feed
       useEffect(() => {
         if (!showSplash && videoRef.current) {
           if (viewingCreator || activeTab !== 'feed') {
@@ -183,9 +181,8 @@
         setTimeout(() => setToastMessage(""), 2200);
       };
 
-      const togglePlayPause = () => {
-        // Si l'utilisateur vient de faire un glissement (swipe), on ignore le clic
-        if (isSwiping.current) return;
+      const togglePlayPause = (e) => {
+        e.stopPropagation();
         if (!videoRef.current) return;
         playSound('click');
 
@@ -290,7 +287,6 @@
       const handleTouchStart = (e) => {
         touchStartX.current = e.touches[0].clientX;
         touchStartY.current = e.touches[0].clientY;
-        isSwiping.current = false;
       };
 
       const handleTouchEnd = (e) => {
@@ -300,18 +296,15 @@
         const diffX = touchStartX.current - touchEndX;
         const diffY = touchStartY.current - touchEndY;
 
-        // Si le geste dépasse 30px, on considère que c'est un swipe
-        if (Math.abs(diffX) > 30 || Math.abs(diffY) > 30) {
-          isSwiping.current = true;
-        }
-
-        if (diffX > 60 && Math.abs(diffY) < 50) {
+        // Seuil de swipe horizontal (profil)
+        if (diffX > 50 && Math.abs(diffY) < 60) {
           playSound('click');
           setViewingCreator(posts[currentIndex]);
           return;
         }
 
-        if (Math.abs(diffY) > 60 && Math.abs(diffX) < 50) {
+        // Seuil de swipe vertical (changer de vidéo)
+        if (Math.abs(diffY) > 50 && Math.abs(diffX) < 60) {
           playSound('click');
           if (diffY > 0) {
             setCurrentIndex(prev => (prev + 1) % posts.length);
@@ -333,7 +326,7 @@
         const diffX = touchStartX.current - touchEndX;
         const diffY = touchStartY.current - touchEndY;
 
-        if (diffX < -60 && Math.abs(diffY) < 50) {
+        if (diffX < -50 && Math.abs(diffY) < 60) {
           playSound('click');
           setViewingCreator(null);
         }
@@ -478,8 +471,7 @@
               <div 
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
-                onClick={togglePlayPause}
-                className="h-full w-full relative flex flex-col justify-end p-6 select-none bg-black cursor-pointer"
+                className="h-full w-full relative flex flex-col justify-end p-6 select-none bg-black"
               >
                 <video 
                   ref={videoRef}
@@ -491,21 +483,25 @@
                   playsInline
                 />
                 
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/90 pointer-events-none"></div>
-
-                {showPlayIcon && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+                {/* Zone centrale dédiée uniquement au clic Pause/Play (laisse les bords libres pour swiper sans risque) */}
+                <div 
+                  onClick={togglePlayPause}
+                  className="absolute inset-x-16 inset-y-32 z-20 flex items-center justify-center cursor-pointer"
+                >
+                  {showPlayIcon && (
                     <div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white text-3xl border border-white/20">
                       {isPlaying ? '▶' : '⏸'}
                     </div>
-                  </div>
-                )}
-
-                <div className="absolute top-4 left-0 right-0 text-center text-[10px] text-white/50 tracking-wider uppercase z-10 pointer-events-none">
-                  👈 Glisse à gauche pour voir le profil
+                  )}
                 </div>
 
-                <div className="absolute right-4 bottom-16 flex flex-col items-center gap-4 z-20">
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/90 pointer-events-none"></div>
+
+                <div className="absolute top-4 left-0 right-0 text-center text-[10px] text-white/50 tracking-wider uppercase z-10 pointer-events-none">
+                  Swipe libre sur les côtés | Tap au centre pour Pause
+                </div>
+
+                <div className="absolute right-4 bottom-16 flex flex-col items-center gap-4 z-30">
                   <div className="relative mb-2">
                     <button 
                       onClick={(e) => { e.stopPropagation(); playSound('click'); setViewingCreator(currentPost); }}
@@ -550,7 +546,7 @@
                   </button>
                 </div>
 
-                <div className="relative z-10 space-y-2 pr-16 mb-4 pointer-events-none">
+                <div className="relative z-30 space-y-2 pr-16 mb-4 pointer-events-none">
                   <h3 
                     onClick={(e) => { e.stopPropagation(); playSound('click'); setViewingCreator(currentPost); }} 
                     className="font-bold text-lg text-cyan-400 pointer-events-auto cursor-pointer"
