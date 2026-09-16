@@ -157,7 +157,7 @@
         return () => clearInterval(interval);
       }, []);
 
-      // Coupure du son lors du glissement vers le profil ou changement d'onglet
+      // Force la relance automatique de la vidéo lors d'un changement d'index ou d'onglet
       useEffect(() => {
         if (!showSplash && videoRef.current) {
           if (viewingCreator || activeTab !== 'feed') {
@@ -165,14 +165,18 @@
             setIsPlaying(false);
           } else {
             videoRef.current.muted = isMuted;
-            setIsPlaying(true);
+            videoRef.current.currentTime = 0;
             const playPromise = videoRef.current.play();
             if (playPromise !== undefined) {
-              playPromise.catch(() => {});
+              playPromise.then(() => {
+                setIsPlaying(true);
+              }).catch(() => {
+                setIsPlaying(false);
+              });
             }
           }
         }
-      }, [currentIndex, isMuted, showSplash, viewingCreator, activeTab]);
+      }, [currentIndex, isMuted, showSplash, viewingCreator, activeTab, posts]);
 
       const showToast = (msg) => {
         setToastMessage(msg);
@@ -266,6 +270,7 @@
           setNewCaption("");
           setSelectedFile(null);
           setCurrentIndex(0);
+          setIsPlaying(true);
           showToast("Vidéo publiée et enregistrée ! 🚀");
         };
 
