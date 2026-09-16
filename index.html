@@ -53,6 +53,7 @@
         bookmarks: 320,
         shares: 156,
         views: "145.2K",
+        video: "https://www.w3schools.com/html/mov_bbb.mp4"
       },
       {
         id: 2,
@@ -64,6 +65,7 @@
         bookmarks: 1450,
         shares: 430,
         views: "520.8K",
+        video: "https://www.w3schools.com/html/movie.mp4"
       }
     ];
 
@@ -71,7 +73,6 @@
       const [showSplash, setShowSplash] = useState(true);
       const [progress, setProgress] = useState(0);
       const [activeTab, setActiveTab] = useState('feed');
-
       const [posts, setPosts] = useState(INITIAL_POSTS);
       const [currentIndex, setCurrentIndex] = useState(0);
       const [likedPosts, setLikedPosts] = useState({});
@@ -80,10 +81,9 @@
       );
       const [following, setFollowing] = useState({});
       const [toastMessage, setToastMessage] = useState("");
-
       const [showUploadModal, setShowUploadModal] = useState(false);
       const [newCaption, setNewCaption] = useState("");
-      const [viewingCreator, setViewingCreator] = useState(null);
+      const [selectedFile, setSelectedFile] = useState(null);
 
       const [userName, setUserName] = useState("Aziz Enbiri");
       const [userTag, setUserTag] = useState("@azizenbiri");
@@ -92,6 +92,7 @@
 
       const touchStartX = useRef(0);
       const touchStartY = useRef(0);
+      const videoRef = useRef(null);
 
       useEffect(() => {
         const interval = setInterval(() => {
@@ -101,7 +102,7 @@
               setTimeout(() => setShowSplash(false), 200);
               return 100;
             }
-            return prev + 20;
+            return prev + 15;
           });
         }, 30);
         return () => clearInterval(interval);
@@ -140,16 +141,6 @@
         const touchEndY = e.changedTouches[0].clientY;
         const diffX = touchStartX.current - touchEndX;
         const diffY = touchStartY.current - touchEndY;
-
-        if (Math.abs(diffX) < 10 && Math.abs(diffY) < 10) {
-          return;
-        }
-
-        if (diffX < -50 && Math.abs(diffY) < 60) {
-          playSound();
-          setViewingCreator(posts[currentIndex]);
-          return;
-        }
 
         if (Math.abs(diffY) > 50 && Math.abs(diffX) < 60) {
           playSound();
@@ -194,27 +185,10 @@
                 <h2 className="text-xl font-bold">Créer un Clip 🎬</h2>
                 <button onClick={() => setShowUploadModal(false)} className="text-gray-400 text-2xl">✕</button>
               </div>
-              <form onSubmit={(e) => { 
-                e.preventDefault(); 
-                const newP = {
-                  id: Date.now(),
-                  user: userTag,
-                  desc: newCaption || "Ma nouvelle vidéo 🎬",
-                  music: `Son original - ${userName} 🎵`,
-                  likes: 1,
-                  comments: 0,
-                  shares: 0,
-                  views: "1"
-                };
-                setPosts([newP, ...posts]);
-                setLikeCounts(prev => ({ ...prev, [newP.id]: 1 }));
-                setShowUploadModal(false);
-                setNewCaption("");
-                setCurrentIndex(0);
-                showToast("Publié avec succès ! 🚀"); 
-              }} className="space-y-4 my-auto">
-                <div className="border-2 border-dashed border-[#ff3b96]/50 rounded-2xl p-6 text-center text-cyan-400 text-sm font-semibold">
-                  Espace de création 📹
+              <form onSubmit={(e) => { e.preventDefault(); setShowUploadModal(false); showToast("Publié ! 🚀"); }} className="space-y-4 my-auto">
+                <div className="border-2 border-dashed border-[#ff3b96]/50 rounded-2xl p-6 text-center">
+                  <input type="file" accept="video/*" id="f-in" className="hidden" onChange={(e) => setSelectedFile(e.target.files[0])} />
+                  <label htmlFor="f-in" className="cursor-pointer text-cyan-400 text-sm font-semibold">{selectedFile ? selectedFile.name : "Sélectionner une vidéo 📹"}</label>
                 </div>
                 <input type="text" placeholder="Légende..." value={newCaption} onChange={(e) => setNewCaption(e.target.value)} className="w-full bg-white/10 rounded-xl p-3 text-sm border border-white/10 focus:outline-none" />
                 <button type="submit" className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#ff3b96] to-purple-600 font-bold">Publier</button>
@@ -223,32 +197,12 @@
             </div>
           )}
 
-          {viewingCreator && (
-            <div className="absolute inset-0 z-50 bg-[#0b0719] p-6 space-y-6 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-400">Profil</span>
-                <button onClick={() => setViewingCreator(null)} className="px-3 py-1 bg-white/10 rounded-full text-xs font-bold">Fermer</button>
-              </div>
-              <div className="text-center space-y-3">
-                <div className="w-20 h-20 mx-auto rounded-full bg-purple-900 flex items-center justify-center text-2xl">👤</div>
-                <h2 className="text-xl font-bold">{viewingCreator.user}</h2>
-                <button onClick={(e) => handleFollow(viewingCreator.user, e)} className={`px-6 py-2 rounded-full text-xs font-bold ${following[viewingCreator.user] ? 'bg-white/20 text-white' : 'bg-[#ff3b96] text-white'}`}>
-                  {following[viewingCreator.user] ? 'Abonné ✓' : 'S\'abonner +'}
-                </button>
-              </div>
-            </div>
-          )}
-
           <div className="flex-1 relative overflow-hidden pb-16">
             {activeTab === 'feed' ? (
-              <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className="h-full w-full relative flex flex-col justify-end p-6 bg-gradient-to-b from-[#120a2a] via-[#0b0719] to-[#05030a]">
+              <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} className="h-full w-full relative flex flex-col justify-end p-6 bg-black">
+                <video ref={videoRef} key={currentPost.id} src={currentPost.video} className="absolute inset-0 w-full h-full object-cover pointer-events-none" autoPlay loop playsInline />
                 
-                <div className="absolute top-4 left-0 right-0 flex justify-center items-center px-6 z-20">
-                  <span className="text-[10px] text-white/60 uppercase">Swipe vertical / Droite</span>
-                </div>
-
                 <div className="absolute right-4 bottom-20 flex flex-col items-center gap-4 z-30" onClick={(e) => e.stopPropagation()}>
-                  <button onClick={(e) => { e.stopPropagation(); setViewingCreator(currentPost); }} className="w-12 h-12 rounded-full border-2 border-[#ff3b96] bg-purple-900 flex items-center justify-center text-xl font-bold">👤</button>
                   <button onClick={(e) => handleLike(currentPost.id, e)} className="flex flex-col items-center">
                     <div className={`w-11 h-11 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border text-lg ${likedPosts[currentPost.id] ? 'border-[#ff3b96] text-[#ff3b96]' : 'border-white/30 text-white'}`}>♥</div>
                     <span className="text-xs mt-1 font-bold text-white">{likeCounts[currentPost.id]}</span>
@@ -268,36 +222,22 @@
               <div className="h-full w-full p-6 bg-[#0b0719] space-y-6 overflow-y-auto">
                 <div className="text-center space-y-3 mt-6">
                   <div className="w-24 h-24 mx-auto rounded-full bg-purple-900 flex items-center justify-center text-3xl">👾</div>
-                  {isEditingProfile ? (
-                    <div className="space-y-2 max-w-xs mx-auto">
-                      <input type="text" value={userName} onChange={(e) => setUserName(e.target.value)} className="bg-black/60 border border-[#ff3b96] rounded-xl px-3 py-1.5 text-center w-full text-white font-bold" />
-                      <input type="text" value={userTag} onChange={(e) => setUserTag(e.target.value)} className="bg-black/60 border border-cyan-400 rounded-xl px-3 py-1.5 text-center w-full text-cyan-400 text-xs" />
-                      <input type="text" value={userBio} onChange={(e) => setUserBio(e.target.value)} className="bg-black/60 border border-purple-500 rounded-xl px-3 py-1.5 text-center w-full text-gray-300 text-xs" />
-                    </div>
-                  ) : (
-                    <div>
-                      <h2 className="text-2xl font-bold">{userName}</h2>
-                      <p className="text-sm text-cyan-400">{userTag}</p>
-                      <p className="text-xs text-gray-400 mt-1">{userBio}</p>
-                    </div>
-                  )}
+                  <h2 className="text-2xl font-bold">{userName}</h2>
+                  <p className="text-sm text-cyan-400">{userTag}</p>
                 </div>
-                <button onClick={() => setIsEditingProfile(!isEditingProfile)} className="w-full py-3 rounded-xl bg-gradient-to-r from-[#ff3b96] to-purple-600 font-semibold">
-                  {isEditingProfile ? "Enregistrer" : "Éditer le profil"}
-                </button>
               </div>
             )}
           </div>
 
           <div className="absolute bottom-0 left-0 right-0 h-16 bg-[#0b0719] border-t border-white/10 flex justify-around items-center z-40">
-            <button onClick={(e) => { e.stopPropagation(); setViewingCreator(null); setActiveTab('feed'); }} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'feed' && !viewingCreator ? 'text-[#ff3b96] font-bold' : 'text-gray-400'}`}>
+            <button onClick={() => setActiveTab('feed')} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'feed' ? 'text-[#ff3b96] font-bold' : 'text-gray-400'}`}>
               <span className="text-xl">🏠</span>
               <span className="text-[10px]">Accueil</span>
             </button>
             <div className="flex items-center justify-center w-full h-full">
-              <button onClick={(e) => { e.stopPropagation(); setShowUploadModal(true); }} className="w-12 h-9 rounded-xl bg-gradient-to-r from-[#ff3b96] to-cyan-400 text-white font-extrabold text-xl shadow-lg">+</button>
+              <button onClick={() => setShowUploadModal(true)} className="w-12 h-9 rounded-xl bg-gradient-to-r from-[#ff3b96] to-cyan-400 text-white font-extrabold text-xl shadow-lg">+</button>
             </div>
-            <button onClick={(e) => { e.stopPropagation(); setViewingCreator(null); setActiveTab('profile'); }} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'profile' ? 'text-cyan-400 font-bold' : 'text-gray-400'}`}>
+            <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'profile' ? 'text-cyan-400 font-bold' : 'text-gray-400'}`}>
               <span className="text-xl">👤</span>
               <span className="text-[10px]">Profil</span>
             </button>
