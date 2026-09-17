@@ -157,7 +157,7 @@
         return () => clearInterval(interval);
       }, []);
 
-      // Gestion propre de la lecture (pause si modal d'upload ouvert, profil ou autre onglet)
+      // Gestion fluide du changement de vidéo ou d'onglet
       useEffect(() => {
         if (!showSplash && videoRef.current) {
           if (viewingCreator || activeTab !== 'feed' || showUploadModal) {
@@ -165,7 +165,6 @@
             setIsPlaying(false);
           } else {
             videoRef.current.muted = isMuted;
-            videoRef.current.currentTime = 0;
             setIsPlaying(true);
             const playPromise = videoRef.current.play();
             if (playPromise !== undefined) {
