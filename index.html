@@ -1,1055 +1,435 @@
-import React, { useState, useEffect, useRef } from 'react';
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ClipClap - Le futur du divertissement</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel pour JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body { background-color: #000; margin: 0; padding: 0; overflow: hidden; }
+    /* Cache les barres de défilement mais garde le scroll */
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
 
-export default function ClipClapApp() {
-  const [showSplash, setShowSplash] = useState(true);
-  const [progress, setProgress] = useState(0);
-  const [activeTab, setActiveTab] = useState('feed'); // 'feed', 'discover', 'inbox', 'profile'
-  const [feedTab, setFeedTab] = useState('foryou'); // 'following', 'foryou'
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
-  const [showPlayIcon, setShowPlayIcon] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  
-  // États d'interactions
-  const [likedPosts, setLikedPosts] = useState({});
-  const [likeCounts, setLikeCounts] = useState({ 1: 1240, 2: 8520, 3: 410, 4: 932 });
-  const [savedPosts, setSavedPosts] = useState({});
-  const [savedCounts, setSavedCounts] = useState({ 1: 340, 2: 1200, 3: 85, 4: 412 });
-  const [following, setFollowing] = useState({});
-  const [creatorFollowers, setCreatorFollowers] = useState({});
-  
-  // Modals & Navigation secondaire
-  const [viewingCreator, setViewingCreator] = useState(null);
-  const [showCommentsModal, setShowCommentsModal] = useState(false);
-  const [newCommentText, setNewCommentText] = useState('');
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [newCaption, setNewCaption] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
 
-  // Profil utilisateur
-  const [userName, setUserName] = useState("Alexandre");
-  const [userTag, setUserTag] = useState("@alex_dev");
-  const [userBio, setUserBio] = useState("Créateur de contenu & passionné de tech 🚀 | ClipClap Creator");
-  const [userFollowingCount, setUserFollowingCount] = useState(142);
-  const [userFollowersCount, setUserFollowersCount] = useState(1280);
-  const [userLikesCount, setUserLikesCount] = useState("14.5K");
-
-  // Messagerie
-  const [activeChat, setActiveChat] = useState(null);
-  const [newMessageText, setNewMessageText] = useState('');
-  const [chatConversations, setChatConversations] = useState([
-    {
-      id: 1,
-      user: "@LinaNeon",
-      lastMsg: "Super ta dernière vidéo ! 🔥",
-      time: "Il y a 10 min",
-      unread: true,
-      messages: [
-        { sender: "@LinaNeon", text: "Salut ! J'adore ton contenu." },
-        { sender: "@alex_dev", text: "Merci beaucoup Lina !" },
-        { sender: "@LinaNeon", text: "Super ta dernière vidéo ! 🔥" }
-      ]
-    },
-    {
-      id: 2,
-      user: "@DJ_Vortex",
-      lastMsg: "On se fait une collab bientôt ?",
-      time: "Il y a 2h",
-      unread: false,
-      messages: [
-        { sender: "@DJ_Vortex", text: "On se fait une collab bientôt ?" }
-      ]
-    }
-  ]);
-
-  // Liste initiale des posts
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      user: "@LinaNeon",
-      authorId: "@LinaNeon",
-      desc: "Ambiance néon cyberpunk incroyable ce soir ! 🔥 #cyberpunk #neon #vibes",
-      video: "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-lights-41656-large.neon",
-      music: "Original Sound - LinaNeon",
-      likes: 1240,
-      comments: 42,
-      views: "12.4K",
-      followers: "45.2K",
-      totalLikes: "180K",
-      followingCount: 88,
-      commentsList: [
-        { id: 1, user: "@CyberSam", text: "Tellement stylé !", time: "Il y a 5 min" },
-        { id: 2, user: "@PixelQueen", text: "Quel filtre tu as utilisé ?", time: "Il y a 1h" }
-      ]
-    },
-    {
-      id: 2,
-      user: "@DJ_Vortex",
-      authorId: "@DJ_Vortex",
-      desc: "Le set de la folie hier au club ! Qui était là ? 🎧✨ #dj #party #music",
-      video: "https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-party-43093-large.neon",
-      music: "Electro Bass Boost - DJ Vortex",
-      likes: 8520,
-      comments: 310,
-      views: "85K",
-      followers: "120K",
-      totalLikes: "1.2M",
-      followingCount: 210,
-      commentsList: [
-        { id: 3, user: "@BeatMaker", text: "Le drop est insane 🔊", time: "Il y a 30 min" }
-      ]
-    },
-    {
-      id: 3,
-      user: "@CodeMaster",
-      authorId: "@CodeMaster",
-      desc: "Astuce secrète pour booster ton app en 2026 📱🚀 #tech #dev #tips",
-      video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-a-green-screen-42358-large.neon",
-      music: "Lo-Fi Chill Beat - CodeMaster",
-      likes: 410,
-      comments: 12,
-      views: "4.1K",
-      followers: "12.5K",
-      totalLikes: "45K",
-      followingCount: 45,
-      commentsList: []
-    }
-  ]);
-
-  const videoRef = useRef(null);
-
-  // Simulation du Splash Screen
-  useEffect(() => {
-    if (showSplash) {
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setTimeout(() => setShowSplash(false), 400);
-            return 100;
-          }
-          return prev + 12;
-        });
-      }, 100);
-      return () => clearInterval(interval);
-    }
-  }, [showSplash]);
-
-  const playSound = (type) => {
-    // Simulation audio
-  };
-
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 2500);
-  };
-  const displayedPosts = feedTab === 'following' 
-    ? posts.filter(p => following[p.authorId || p.user]) 
-    : posts;
-
-  useEffect(() => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.play().catch(() => {});
-      } else {
-        videoRef.current.pause();
-      }
-    }
-  }, [currentIndex, isPlaying, feedTab]);
-
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
-    setShowPlayIcon(true);
-    setTimeout(() => setShowPlayIcon(false), 800);
-  };
-
-  const handleTouchStart = (e) => {
-    window.touchStartY = e.touches[0].clientY;
-  };
-
-  const handleTouchEnd = (e) => {
-    if (!window.touchStartY) return;
-    const touchEndY = e.changedTouches[0].clientY;
-    const diff = window.touchStartY - touchEndY;
-
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) {
-        // Swipe vers le haut (vidéo suivante)
-        if (currentIndex < displayedPosts.length - 1) {
-          setCurrentIndex(currentIndex + 1);
-          setIsPlaying(true);
-          playSound('swipe');
-        }
-      } else {
-        // Swipe vers le bas (vidéo précédente)
-        if (currentIndex > 0) {
-          setCurrentIndex(currentIndex - 1);
-          setIsPlaying(true);
-          playSound('swipe');
-        }
-      }
-    }
-    window.touchStartY = null;
-  };
-
-  const handleProfileTouchStart = (e) => {
-    window.profileTouchStartY = e.touches[0].clientY;
-  };
-
-  const handleProfileTouchEnd = (e) => {
-    if (!window.profileTouchStartY) return;
-    const diff = e.changedTouches[0].clientY - window.profileTouchStartY;
-    if (diff > 100) {
-      setViewingCreator(null);
-    }
-    window.profileTouchStartY = null;
-  };
-
-  const handleLike = (postId, e) => {
-    e.stopPropagation();
-    playSound('like');
-    const isLiked = !!likedPosts[postId];
-    setLikedPosts({ ...likedPosts, [postId]: !isLiked });
-    setLikeCounts({
-      ...likeCounts,
-      [postId]: isLiked ? likeCounts[postId] - 1 : likeCounts[postId] + 1
-    });
-  };
-
-  const handleSave = (postId, e) => {
-    e.stopPropagation();
-    playSound('save');
-    const isSaved = !!savedPosts[postId];
-    setSavedPosts({ ...savedPosts, [postId]: !isSaved });
-    setSavedCounts({
-      ...savedCounts,
-      [postId]: isSaved ? savedCounts[postId] - 1 : savedCounts[postId] + 1
-    });
-    showToast(isSaved ? "Retiré des favoris" : "Ajouté aux favoris ⭐");
-  };
-
-  const handleFollow = (author, e) => {
-    if (e) e.stopPropagation();
-    playSound('follow');
-    const isFollowing = !!following[author];
-    setFollowing({ ...following, [author]: !isFollowing });
-    
-    // Mettre à jour les abonnés du créateur
-    const currentFollowers = creatorFollowers[author] || 1200;
-    setCreatorFollowers({
-      ...creatorFollowers,
-      [author]: isFollowing ? currentFollowers - 1 : currentFollowers + 1
-    });
-
-    showToast(isFollowing ? `Vous ne suivez plus ${author}` : `Vous suivez maintenant ${author} 🎉`);
-  };
-
-  const handleShare = (e) => {
-    e.stopPropagation();
-    playSound('click');
-    if (navigator.share) {
-      navigator.share({
-        title: 'ClipClap Vidéo',
-        text: 'Regarde cette vidéo incroyable sur ClipClap !',
-        url: window.location.href,
-      }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      showToast("Lien copié dans le presse-papier ! 🔗");
-    }
-  };
-
-  const handleAddComment = (e) => {
-    e.preventDefault();
-    if (!newCommentText.trim()) return;
-    playSound('click');
-    
-    const currentPost = displayedPosts[currentIndex];
-    const updatedPosts = posts.map(p => {
-      if (p.id === currentPost.id) {
-        const newCommentObj = {
-          id: Date.now(),
-          user: userTag,
-          text: newCommentText,
-          time: "À l'instant"
-        };
-        return {
-          ...p,
-          commentsList: [...(p.commentsList || []), newCommentObj]
-        };
-      }
-      return p;
-    });
-
-    setPosts(updatedPosts);
-    setNewCommentText('');
-  };
-
-  const handlePublish = (e) => {
-    e.preventDefault();
-    if (!selectedFile) {
-      showToast("Veuillez sélectionner une vidéo !");
-      return;
-    }
-
-    const videoUrl = URL.createObjectURL(selectedFile);
-    const newPostObj = {
-      id: Date.now(),
-      user: userTag,
-      authorId: userTag,
-      desc: newCaption || "Ma super vidéo sur ClipClap 🚀 #clipclap",
-      video: videoUrl,
-      music: `Original Sound - ${userTag}`,
-      likes: 1,
-      comments: 0,
-      views: "1",
-      followers: userFollowersCount,
-      totalLikes: userLikesCount,
-      followingCount: userFollowingCount,
-      commentsList: []
-    };
-
-    setPosts([newPostObj, ...posts]);
-    setSelectedFile(null);
-    setNewCaption('');
-    setShowUploadModal(false);
-    showToast("Vidéo publiée avec succès ! 🚀");
-  };
-
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (!newMessageText.trim() || !activeChat) return;
-    playSound('click');
-
-    const updatedConversations = chatConversations.map(c => {
-      if (c.id === activeChat.id) {
-        const updatedMsgs = [...c.messages, { sender: userTag, text: newMessageText }];
-        return { ...c, messages: updatedMsgs, lastMsg: newMessageText, time: "À l'instant" };
-      }
-      return c;
-    });
-
-    setChatConversations(updatedConversations);
-    setActiveChat({
-      ...activeChat,
-      messages: [...activeChat.messages, { sender: userTag, text: newMessageText }]
-    });
-    setNewMessageText('');
-  };
-
-  return (
-    <div className="h-full w-full bg-[#0b0719] flex flex-col relative overflow-hidden text-white font-sans select-none">
+    function ClipClapApp() {
+      const [showSplash, setShowSplash] = useState(true);
+      const [progress, setProgress] = useState(0);
+      const [activeTab, setActiveTab] = useState('feed');
+      const [feedTab, setFeedTab] = useState('foryou');
+      const [currentIndex, setCurrentIndex] = useState(0);
+      const [isPlaying, setIsPlaying] = useState(true);
+      const [isMuted, setIsMuted] = useState(false);
+      const [showPlayIcon, setShowPlayIcon] = useState(false);
+      const [toastMessage, setToastMessage] = useState('');
       
-      {/* ========================================================= */}
-      {/* SPLASH SCREEN MIS À JOUR (Design futuriste validé)       */}
-      {/* ========================================================= */}
-      {showSplash && (
-        <div className="fixed inset-0 bg-[#070412] z-50 flex flex-col items-center justify-between p-8 text-center overflow-hidden">
-          <div className="absolute -top-20 -left-20 w-72 h-72 bg-purple-600/30 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
-          <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-pink-600/30 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDelay: '1s' }}></div>
+      const [likedPosts, setLikedPosts] = useState({});
+      const [likeCounts, setLikeCounts] = useState({ 1: 1240, 2: 8520, 3: 410 });
+      const [savedPosts, setSavedPosts] = useState({});
+      const [savedCounts, setSavedCounts] = useState({ 1: 340, 2: 1200, 3: 85 });
+      const [following, setFollowing] = useState({});
+      const [creatorFollowers, setCreatorFollowers] = useState({});
+      
+      const [viewingCreator, setViewingCreator] = useState(null);
+      const [showCommentsModal, setShowCommentsModal] = useState(false);
+      const [newCommentText, setNewCommentText] = useState('');
+      const [showUploadModal, setShowUploadModal] = useState(false);
+      const [selectedFile, setSelectedFile] = useState(null);
+      const [newCaption, setNewCaption] = useState('');
+      const [searchQuery, setSearchQuery] = useState('');
+      const [isEditingProfile, setIsEditingProfile] = useState(false);
 
-          <div className="pt-8 z-10">
-            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-white/10 text-pink-300 border border-white/15 backdrop-blur-md shadow-lg">
-              <span className="w-2 h-2 rounded-full bg-pink-500 animate-ping"></span>
-              Édition 2026 • Le futur du divertissement
-            </span>
-          </div>
+      const [userName, setUserName] = useState("Alexandre");
+      const [userTag, setUserTag] = useState("@alex_dev");
+      const [userBio, setUserBio] = useState("Créateur de contenu & passionné de tech 🚀 | ClipClap Creator");
+      const [userFollowingCount, setUserFollowingCount] = useState(142);
+      const [userFollowersCount, setUserFollowersCount] = useState(1280);
+      const [userLikesCount, setUserLikesCount] = useState("14.5K");
 
-          <div className="flex flex-col items-center z-10 my-auto">
-            <div className="relative mb-8">
-              <div className="absolute -inset-6 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 rounded-full blur-2xl opacity-60 animate-pulse"></div>
-              <div className="relative w-28 h-28 bg-gradient-to-tr from-purple-600 via-pink-500 to-amber-400 rounded-[2.5rem] flex items-center justify-center shadow-2xl border-2 border-white/30 transform hover:scale-105 transition-transform">
-                <svg className="w-14 h-14 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+      const [activeChat, setActiveChat] = useState(null);
+      const [newMessageText, setNewMessageText] = useState('');
+      const [chatConversations, setChatConversations] = useState([
+        {
+          id: 1,
+          user: "@LinaNeon",
+          lastMsg: "Super ta dernière vidéo ! 🔥",
+          time: "Il y a 10 min",
+          unread: true,
+          messages: [
+            { sender: "@LinaNeon", text: "Salut ! J'adore ton contenu." },
+            { sender: "@alex_dev", text: "Merci beaucoup Lina !" },
+            { sender: "@LinaNeon", text: "Super ta dernière vidéo ! 🔥" }
+          ]
+        }
+      ]);
+
+      const [posts, setPosts] = useState([
+        {
+          id: 1,
+          user: "@LinaNeon",
+          authorId: "@LinaNeon",
+          desc: "Ambiance néon cyberpunk incroyable ce soir ! 🔥 #cyberpunk #neon #vibes",
+          video: "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-lights-41656-large.neon",
+          music: "Original Sound - LinaNeon",
+          likes: 1240,
+          comments: 42,
+          views: "12.4K",
+          followers: "45.2K",
+          totalLikes: "180K",
+          followingCount: 88,
+          commentsList: [
+            { id: 1, user: "@CyberSam", text: "Tellement stylé !", time: "Il y a 5 min" }
+          ]
+        },
+        {
+          id: 2,
+          user: "@DJ_Vortex",
+          authorId: "@DJ_Vortex",
+          desc: "Le set de la folie hier au club ! Qui était là ? 🎧✨ #dj #party #music",
+          video: "https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-party-43093-large.neon",
+          music: "Electro Bass Boost - DJ Vortex",
+          likes: 8520,
+          comments: 310,
+          views: "85K",
+          followers: "120K",
+          totalLikes: "1.2M",
+          followingCount: 210,
+          commentsList: []
+        },
+        {
+          id: 3,
+          user: "@CodeMaster",
+          authorId: "@CodeMaster",
+          desc: "Astuce secrète pour booster ton app en 2026 📱🚀 #tech #dev #tips",
+          video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-a-green-screen-42358-large.neon",
+          music: "Lo-Fi Chill Beat - CodeMaster",
+          likes: 410,
+          comments: 12,
+          views: "4.1K",
+          followers: "12.5K",
+          totalLikes: "45K",
+          followingCount: 45,
+          commentsList: []
+        }
+      ]);
+
+      const videoRef = useRef(null);
+
+      useEffect(() => {
+        if (showSplash) {
+          const interval = setInterval(() => {
+            setProgress((prev) => {
+              if (prev >= 100) {
+                clearInterval(interval);
+                setTimeout(() => setShowSplash(false), 400);
+                return 100;
+              }
+              return prev + 15;
+            });
+          }, 100);
+          return () => clearInterval(interval);
+        }
+      }, [showSplash]);
+
+      const displayedPosts = feedTab === 'following' 
+        ? posts.filter(p => following[p.authorId || p.user]) 
+        : posts;
+
+      useEffect(() => {
+        if (videoRef.current) {
+          if (isPlaying) {
+            videoRef.current.play().catch(() => {});
+          } else {
+            videoRef.current.pause();
+          }
+        }
+      }, [currentIndex, isPlaying, feedTab]);
+
+      const togglePlayPause = () => {
+        setIsPlaying(!isPlaying);
+        setShowPlayIcon(true);
+        setTimeout(() => setShowPlayIcon(false), 800);
+      };
+
+      const handleTouchStart = (e) => {
+        window.touchStartY = e.touches[0].clientY;
+      };
+
+      const handleTouchEnd = (e) => {
+        if (!window.touchStartY) return;
+        const diff = window.touchStartY - e.changedTouches[0].clientY;
+        if (Math.abs(diff) > 50) {
+          if (diff > 0 && currentIndex < displayedPosts.length - 1) {
+            setCurrentIndex(currentIndex + 1);
+            setIsPlaying(true);
+          } else if (diff < 0 && currentIndex > 0) {
+            setCurrentIndex(currentIndex - 1);
+            setIsPlaying(true);
+          }
+        }
+        window.touchStartY = null;
+      };
+
+      const showToast = (msg) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(''), 2500);
+      };
+
+      const handleLike = (postId, e) => {
+        e.stopPropagation();
+        const isLiked = !!likedPosts[postId];
+        setLikedPosts({ ...likedPosts, [postId]: !isLiked });
+        setLikeCounts({ ...likeCounts, [postId]: isLiked ? likeCounts[postId] - 1 : likeCounts[postId] + 1 });
+      };
+
+      const handleSave = (postId, e) => {
+        e.stopPropagation();
+        const isSaved = !!savedPosts[postId];
+        setSavedPosts({ ...savedPosts, [postId]: !isSaved });
+        showToast(isSaved ? "Retiré des favoris" : "Ajouté aux favoris ⭐");
+      };
+
+      const handleFollow = (author, e) => {
+        if (e) e.stopPropagation();
+        const isFollowing = !!following[author];
+        setFollowing({ ...following, [author]: !isFollowing });
+        showToast(isFollowing ? `Tu ne suis plus ${author}` : `Tu suis maintenant ${author} 🎉`);
+      };
+
+      const handleShare = (e) => {
+        e.stopPropagation();
+        if (navigator.share) {
+          navigator.share({ title: 'ClipClap', url: window.location.href }).catch(() => {});
+        } else {
+          navigator.clipboard.writeText(window.location.href);
+          showToast("Lien copié ! 🔗");
+        }
+      };
+
+      const handleAddComment = (e) => {
+        e.preventDefault();
+        if (!newCommentText.trim()) return;
+        const currentPost = displayedPosts[currentIndex];
+        const updatedPosts = posts.map(p => {
+          if (p.id === currentPost.id) {
+            return {
+              ...p,
+              commentsList: [...(p.commentsList || []), { id: Date.now(), user: userTag, text: newCommentText, time: "À l'instant" }]
+            };
+          }
+          return p;
+        });
+        setPosts(updatedPosts);
+        setNewCommentText('');
+      };
+
+      return (
+        <div className="relative w-full h-screen bg-[#0b0719] text-white font-sans overflow-hidden flex flex-col justify-between select-none">
+          
+          {/* SPLASH SCREEN */}
+          {showSplash && (
+            <div className="fixed inset-0 bg-[#070412] z-50 flex flex-col items-center justify-between p-8 text-center overflow-hidden">
+              <div className="absolute -top-20 -left-20 w-72 h-72 bg-purple-600/30 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+              <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-pink-600/30 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+
+              <div className="pt-8 z-10">
+                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-white/10 text-pink-300 border border-white/15 backdrop-blur-md shadow-lg">
+                  <span className="w-2 h-2 rounded-full bg-pink-500 animate-ping"></span>
+                  Édition 2026 • Le futur du divertissement
+                </span>
+              </div>
+
+              <div className="flex flex-col items-center z-10 my-auto">
+                <div className="relative mb-8">
+                  <div className="absolute -inset-6 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 rounded-full blur-2xl opacity-60 animate-pulse"></div>
+                  <div className="relative w-28 h-28 bg-gradient-to-tr from-purple-600 via-pink-500 to-amber-400 rounded-[2.5rem] flex items-center justify-center shadow-2xl border-2 border-white/30">
+                    <svg className="w-14 h-14 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+
+                <h1 className="text-5xl font-black tracking-wider bg-gradient-to-r from-white via-pink-200 to-purple-300 bg-clip-text text-transparent mb-3">
+                  ClipClap
+                </h1>
+                <p className="text-purple-200/90 text-sm font-medium max-w-xs leading-relaxed mb-8">
+                  Swipe, partage et vibre au rythme des meilleures créations de la communauté.
+                </p>
+
+                <div className="grid grid-cols-3 gap-3 w-full max-w-xs mb-6">
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col items-center">
+                    <span className="text-pink-400 font-black text-base">HD</span>
+                    <span className="text-[10px] text-white/60 font-semibold uppercase">Flux Fluide</span>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col items-center">
+                    <span className="text-purple-400 font-black text-base">100%</span>
+                    <span className="text-[10px] text-white/60 font-semibold uppercase">Interactif</span>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col items-center">
+                    <span className="text-amber-400 font-black text-base">VIP</span>
+                    <span className="text-[10px] text-white/60 font-semibold uppercase">Créateurs</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full max-w-xs pb-6 z-10 flex flex-col items-center gap-3">
+                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden border border-white/10 p-0.5">
+                  <div className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-amber-400 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                </div>
+                <span className="text-[11px] text-purple-300/70 font-semibold">
+                  {progress < 100 ? "Préparation de ton expérience..." : "C'est parti ! 🚀"}
+                </span>
               </div>
             </div>
+          )}
 
-            <h1 className="text-5xl font-black tracking-wider bg-gradient-to-r from-white via-pink-200 to-purple-300 bg-clip-text text-transparent mb-3 drop-shadow-sm">
-              ClipClap
-            </h1>
-            <p className="text-purple-200/90 text-sm font-medium max-w-xs leading-relaxed tracking-wide mb-8">
-              Swipe, partage et vibre au rythme des meilleures créations de la communauté.
-            </p>
-
-            <div className="grid grid-cols-3 gap-3 w-full max-w-xs mb-6">
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-3 backdrop-blur-sm flex flex-col items-center">
-                <span className="text-pink-400 font-black text-base mb-0.5">HD</span>
-                <span className="text-[10px] text-white/60 font-semibold uppercase">Flux Fluide</span>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-3 backdrop-blur-sm flex flex-col items-center">
-                <span className="text-purple-400 font-black text-base mb-0.5">100%</span>
-                <span className="text-[10px] text-white/60 font-semibold uppercase">Interactif</span>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-3 backdrop-blur-sm flex flex-col items-center">
-                <span className="text-amber-400 font-black text-base mb-0.5">VIP</span>
-                <span className="text-[10px] text-white/60 font-semibold uppercase">Créateurs</span>
-              </div>
+          {toastMessage && (
+            <div className="absolute top-16 left-1/2 transform -translate-x-1/2 bg-black/80 border border-white/20 text-white text-xs font-bold px-4 py-2 rounded-xl backdrop-blur-md z-50 shadow-2xl">
+              {toastMessage}
             </div>
-          </div>
+          )}
 
-          <div className="w-full max-w-xs pb-6 z-10 flex flex-col items-center gap-3">
-            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden backdrop-blur border border-white/10 p-0.5">
-              <div className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-amber-400 transition-all duration-300 rounded-full shadow-lg" style={{ width: `${progress}%` }}></div>
-            </div>
-            <span className="text-[11px] text-purple-300/70 font-semibold tracking-wider">
-              {progress < 100 ? "Préparation de ton expérience..." : "C'est parti ! 🚀"}
-            </span>
-          </div>
-        </div>
-      )}
-      {toastMessage && (
-        <div className="absolute top-16 left-1/2 transform -translate-x-1/2 bg-black/80 border border-white/20 text-white text-xs font-bold px-4 py-2 rounded-xl backdrop-blur-md z-50 shadow-2xl animate-bounce">
-          {toastMessage}
-        </div>
-      )}
-
-      <div className="flex-1 relative overflow-hidden">
-        {activeTab === 'feed' && (
-          <div 
-            className="absolute inset-0 bg-neutral-950 flex flex-col justify-between overflow-hidden"
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-          >
-            {displayedPosts.length > 0 ? (
+          {/* CONTENU PRINCIPAL */}
+          <div className="flex-1 relative overflow-hidden">
+            {activeTab === 'feed' && (
               <div 
-                className="absolute inset-0 cursor-pointer"
-                onClick={togglePlayPause}
+                className="absolute inset-0 bg-neutral-950 flex flex-col justify-between overflow-hidden"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
               >
-                <video 
-                  ref={videoRef}
-                  src={displayedPosts[currentIndex]?.video} 
-                  className="w-full h-full object-cover"
-                  loop 
-                  playsInline 
-                  muted={isMuted}
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80 pointer-events-none"></div>
+                {displayedPosts.length > 0 ? (
+                  <div className="absolute inset-0 cursor-pointer" onClick={togglePlayPause}>
+                    <video 
+                      ref={videoRef}
+                      src={displayedPosts[currentIndex]?.video} 
+                      className="w-full h-full object-cover"
+                      loop 
+                      playsInline 
+                      muted={isMuted}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80 pointer-events-none"></div>
 
-                {showPlayIcon && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-16 h-16 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white text-2xl shadow-2xl border border-white/20 animate-ping">
-                      {isPlaying ? '▶' : '⏸'}
+                    {showPlayIcon && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-16 h-16 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white text-2xl border border-white/20 animate-ping">
+                          {isPlaying ? '▶' : '⏸'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white/70">
+                    <p className="text-sm font-bold mb-2">Aucune vidéo dans "Abonnements"</p>
+                    <button onClick={() => setFeedTab('foryou')} className="bg-gradient-to-r from-pink-500 to-purple-600 px-6 py-2.5 rounded-xl text-xs font-bold text-white">
+                      Voir le flux "Pour toi"
+                    </button>
+                  </div>
+                )}
+
+                {/* EN-TÊTE ABONNEMENTS / POUR TOI REMONTÉ */}
+                <div className="absolute top-0 left-0 right-0 z-30 flex justify-center items-center gap-6 pt-12 pb-3 pointer-events-auto">
+                  <button 
+                    onClick={() => { setFeedTab('following'); setCurrentIndex(0); }}
+                    className={`text-sm font-extrabold tracking-wide transition-all drop-shadow-md ${feedTab === 'following' ? 'text-white border-b-2 border-white pb-1 scale-105' : 'text-white/60'}`}
+                  >
+                    Abonnements
+                  </button>
+                  <span className="text-white/30 font-light">|</span>
+                  <button 
+                    onClick={() => { setFeedTab('foryou'); setCurrentIndex(0); }}
+                    className={`text-sm font-extrabold tracking-wide transition-all drop-shadow-md ${feedTab === 'foryou' ? 'text-white border-b-2 border-white pb-1 scale-105' : 'text-white/60'}`}
+                  >
+                    Pour toi
+                  </button>
+                </div>
+
+                {/* BOUTONS DROITE */}
+                {displayedPosts.length > 0 && (
+                  <div className="absolute right-3 bottom-20 z-30 flex flex-col items-center gap-5">
+                    <div 
+                      onClick={() => setViewingCreator(displayedPosts[currentIndex])}
+                      className="relative w-11 h-11 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 p-0.5 cursor-pointer shadow-xl border border-white/20 flex items-center justify-center font-bold text-xs"
+                    >
+                      {displayedPosts[currentIndex].user.substring(1, 3).toUpperCase()}
+                    </div>
+
+                    <div className="flex flex-col items-center gap-1">
+                      <button onClick={(e) => handleLike(displayedPosts[currentIndex].id, e)} className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white shadow-xl">
+                        ❤️
+                      </button>
+                      <span className="text-[11px] font-extrabold">{likeCounts[displayedPosts[currentIndex].id] || displayedPosts[currentIndex].likes}</span>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-1">
+                      <button onClick={() => setShowCommentsModal(true)} className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white shadow-xl">
+                        💬
+                      </button>
+                      <span className="text-[11px] font-extrabold">{displayedPosts[currentIndex].commentsList?.length || 0}</span>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-1">
+                      <button onClick={(e) => handleSave(displayedPosts[currentIndex].id, e)} className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white shadow-xl">
+                        ⭐
+                      </button>
+                      <span className="text-[11px] font-extrabold">340</span>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-1">
+                      <button onClick={handleShare} className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white shadow-xl">
+                        ↗️
+                      </button>
+                      <span className="text-[11px] font-extrabold">Partager</span>
                     </div>
                   </div>
                 )}
-              </div>
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white/70">
-                <p className="text-sm font-bold mb-2">Aucune vidéo dans "Abonnements"</p>
-                <p className="text-xs text-white/40 mb-4">Abonne-toi à des créateurs pour voir leurs vidéos ici !</p>
-                <button 
-                  onClick={() => setFeedTab('foryou')} 
-                  className="bg-gradient-to-r from-pink-500 to-purple-600 px-6 py-2.5 rounded-xl text-xs font-bold text-white shadow-lg"
-                >
-                  Découvrir le flux "Pour toi"
-                </button>
-              </div>
-            )}
 
-            {/* HEADER - ABONNEMENTS / POUR TOI (Remonté plus haut à pt-12 pour ne pas cacher la vidéo) */}
-            <div className="absolute top-0 left-0 right-0 z-30 flex justify-center items-center gap-6 pt-12 pb-3 pointer-events-auto">
-              <button 
-                onClick={() => { setFeedTab('following'); setCurrentIndex(0); playSound('click'); }}
-                className={`text-sm font-extrabold tracking-wide transition-all drop-shadow-md ${feedTab === 'following' ? 'text-white border-b-2 border-white pb-1 scale-105' : 'text-white/60 hover:text-white/90'}`}
-              >
-                Abonnements
-              </button>
-              <span className="text-white/30 font-light">|</span>
-              <button 
-                onClick={() => { setFeedTab('foryou'); setCurrentIndex(0); playSound('click'); }}
-                className={`text-sm font-extrabold tracking-wide transition-all drop-shadow-md ${feedTab === 'foryou' ? 'text-white border-b-2 border-white pb-1 scale-105' : 'text-white/60 hover:text-white/90'}`}
-              >
-                Pour toi
-              </button>
-            </div>
-
-            {displayedPosts.length > 0 && (
-              <div className="absolute right-3 bottom-20 z-30 flex flex-col items-center gap-5">
-                <div 
-                  onClick={() => {
-                    const post = displayedPosts[currentIndex];
-                    const targetUser = post.authorId || post.user;
-                    const fullCreatorData = {
-                      ...post,
-                      userPosts: posts.filter(p => (p.authorId || p.user) === targetUser)
-                    };
-                    setViewingCreator(fullCreatorData);
-                    playSound('click');
-                  }}
-                  className="relative w-11 h-11 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 p-0.5 cursor-pointer shadow-xl border border-white/20"
-                >
-                  <div className="w-full h-full rounded-full bg-black flex items-center justify-center font-bold text-xs text-white uppercase overflow-hidden">
-                    {(displayedPosts[currentIndex].authorId || displayedPosts[currentIndex].user).substring(1, 3)}
+                {/* INFOS VIDÉO BAS GAUCHE */}
+                {displayedPosts.length > 0 && (
+                  <div className="absolute left-4 bottom-20 z-30 max-w-[70%] flex flex-col gap-2 pointer-events-none">
+                    <span className="font-extrabold text-sm text-white drop-shadow-md pointer-events-auto cursor-pointer">
+                      {displayedPosts[currentIndex].user}
+                    </span>
+                    <p className="text-xs text-white/90 drop-shadow line-clamp-2 leading-snug">
+                      {displayedPosts[currentIndex].desc}
+                    </p>
                   </div>
-                  {!following[displayedPosts[currentIndex].authorId || displayedPosts[currentIndex].user] && (
-                    <button 
-                      onClick={(e) => handleFollow(displayedPosts[currentIndex].authorId || displayedPosts[currentIndex].user, e)}
-                      className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center text-white text-[12px] font-black shadow-md hover:scale-110 transition-transform"
-                    >
-                      +
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex flex-col items-center gap-1">
-                  <button 
-                    onClick={(e) => handleLike(displayedPosts[currentIndex].id, e)}
-                    className={`w-11 h-11 rounded-full backdrop-blur-md flex items-center justify-center transition-transform active:scale-90 shadow-xl border ${likedPosts[displayedPosts[currentIndex].id] ? 'bg-pink-500/30 border-pink-500/50 text-pink-400' : 'bg-black/40 border-white/10 text-white'}`}
-                  >
-                    <svg className={`w-6 h-6 ${likedPosts[displayedPosts[currentIndex].id] ? 'fill-current text-pink-500' : 'none'}`} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                    </svg>
-                  </button>
-                  <span className="text-[11px] font-extrabold text-white drop-shadow">
-                    {likeCounts[displayedPosts[currentIndex].id] || displayedPosts[currentIndex].likes}
-                  </span>
-                </div>
-
-                <div className="flex flex-col items-center gap-1">
-                  <button 
-                    onClick={() => { setShowCommentsModal(true); playSound('click'); }}
-                    className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-transform active:scale-90 shadow-xl"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                  </button>
-                  <span className="text-[11px] font-extrabold text-white drop-shadow">
-                    {displayedPosts[currentIndex].commentsList ? displayedPosts[currentIndex].commentsList.length : displayedPosts[currentIndex].comments}
-                  </span>
-                </div>
-
-                <div className="flex flex-col items-center gap-1">
-                  <button 
-                    onClick={(e) => handleSave(displayedPosts[currentIndex].id, e)}
-                    className={`w-11 h-11 rounded-full backdrop-blur-md flex items-center justify-center transition-transform active:scale-90 shadow-xl border ${savedPosts[displayedPosts[currentIndex].id] ? 'bg-amber-500/30 border-amber-500/50 text-amber-400' : 'bg-black/40 border-white/10 text-white'}`}
-                  >
-                    <svg className={`w-6 h-6 ${savedPosts[displayedPosts[currentIndex].id] ? 'fill-current text-amber-400' : 'none'}`} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                  </button>
-                  <span className="text-[11px] font-extrabold text-white drop-shadow">
-                    {savedCounts[displayedPosts[currentIndex].id] || 340}
-                  </span>
-                </div>
-
-                <div className="flex flex-col items-center gap-1">
-                  <button 
-                    onClick={handleShare}
-                    className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-transform active:scale-90 shadow-xl"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                    </svg>
-                  </button>
-                  <span className="text-[11px] font-extrabold text-white drop-shadow">Partager</span>
-                </div>
-              </div>
-            )}
-
-            {displayedPosts.length > 0 && (
-              <div className="absolute left-4 bottom-20 z-30 max-w-[70%] flex flex-col gap-2 pointer-events-none">
-                <span 
-                  onClick={() => {
-                    const post = displayedPosts[currentIndex];
-                    const targetUser = post.authorId || post.user;
-                    const fullCreatorData = {
-                      ...post,
-                      userPosts: posts.filter(p => (p.authorId || p.user) === targetUser)
-                    };
-                    setViewingCreator(fullCreatorData);
-                    playSound('click');
-                  }}
-                  className="font-extrabold text-sm text-white drop-shadow-md pointer-events-auto cursor-pointer hover:underline"
-                >
-                  {displayedPosts[currentIndex].authorId || displayedPosts[currentIndex].user}
-                </span>
-                <p className="text-xs text-white/90 drop-shadow line-clamp-2 leading-snug">
-                  {displayedPosts[currentIndex].desc}
-                </p>
-                <div className="flex items-center gap-2 text-xs text-purple-200/80">
-                  <svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                  </svg>
-                  <span className="truncate">{displayedPosts[currentIndex].music}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-            {activeTab === 'discover' && (
-              <div className="absolute inset-0 bg-[#0b0719] flex flex-col p-4 overflow-y-auto pb-24">
-                <div className="sticky top-0 bg-[#0b0719]/90 backdrop-blur-md pt-4 pb-3 z-20">
-                  <h1 className="text-xl font-extrabold mb-3 bg-gradient-to-r from-white via-pink-200 to-purple-300 bg-clip-text text-transparent">Découvrir</h1>
-                  <div className="relative">
-                    <svg className="absolute left-3.5 top-3 w-4 h-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input 
-                      type="text"
-                      placeholder="Rechercher des vidéos, hashtags, créateurs..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none focus:border-purple-500 transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  <h2 className="text-xs font-bold text-purple-300 uppercase tracking-wider mb-3">Tendances du moment</h2>
-                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-                    {["#neon", "#cyberpunk", "#dance", "#vibes", "#music", "#fyp", "#art"].map((tag, i) => (
-                      <button 
-                        key={i} 
-                        onClick={() => setSearchQuery(tag)}
-                        className="bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors"
-                      >
-                        {tag} 🔥
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  {posts
-                    .filter(p => p.desc.toLowerCase().includes(searchQuery.toLowerCase()) || p.user.toLowerCase().includes(searchQuery.toLowerCase()))
-                    .map((post, idx) => (
-                      <div 
-                        key={post.id || idx}
-                        onClick={() => {
-                          const originalIndex = displayedPosts.findIndex(p => p.id === post.id);
-                          if (originalIndex !== -1) {
-                            setCurrentIndex(originalIndex);
-                          } else {
-                            setFeedTab('foryou');
-                            setCurrentIndex(0);
-                          }
-                          setActiveTab('feed');
-                        }}
-                        className="relative aspect-[9/16] bg-neutral-900 rounded-2xl overflow-hidden cursor-pointer border border-white/10 group shadow-lg"
-                      >
-                        <video src={post.video} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs font-bold">
-                          <span className="truncate max-w-[100px]">{post.user}</span>
-                          <div className="flex items-center gap-1 text-pink-400">
-                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                            <span>{likeCounts[post.id] || post.likes}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'inbox' && (
-              <div className="absolute inset-0 bg-[#0b0719] flex flex-col p-4 overflow-y-auto pb-24">
-                <h1 className="text-xl font-extrabold mb-4 pt-2 bg-gradient-to-r from-white via-pink-200 to-purple-300 bg-clip-text text-transparent">Messages</h1>
-                <div className="flex flex-col gap-2">
-                  {chatConversations.map(conv => (
-                    <div 
-                      key={conv.id}
-                      onClick={() => { setActiveChat(conv); playSound('click'); }}
-                      className="flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 cursor-pointer transition-all"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center font-bold text-base shadow-md">
-                        {conv.user.substring(1, 3).toUpperCase()}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-center mb-1">
-                          <h2 className="font-bold text-sm truncate">{conv.user}</h2>
-                          <span className="text-[10px] text-white/40">{conv.time}</span>
-                        </div>
-                        <p className="text-xs text-white/70 truncate">{conv.lastMsg}</p>
-                      </div>
-                      {conv.unread && <div className="w-2.5 h-2.5 bg-pink-500 rounded-full shadow-lg"></div>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'profile' && (
-              <div className="absolute inset-0 bg-[#0b0719] flex flex-col overflow-y-auto pb-24">
-                <div className="relative pt-12 pb-6 px-4 bg-gradient-to-b from-purple-900/40 to-transparent border-b border-white/10">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center font-extrabold text-2xl shadow-2xl border-2 border-white/20">
-                        {userName.substring(0, 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <h1 className="text-lg font-extrabold">{userName}</h1>
-                        <p className="text-xs text-purple-300 font-semibold">{userTag}</p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => { setIsEditingProfile(true); playSound('click'); }}
-                      className="bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2 rounded-xl text-xs font-bold transition-all"
-                    >
-                      Modifier profil
-                    </button>
-                  </div>
-
-                  <p className="text-xs text-white/90 mb-4">{userBio}</p>
-
-                  <div className="flex justify-around py-3 bg-black/30 rounded-2xl border border-white/10 backdrop-blur">
-                    <div className="text-center">
-                      <span className="block font-extrabold text-base">{userFollowingCount}</span>
-                      <span className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Abonnements</span>
-                    </div>
-                    <div className="w-[1px] bg-white/10"></div>
-                    <div className="text-center">
-                      <span className="block font-extrabold text-base">{userFollowersCount}</span>
-                      <span className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Abonnés</span>
-                    </div>
-                    <div className="w-[1px] bg-white/10"></div>
-                    <div className="text-center">
-                      <span className="block font-extrabold text-base">{userLikesCount}</span>
-                      <span className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">J'aime</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4">
-                  <h2 className="text-xs font-bold text-purple-300 uppercase tracking-wider mb-3">Mes publications</h2>
-                  <div className="grid grid-cols-3 gap-2">
-                    {posts.filter(p => p.authorId === userTag || p.user === userTag).map((post, idx) => (
-                      <div key={post.id || idx} className="relative aspect-[9/16] bg-neutral-900 rounded-xl overflow-hidden border border-white/10">
-                        <video src={post.video} className="w-full h-full object-cover" />
-                        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px] font-bold">
-                          <div className="flex items-center gap-1 text-pink-400">
-                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                            <span>{likeCounts[post.id] || post.likes}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 h-16 bg-[#0b0719]/90 backdrop-blur-xl border-t border-white/10 flex items-center justify-around px-2 z-40">
-            <button 
-              onClick={() => { setActiveTab('feed'); playSound('click'); }}
-              className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'feed' ? 'text-pink-500' : 'text-white/50'}`}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              <span className="text-[10px] font-bold">Accueil</span>
+          {/* BARRE DE NAVIGATION INFÉRIEURE */}
+          <div className="relative z-40 h-16 bg-[#0b0719]/90 backdrop-blur-xl border-t border-white/10 flex items-center justify-around px-2">
+            <button onClick={() => setActiveTab('feed')} className={`flex flex-col items-center gap-1 ${activeTab === 'feed' ? 'text-pink-500' : 'text-white/50'}`}>
+              <span className="text-[10px] font-bold">🏠 Accueil</span>
             </button>
-
-            <button 
-              onClick={() => { setActiveTab('discover'); playSound('click'); }}
-              className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'discover' ? 'text-pink-500' : 'text-white/50'}`}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <span className="text-[10px] font-bold">Découvrir</span>
+            <button onClick={() => setActiveTab('discover')} className={`flex flex-col items-center gap-1 ${activeTab === 'discover' ? 'text-pink-500' : 'text-white/50'}`}>
+              <span className="text-[10px] font-bold">🔍 Découvrir</span>
             </button>
-
-            <button 
-              onClick={() => { setShowUploadModal(true); playSound('click'); }}
-              className="relative -top-2 w-12 h-12 bg-gradient-to-tr from-pink-500 to-purple-600 rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-transform border border-white/20"
-            >
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" />
-              </svg>
+            <button onClick={() => setShowUploadModal(true)} className="relative -top-2 w-12 h-12 bg-gradient-to-tr from-pink-500 to-purple-600 rounded-full flex items-center justify-center shadow-xl text-white font-bold text-xl">
+              +
             </button>
-
-            <button 
-              onClick={() => { setActiveTab('inbox'); playSound('click'); }}
-              className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'inbox' ? 'text-pink-500' : 'text-white/50'}`}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-              <span className="text-[10px] font-bold">Boîte de réc.</span>
+            <button onClick={() => setActiveTab('inbox')} className={`flex flex-col items-center gap-1 ${activeTab === 'inbox' ? 'text-pink-500' : 'text-white/50'}`}>
+              <span className="text-[10px] font-bold">💬 Messages</span>
             </button>
-
-            <button 
-              onClick={() => { setActiveTab('profile'); playSound('click'); }}
-              className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'profile' ? 'text-pink-500' : 'text-white/50'}`}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span className="text-[10px] font-bold">Profil</span>
+            <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center gap-1 ${activeTab === 'profile' ? 'text-pink-500' : 'text-white/50'}`}>
+              <span className="text-[10px] font-bold">👤 Profil</span>
             </button>
           </div>
 
-          {viewingCreator && (
-            <div 
-              className="absolute inset-0 bg-[#0b0719] z-50 flex flex-col overflow-y-auto animate-fadeIn"
-              onTouchStart={handleProfileTouchStart}
-              onTouchEnd={handleProfileTouchEnd}
-            >
-              <div className="relative pt-12 pb-6 px-4 bg-gradient-to-b from-purple-900/40 to-transparent border-b border-white/15">
-                <button 
-                  onClick={() => setViewingCreator(null)}
-                  className="absolute top-4 left-4 bg-black/40 p-2.5 rounded-full border border-white/10 backdrop-blur"
-                >
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-
-                <div className="flex flex-col items-center text-center mt-4">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center font-extrabold text-3xl shadow-2xl border-2 border-white/20 mb-3">
-                    {(viewingCreator.authorId || viewingCreator.user).substring(1, 3).toUpperCase()}
-                  </div>
-                  <h1 className="text-xl font-extrabold mb-1">{viewingCreator.authorId || viewingCreator.user}</h1>
-                  <p className="text-xs text-purple-300 font-semibold mb-4">Créateur ClipClap</p>
-
-                  <div className="flex gap-4 mb-6">
-                    <button 
-                      onClick={(e) => handleFollow(viewingCreator.authorId || viewingCreator.user, e)}
-                      className={`px-8 py-2.5 rounded-xl text-xs font-extrabold shadow-lg transition-all ${following[viewingCreator.authorId || viewingCreator.user] ? 'bg-white/10 border border-white/20 text-white' : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'}`}
-                    >
-                      {following[viewingCreator.authorId || viewingCreator.user] ? 'Abonné ✓' : 'S\'abonner'}
-                    </button>
-                    <button 
-                      onClick={() => {
-                        const targetUser = viewingCreator.authorId || viewingCreator.user;
-                        let existing = chatConversations.find(c => c.user === targetUser);
-                        if (!existing) {
-                          existing = { id: Date.now(), user: targetUser, lastMsg: "Bonjour !", time: "À l'instant", unread: false, messages: [] };
-                          setChatConversations([existing, ...chatConversations]);
-                        }
-                        setActiveChat(existing);
-                        setViewingCreator(null);
-                        setActiveTab('inbox');
-                      }}
-                      className="bg-white/10 hover:bg-white/20 border border-white/20 px-6 py-2.5 rounded-xl text-xs font-extrabold transition-all"
-                    >
-                      Message
-                    </button>
-                  </div>
-
-                  <div className="flex justify-around w-full max-w-xs py-3 bg-black/30 rounded-2xl border border-white/10 backdrop-blur">
-                    <div className="text-center">
-                      <span className="block font-extrabold text-base">{viewingCreator.followingCount || 120}</span>
-                      <span className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Abonnements</span>
-                    </div>
-                    <div className="w-[1px] bg-white/10"></div>
-                    <div className="text-center">
-                      <span className="block font-extrabold text-base">{creatorFollowers[viewingCreator.authorId || viewingCreator.user] || viewingCreator.followers}</span>
-                      <span className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Abonnés</span>
-                    </div>
-                    <div className="w-[1px] bg-white/10"></div>
-                    <div className="text-center">
-                      <span className="block font-extrabold text-base">{viewingCreator.totalLikes || viewingCreator.likes}</span>
-                      <span className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">J'aime</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4">
-                <h2 className="text-xs font-bold text-purple-300 uppercase tracking-wider mb-3">Vidéos du créateur</h2>
-                <div className="grid grid-cols-3 gap-2">
-                  {(viewingCreator.userPosts && viewingCreator.userPosts.length > 0 ? viewingCreator.userPosts : [viewingCreator]).map((p, idx) => (
-                    <div key={idx} className="relative aspect-[9/16] bg-neutral-900 rounded-xl overflow-hidden border border-white/10 shadow">
-                      <video src={p.video} className="w-full h-full object-cover" />
-                      <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px] font-bold">
-                        <span className="truncate">{p.views}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showCommentsModal && displayedPosts[currentIndex] && (
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-md z-50 flex flex-col justify-end animate-fadeIn">
-              <div className="bg-[#0b0719] rounded-t-3xl border-t border-white/15 h-[65%] flex flex-col overflow-hidden">
-                <div className="flex justify-between items-center p-4 border-b border-white/10">
-                  <h3 className="font-extrabold text-sm">{displayedPosts[currentIndex].commentsList ? displayedPosts[currentIndex].commentsList.length : displayedPosts[currentIndex].comments} commentaires</h3>
-                  <button onClick={() => setShowCommentsModal(false)} className="p-2 text-white/60 hover:text-white">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-                  {displayedPosts[currentIndex].commentsList && displayedPosts[currentIndex].commentsList.map(c => (
-                    <div key={c.id} className="flex gap-3 items-start">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center font-bold text-xs shrink-0">
-                        {c.user.substring(1, 3).toUpperCase()}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center mb-0.5">
-                          <span className="font-bold text-xs text-purple-300">{c.user}</span>
-                          <span className="text-[10px] text-white/40">{c.time}</span>
-                        </div>
-                        <p className="text-xs text-white/90 leading-snug">{c.text}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <form onSubmit={handleAddComment} className="p-3 bg-black/40 border-t border-white/10 flex gap-2">
-                  <input 
-                    type="text"
-                    placeholder="Ajouter un commentaire..."
-                    value={newCommentText}
-                    onChange={(e) => setNewCommentText(e.target.value)}
-                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-white/40 focus:outline-none focus:border-purple-500"
-                  />
-                  <button type="submit" className="bg-gradient-to-r from-pink-500 to-purple-600 px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg">
-                    Publier
-                  </button>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {showUploadModal && (
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-              <div className="bg-[#0b0719] border border-white/15 w-full max-w-sm rounded-3xl p-6 shadow-2xl flex flex-col">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="font-extrabold text-base bg-gradient-to-r from-white via-pink-200 to-purple-300 bg-clip-text text-transparent">Publier une vidéo</h2>
-                  <button onClick={() => setShowUploadModal(false)} className="text-white/60 hover:text-white">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-
-                <form onSubmit={handlePublish} className="flex flex-col gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-purple-300 uppercase tracking-wider mb-2">Sélectionner une vidéo</label>
-                    <input 
-                      type="file" 
-                      accept="video/*"
-                      onChange={(e) => setSelectedFile(e.target.files[0])}
-                      className="w-full text-xs text-white/70 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-gradient-to-r file:from-pink-500 file:to-purple-600 file:text-white file:cursor-pointer hover:file:opacity-90"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-purple-300 uppercase tracking-wider mb-2">Description & Hashtags</label>
-                    <textarea 
-                      rows="3"
-                      placeholder="Décrivez votre vidéo... #clipclap #vibes"
-                      value={newCaption}
-                      onChange={(e) => setNewCaption(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-white/40 focus:outline-none focus:border-purple-500 resize-none"
-                    ></textarea>
-                  </div>
-
-                  <button type="submit" className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl text-xs font-extrabold shadow-lg tracking-wide uppercase mt-2">
-                    Mettre en ligne 🚀
-                  </button>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {activeChat && (
-            <div className="absolute inset-0 bg-[#0b0719] z-50 flex flex-col">
-              <div className="flex items-center gap-3 p-4 bg-black/40 border-b border-white/10 backdrop-blur">
-                <button onClick={() => setActiveChat(null)} className="text-white/80">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center font-bold text-xs shadow">
-                  {activeChat.user.substring(1, 3).toUpperCase()}
-                </div>
-                <h2 className="font-extrabold text-sm">{activeChat.user}</h2>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-                {activeChat.messages.map((m, idx) => (
-                  <div key={idx} className={`flex ${m.sender === userTag ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-xs font-medium shadow-md ${m.sender === userTag ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-br-none' : 'bg-white/10 border border-white/10 text-white rounded-bl-none'}`}>
-                      {m.text}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <form onSubmit={handleSendMessage} className="p-3 bg-black/40 border-t border-white/10 flex gap-2">
-                <input 
-                  type="text"
-                  placeholder="Écrivez un message..."
-                  value={newMessageText}
-                  onChange={(e) => setNewMessageText(e.target.value)}
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-white/40 focus:outline-none focus:border-purple-500"
-                />
-                <button type="submit" className="bg-gradient-to-r from-pink-500 to-purple-600 px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg">
-                  Envoyer
-                </button>
-              </form>
-            </div>
-          )}
-
-          {isEditingProfile && (
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-              <div className="bg-[#0b0719] border border-white/15 w-full max-w-sm rounded-3xl p-6 shadow-2xl flex flex-col">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="font-extrabold text-base bg-gradient-to-r from-white via-pink-200 to-purple-300 bg-clip-text text-transparent">Modifier le profil</h2>
-                  <button onClick={() => setIsEditingProfile(false)} className="text-white/60 hover:text-white">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-purple-300 uppercase tracking-wider mb-2">Nom</label>
-                    <input 
-                      type="text"
-                      value={userName}
-                      onChange={(e) => setUserName(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-purple-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-purple-300 uppercase tracking-wider mb-2">Identifiant (@)</label>
-                    <input 
-                      type="text"
-                      value={userTag}
-                      onChange={(e) => setUserTag(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-purple-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-purple-300 uppercase tracking-wider mb-2">Bio</label>
-                    <textarea 
-                      rows="2"
-                      value={userBio}
-                      onChange={(e) => setUserBio(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-purple-500 resize-none"
-                    ></textarea>
-                  </div>
-                  <button 
-                    onClick={() => { setIsEditingProfile(false); playSound('click'); }}
-                    className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl text-xs font-extrabold shadow-lg tracking-wide uppercase mt-2"
-                  >
-                    Enregistrer
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       );
     }
