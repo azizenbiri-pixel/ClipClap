@@ -157,7 +157,7 @@
         return () => clearInterval(interval);
       }, []);
 
-      // Coupure du son lors du glissement vers le profil ou changement d'onglet
+      // Gestion propre de la lecture lors des changements (index, onglets, profil)
       useEffect(() => {
         if (!showSplash && videoRef.current) {
           if (viewingCreator || activeTab !== 'feed') {
@@ -165,6 +165,7 @@
             setIsPlaying(false);
           } else {
             videoRef.current.muted = isMuted;
+            videoRef.current.currentTime = 0; // Reprend la vidéo au début lors du swipe
             setIsPlaying(true);
             const playPromise = videoRef.current.play();
             if (playPromise !== undefined) {
