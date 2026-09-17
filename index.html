@@ -67,6 +67,7 @@
         comments: 842,
         bookmarks: 320,
         shares: 156,
+        viewsCount: 145200,
         views: "145.2K",
         video: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4",
         commentsList: [
@@ -74,9 +75,8 @@
           { id: 2, user: "@sarah_gfx", text: "Le rendu des néons est top 🌌", time: "Il y a 5h" }
         ],
         userPosts: [
-          { id: 101, views: "145.2K" },
-          { id: 102, views: "89.1K" },
-          { id: 103, views: "34.5K" }
+          { id: 101, views: "145.2K", video: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4", desc: "Mon ancienne vidéo néon 🌌" },
+          { id: 102, views: "89.1K", video: "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4", desc: "Nature and chill 🌿" }
         ]
       },
       {
@@ -88,14 +88,14 @@
         comments: 1200,
         bookmarks: 1450,
         shares: 430,
+        viewsCount: 520800,
         views: "520.8K",
         video: "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4",
         commentsList: [
           { id: 1, user: "@dance_King", text: "Quelle énergie ! 💃", time: "Il y a 1j" }
         ],
         userPosts: [
-          { id: 201, views: "520.8K" },
-          { id: 202, views: "210.4K" }
+          { id: 201, views: "520.8K", video: "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4", desc: "Session freestyle 💃✨" }
         ]
       }
     ];
@@ -119,6 +119,7 @@
       });
 
       const [currentIndex, setCurrentIndex] = useState(0);
+
       const [likedPosts, setLikedPosts] = useState({});
       const [savedPosts, setSavedPosts] = useState({});
       const [likeCounts, setLikeCounts] = useState(() => 
@@ -143,6 +144,11 @@
       const [userBio, setUserBio] = useState("Créateur de contenu néon ⚡");
       const [isEditingProfile, setIsEditingProfile] = useState(false);
 
+      // Statistiques de profil fonctionnelles
+      const [userFollowersCount, setUserFollowersCount] = useState(1280);
+      const [userFollowingCount, setUserFollowingCount] = useState(245);
+      const [userLikesCount, setUserLikesCount] = useState(9420);
+
       const touchStartX = useRef(0);
       const touchStartY = useRef(0);
       const videoRef = useRef(null);
@@ -165,6 +171,20 @@
         }, 40);
         return () => clearInterval(interval);
       }, []);
+
+      // Comptabiliser les vues automatiquement quand on change de vidéo
+      useEffect(() => {
+        if (!showSplash && posts[currentIndex]) {
+          setPosts(prevPosts => {
+            return prevPosts.map((p, idx) => {
+              if (idx === currentIndex) {
+                return { ...p, viewsCount: (p.viewsCount || 1000) + 1 };
+              }
+              return p;
+            });
+          });
+        }
+      }, [currentIndex, showSplash]);
 
       useEffect(() => {
         if (!showSplash && videoRef.current) {
@@ -213,6 +233,8 @@
           ...prev,
           [postId]: isLiked ? prev[postId] - 1 : prev[postId] + 1
         }));
+        // Met à jour les j'aime du profil si c'est notre vidéo
+        setUserLikesCount(prev => isLiked ? prev - 1 : prev + 1);
       };
 
       const handleSave = (postId, e) => {
@@ -233,6 +255,11 @@
         setFollowing(prev => {
           const newState = !prev[user];
           showToast(newState ? `Abonné à ${user} ! ✨` : `Désabonné de ${user}`);
+          if (newState) {
+            setUserFollowingCount(c => c + 1);
+          } else {
+            setUserFollowingCount(c => Math.max(0, c - 1));
+          }
           return { ...prev, [user]: newState };
         });
       };
@@ -282,7 +309,7 @@
         playSound('click');
 
         const createAndSavePost = (videoSrc) => {
-          const newPost = {
+          const myNewPostItem = {
             id: Date.now(),
             user: userTag,
             desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
@@ -291,16 +318,20 @@
             comments: 0,
             bookmarks: 0,
             shares: 0,
+            viewsCount: 1,
             views: "1",
             video: videoSrc,
             commentsList: [],
             userPosts: []
           };
 
-          const updatedPosts = [newPost, ...posts];
+          const updatedPosts = [myNewPostItem, ...posts];
           setPosts(updatedPosts);
-          setLikeCounts(prev => ({ ...prev, [newPost.id]: 1 }));
-          setSavedCounts(prev => ({ ...prev, [newPost.id]: 0 }));
+          setLikeCounts(prev => ({ ...prev, [myNewPostItem.id]: 1 }));
+          setSavedCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
+          
+          // Ajouter aussi dans la liste des posts du profil
+          setUserName(n => n); // refresh state trigger
           setShowUploadModal(false);
           setNewCaption("");
           setSelectedFile(null);
@@ -338,7 +369,6 @@
         }
 
         if (Math.abs(diffY) > 60 && Math.abs(diffX) < 50) {
-          playSound('click');
           if (diffY > 0) {
             setCurrentIndex(prev => (prev + 1) % posts.length);
           } else {
@@ -579,6 +609,30 @@
                   ))}
                 </div>
               </div>
+            ) : activeTab === 'friends' ? (
+              <div className="h-full w-full p-6 overflow-y-auto bg-[#0b0719] space-y-4">
+                <h2 className="text-xl font-bold text-white mb-2">Amis 👥</h2>
+                <p className="text-xs text-gray-400">Découvre les créateurs suivis et interagis avec eux.</p>
+                <div className="space-y-3 pt-2">
+                  {posts.map(post => (
+                    <div key={post.id} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-purple-900 border border-[#ff3b96] flex items-center justify-center">👤</div>
+                        <div>
+                          <h4 className="text-sm font-bold text-cyan-400">{post.user}</h4>
+                          <p className="text-[10px] text-gray-400">A publié un nouveau clip</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={(e) => handleFollow(post.user, e)}
+                        className={`px-4 py-1.5 rounded-full text-xs font-bold ${following[post.user] ? 'bg-white/20 text-white' : 'bg-[#ff3b96] text-white'}`}
+                      >
+                        {following[post.user] ? 'Abonné ✓' : 'Suivre'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             ) : activeTab === 'feed' ? (
               <div 
                 onTouchStart={handleTouchStart}
@@ -610,8 +664,9 @@
                   </div>
                 )}
 
-                <div className="absolute top-4 left-0 right-0 text-center text-[10px] text-white/50 tracking-wider uppercase z-10 pointer-events-none">
-                  👈 Glisse à gauche pour voir le profil
+                <div className="absolute top-4 left-0 right-0 flex justify-between px-6 text-[10px] text-white/50 tracking-wider uppercase z-10 pointer-events-none">
+                  <span>👀 Vues : {currentPost.viewsCount || 1000}</span>
+                  <span>👈 Glisse profil</span>
                 </div>
 
                 <div className="absolute right-4 bottom-16 flex flex-col items-center gap-4 z-20">
@@ -670,9 +725,9 @@
                   <p className="text-xs text-[#ff3b96] flex items-center gap-1">🎵 {currentPost.music}</p>
                 </div>
               </div>
-            ) : (
+            ) : activeTab === 'profile' ? (
               <div className="h-full w-full p-6 overflow-y-auto bg-[#0b0719] space-y-6">
-                <div className="text-center space-y-3 mt-6">
+                <div className="text-center space-y-3 mt-4">
                   <div className="w-24 h-24 mx-auto rounded-full p-1 bg-gradient-to-tr from-[#ff3b96] to-cyan-400">
                     <div className="w-full h-full bg-[#0b0719] rounded-full flex items-center justify-center text-3xl">👾</div>
                   </div>
@@ -705,6 +760,22 @@
                       <p className="text-xs text-gray-400 mt-1">{userBio}</p>
                     </div>
                   )}
+
+                  {/* Statistiques abonnés / suivre / j'aime fonctionnelles */}
+                  <div className="flex justify-center gap-6 py-2">
+                    <div className="text-center">
+                      <span className="block text-lg font-bold text-white">{userFollowersCount}</span>
+                      <span className="text-[10px] text-gray-400 uppercase">Followers</span>
+                    </div>
+                    <div className="text-center">
+                      <span className="block text-lg font-bold text-white">{userFollowingCount}</span>
+                      <span className="text-[10px] text-gray-400 uppercase">Suivre</span>
+                    </div>
+                    <div className="text-center">
+                      <span className="block text-lg font-bold text-white">{userLikesCount}</span>
+                      <span className="text-[10px] text-gray-400 uppercase">J'aime</span>
+                    </div>
+                  </div>
                 </div>
 
                 <button 
@@ -713,8 +784,32 @@
                 >
                   {isEditingProfile ? "Enregistrer les modifications" : "Éditer le profil"}
                 </button>
+
+                <div>
+                  <h3 className="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">Mes Vidéo publiées (Cliquables)</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {posts.filter(p => p.user === userTag).map((myPost, idx) => (
+                      <div 
+                        key={idx} 
+                        onClick={() => {
+                          playSound('click');
+                          setActiveTab('feed');
+                          const realIdx = posts.findIndex(p => p.id === myPost.id);
+                          if(realIdx !== -1) setCurrentIndex(realIdx);
+                        }}
+                        className="aspect-[3/4] bg-purple-950/50 rounded-lg relative overflow-hidden border border-white/10 flex flex-col justify-end p-2 cursor-pointer hover:border-[#ff3b96] transition"
+                      >
+                        <video src={myPost.video} className="absolute inset-0 w-full h-full object-cover opacity-60 pointer-events-none" />
+                        <div className="absolute inset-0 bg-black/30"></div>
+                        <span className="relative z-10 text-[10px] font-bold text-white drop-shadow">
+                          ▶ {myPost.views || "1"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="h-16 shrink-0 bg-[#0b0719] border-t border-white/10 flex justify-around items-center z-40">
@@ -733,6 +828,11 @@
               className="flex items-center justify-center w-12 h-9 rounded-xl bg-gradient-to-r from-[#ff3b96] to-cyan-400 text-white font-extrabold text-xl shadow-lg active:scale-90 transition"
             >
               +
+            </button>
+
+            <button onClick={() => { playSound('click'); setViewingCreator(null); setActiveTab('friends'); }} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'friends' ? 'text-purple-400 font-bold' : 'text-gray-400'}`}>
+              <span className="text-xl">👥</span>
+              <span className="text-[10px]">Amis</span>
             </button>
 
             <button onClick={() => { playSound('click'); setViewingCreator(null); setActiveTab('profile'); }} className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'profile' ? 'text-cyan-400 font-bold' : 'text-gray-400'}`}>
