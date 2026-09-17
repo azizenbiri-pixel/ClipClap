@@ -19,6 +19,10 @@
       background-color: #0b0719;
       font-family: 'Plus Jakarta Sans', sans-serif;
       -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+    .video-swipe-area {
+      touch-action: none;
     }
   </style>
 </head>
@@ -154,7 +158,6 @@
       const [userFollowingCount, setUserFollowingCount] = useState(245);
       const [userLikesCount, setUserLikesCount] = useState(9420);
 
-      // Système de messagerie (DMs)
       const [chatConversations, setChatConversations] = useState([
         { id: 1, user: "@neon_vibes", lastMsg: "Salut super tes vidéos !", time: "Il y a 10m", unread: true, messages: [{ sender: "@neon_vibes", text: "Salut super tes vidéos !" }] },
         { id: 2, user: "@cyber_dancer", lastMsg: "On collabore quand ?", time: "Il y a 1h", unread: false, messages: [{ sender: "@cyber_dancer", text: "On collabore quand ?" }] }
@@ -396,13 +399,14 @@
         const diffX = touchStartX.current - touchEndX;
         const diffY = touchStartY.current - touchEndY;
 
-        if (diffX > 60 && Math.abs(diffY) < 50) {
+        // Seuil réduit à 40px pour plus de réactivité
+        if (diffX > 40 && Math.abs(diffY) < 50) {
           playSound('click');
           setViewingCreator(posts[currentIndex]);
           return;
         }
 
-        if (Math.abs(diffY) > 60 && Math.abs(diffX) < 50) {
+        if (Math.abs(diffY) > 40 && Math.abs(diffX) < 50) {
           if (diffY > 0) {
             setCurrentIndex(prev => (prev + 1) % posts.length);
           } else {
@@ -423,7 +427,7 @@
         const diffX = touchStartX.current - touchEndX;
         const diffY = touchStartY.current - touchEndY;
 
-        if (diffX < -60 && Math.abs(diffY) < 50) {
+        if (diffX < -40 && Math.abs(diffY) < 50) {
           playSound('click');
           setViewingCreator(null);
         }
@@ -565,7 +569,7 @@
             <div 
               onTouchStart={handleProfileTouchStart}
               onTouchEnd={handleProfileTouchEnd}
-              className="absolute inset-0 z-50 bg-[#0b0719] overflow-y-auto p-6 space-y-6 select-none"
+              className="absolute inset-0 z-50 bg-[#0b0719] overflow-y-auto p-6 space-y-6 select-none video-swipe-area"
             >
               <div className="flex items-center justify-between">
                 <div className="text-xs text-gray-400 flex items-center gap-1">
@@ -585,7 +589,6 @@
                 </div>
                 <h2 className="text-xl font-bold">{viewingCreator.user}</h2>
 
-                {/* Statistiques abonnés/suivis/j'aime du profil visité */}
                 <div className="flex justify-center gap-6 py-1">
                   <div className="text-center">
                     <span className="block text-base font-bold text-white">{viewingCreator.followers || 1420}</span>
@@ -736,7 +739,7 @@
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
                 onClick={togglePlayPause}
-                className="h-full w-full relative flex flex-col justify-end p-6 select-none bg-black cursor-pointer"
+                className="h-full w-full relative flex flex-col justify-end p-6 select-none bg-black cursor-pointer video-swipe-area"
               >
                 <video 
                   ref={videoRef}
