@@ -1,665 +1,587 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ClipClap</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-    html, body {
-      height: 100%;
-      width: 100%;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background-color: #0b0719;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      -webkit-tap-highlight-color: transparent;
-      overscroll-behavior: none;
+import React, { useState, useEffect, useRef } from 'react';
+
+export default function ClipClapApp() {
+  const [showSplash, setShowSplash] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [activeTab, setActiveTab] = useState('feed'); // 'feed', 'discover', 'inbox', 'profile'
+  const [feedTab, setFeedTab] = useState('foryou'); // 'following', 'foryou'
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const [showPlayIcon, setShowPlayIcon] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  
+  // États d'interactions
+  const [likedPosts, setLikedPosts] = useState({});
+  const [likeCounts, setLikeCounts] = useState({ 1: 1240, 2: 8520, 3: 410, 4: 932 });
+  const [savedPosts, setSavedPosts] = useState({});
+  const [savedCounts, setSavedCounts] = useState({ 1: 340, 2: 1200, 3: 85, 4: 412 });
+  const [following, setFollowing] = useState({});
+  const [creatorFollowers, setCreatorFollowers] = useState({});
+  
+  // Modals & Navigation secondaire
+  const [viewingCreator, setViewingCreator] = useState(null);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [newCommentText, setNewCommentText] = useState('');
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [newCaption, setNewCaption] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+
+  // Profil utilisateur
+  const [userName, setUserName] = useState("Alexandre");
+  const [userTag, setUserTag] = useState("@alex_dev");
+  const [userBio, setUserBio] = useState("Créateur de contenu & passionné de tech 🚀 | ClipClap Creator");
+  const [userFollowingCount, setUserFollowingCount] = useState(142);
+  const [userFollowersCount, setUserFollowersCount] = useState(1280);
+  const [userLikesCount, setUserLikesCount] = useState("14.5K");
+
+  // Messagerie
+  const [activeChat, setActiveChat] = useState(null);
+  const [newMessageText, setNewMessageText] = useState('');
+  const [chatConversations, setChatConversations] = useState([
+    {
+      id: 1,
+      user: "@LinaNeon",
+      lastMsg: "Super ta dernière vidéo ! 🔥",
+      time: "Il y a 10 min",
+      unread: true,
+      messages: [
+        { sender: "@LinaNeon", text: "Salut ! J'adore ton contenu." },
+        { sender: "@alex_dev", text: "Merci beaucoup Lina !" },
+        { sender: "@LinaNeon", text: "Super ta dernière vidéo ! 🔥" }
+      ]
+    },
+    {
+      id: 2,
+      user: "@DJ_Vortex",
+      lastMsg: "On se fait une collab bientôt ?",
+      time: "Il y a 2h",
+      unread: false,
+      messages: [
+        { sender: "@DJ_Vortex", text: "On se fait une collab bientôt ?" }
+      ]
     }
-    .video-swipe-area {
-      touch-action: none;
+  ]);
+
+  // Liste initiale des posts
+  const [posts, setPosts] = useState([
+    {
+      id: 1,
+      user: "@LinaNeon",
+      authorId: "@LinaNeon",
+      desc: "Ambiance néon cyberpunk incroyable ce soir ! 🔥 #cyberpunk #neon #vibes",
+      video: "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-lights-41656-large.neon",
+      music: "Original Sound - LinaNeon",
+      likes: 1240,
+      comments: 42,
+      views: "12.4K",
+      followers: "45.2K",
+      totalLikes: "180K",
+      followingCount: 88,
+      commentsList: [
+        { id: 1, user: "@CyberSam", text: "Tellement stylé !", time: "Il y a 5 min" },
+        { id: 2, user: "@PixelQueen", text: "Quel filtre tu as utilisé ?", time: "Il y a 1h" }
+      ]
+    },
+    {
+      id: 2,
+      user: "@DJ_Vortex",
+      authorId: "@DJ_Vortex",
+      desc: "Le set de la folie hier au club ! Qui était là ? 🎧✨ #dj #party #music",
+      video: "https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-party-43093-large.neon",
+      music: "Electro Bass Boost - DJ Vortex",
+      likes: 8520,
+      comments: 310,
+      views: "85K",
+      followers: "120K",
+      totalLikes: "1.2M",
+      followingCount: 210,
+      commentsList: [
+        { id: 3, user: "@BeatMaker", text: "Le drop est insane 🔊", time: "Il y a 30 min" }
+      ]
+    },
+    {
+      id: 3,
+      user: "@CodeMaster",
+      authorId: "@CodeMaster",
+      desc: "Astuce secrète pour booster ton app en 2026 📱🚀 #tech #dev #tips",
+      video: "https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-a-green-screen-42358-large.neon",
+      music: "Lo-Fi Chill Beat - CodeMaster",
+      likes: 410,
+      comments: 12,
+      views: "4.1K",
+      followers: "12.5K",
+      totalLikes: "45K",
+      followingCount: 45,
+      commentsList: []
     }
-  </style>
-</head>
-<body class="text-white select-none">
-  <div id="root" class="h-full w-full"></div>
+  ]);
 
-  <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+  const videoRef = useRef(null);
 
-    const playSound = (type = 'click') => {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        if (ctx.state === 'suspended') ctx.resume();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        if (type === 'click') {
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(600, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.05);
-          gain.gain.setValueAtTime(0.15, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
-          osc.start();
-          osc.stop(ctx.currentTime + 0.05);
-        } else if (type === 'like') {
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(440, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
-          gain.gain.setValueAtTime(0.2, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-          osc.start();
-          osc.stop(ctx.currentTime + 0.1);
-        }
-      } catch(e) {}
-    };
-
-    const INITIAL_POSTS = [
-      {
-        id: 1,
-        authorId: "@neon_vibes",
-        user: "@neon_vibes",
-        desc: "Lumières de la ville 🌌 #neon #city #vibes #fyp",
-        music: "Son original - Neon Vibes 🎵",
-        likes: 12400,
-        comments: 842,
-        bookmarks: 320,
-        shares: 156,
-        viewsCount: 145200,
-        views: "145.2K",
-        followers: 45200,
-        followingCount: 120,
-        totalLikes: 210000,
-        video: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4",
-        commentsList: [
-          { id: 1, user: "@lucas_92", text: "Incroyable cette vidéo ! 🔥", time: "Il y a 2h" },
-          { id: 2, user: "@sarah_gfx", text: "Le rendu des néons est top 🌌", time: "Il y a 5h" }
-        ],
-        userPosts: [
-          { id: 101, views: "145.2K", video: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4", desc: "Mon ancienne vidéo néon 🌌" },
-          { id: 102, views: "89.1K", video: "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4", desc: "Nature and chill 🌿" }
-        ]
-      },
-      {
-        id: 2,
-        authorId: "@cyber_dancer",
-        user: "@cyber_dancer",
-        desc: "Session freestyle sous les néons 💃✨ #dance #cyberpunk",
-        music: "Cyberpunk Beats 2077 🎶",
-        likes: 45200,
-        comments: 1200,
-        bookmarks: 1450,
-        shares: 430,
-        viewsCount: 520800,
-        views: "520.8K",
-        followers: 128000,
-        followingCount: 410,
-        totalLikes: 890000,
-        video: "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4",
-        commentsList: [
-          { id: 1, user: "@dance_King", text: "Quelle énergie ! 💃", time: "Il y a 1j" }
-        ],
-        userPosts: [
-          { id: 201, views: "520.8K", video: "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4", desc: "Session freestyle 💃✨" }
-        ]
-      }
-    ];
-    function ClipClapApp() {
-      const [showSplash, setShowSplash] = useState(true);
-      const [progress, setProgress] = useState(0);
-      const [isMuted, setIsMuted] = useState(false);
-      const [isPlaying, setIsPlaying] = useState(true);
-      const [showPlayIcon, setShowPlayIcon] = useState(false);
-      const [activeTab, setActiveTab] = useState('feed');
-      const [feedTab, setFeedTab] = useState('foryou'); // 'following' ou 'foryou'
-      const [searchQuery, setSearchQuery] = useState("");
-
-      const [posts, setPosts] = useState(() => {
-        try {
-          const saved = localStorage.getItem('clipclap_posts');
-          return saved ? JSON.parse(saved) : INITIAL_POSTS;
-        } catch(e) {
-          return INITIAL_POSTS;
-        }
-      });
-
-      const [currentIndex, setCurrentIndex] = useState(0);
-
-      const [likedPosts, setLikedPosts] = useState({});
-      const [savedPosts, setSavedPosts] = useState({});
-      const [likeCounts, setLikeCounts] = useState(() => 
-        posts.reduce((acc, post) => ({ ...acc, [post.id]: post.likes }), {})
-      );
-      const [savedCounts, setSavedCounts] = useState(() =>
-        posts.reduce((acc, post) => ({ ...acc, [post.id]: post.bookmarks }), {})
-      );
-      
-      const [following, setFollowing] = useState({});
-      const [creatorFollowers, setCreatorFollowers] = useState(() =>
-        posts.reduce((acc, post) => ({ ...acc, [post.authorId || post.user]: post.followers }), {})
-      );
-
-      const [toastMessage, setToastMessage] = useState("");
-
-      const [showUploadModal, setShowUploadModal] = useState(false);
-      const [newCaption, setNewCaption] = useState("");
-      const [selectedFile, setSelectedFile] = useState(null);
-      const [viewingCreator, setViewingCreator] = useState(null);
-
-      const [showCommentsModal, setShowCommentsModal] = useState(false);
-      const [newCommentText, setNewCommentText] = useState("");
-
-      const [userName, setUserName] = useState("Aziz Enbiri");
-      const [userTag, setUserTag] = useState("@azizenbiri");
-      const [userBio, setUserBio] = useState("Créateur de contenu néon ⚡");
-      const [isEditingProfile, setIsEditingProfile] = useState(false);
-
-      const [userFollowersCount, setUserFollowersCount] = useState(1280);
-      const [userFollowingCount, setUserFollowingCount] = useState(245);
-      const [userLikesCount, setUserLikesCount] = useState(9420);
-
-      const [chatConversations, setChatConversations] = useState([
-        { id: 1, user: "@neon_vibes", lastMsg: "Salut super tes vidéos !", time: "Il y a 10m", unread: true, messages: [{ sender: "@neon_vibes", text: "Salut super tes vidéos !" }] },
-        { id: 2, user: "@cyber_dancer", lastMsg: "On collabore quand ?", time: "Il y a 1h", unread: false, messages: [{ sender: "@cyber_dancer", text: "On collabore quand ?" }] }
-      ]);
-      const [activeChat, setActiveChat] = useState(null);
-      const [newMessageText, setNewMessageText] = useState("");
-
-      const touchStartX = useRef(0);
-      const touchStartY = useRef(0);
-      const videoRef = useRef(null);
-
-      useEffect(() => {
-        try {
-          localStorage.setItem('clipclap_posts', JSON.stringify(posts));
-        } catch(e) {}
-      }, [posts]);
-
-      useEffect(() => {
-        const interval = setInterval(() => {
-          setProgress(prev => {
-            if (prev >= 100) {
-              clearInterval(interval);
-              setTimeout(() => setShowSplash(false), 300);
-              return 100;
-            }
-            return prev + 10;
-          });
-        }, 40);
-        return () => clearInterval(interval);
-      }, []);
-
-      // Filtrage des vidéos en fonction du flux actif (Abonnements / Pour toi)
-      const displayedPosts = posts.filter(post => {
-        if (feedTab === 'following') {
-          const authorKey = post.authorId || post.user;
-          return following[authorKey] === true;
-        }
-        return true;
-      });
-
-      useEffect(() => {
-        if (currentIndex >= displayedPosts.length) {
-          setCurrentIndex(0);
-        }
-      }, [feedTab, displayedPosts.length]);
-
-      useEffect(() => {
-        if (!showSplash && displayedPosts[currentIndex]) {
-          const currentPostId = displayedPosts[currentIndex].id;
-          setPosts(prevPosts => {
-            return prevPosts.map((p) => {
-              if (p.id === currentPostId) {
-                return { ...p, viewsCount: (p.viewsCount || 1000) + 1 };
-              }
-              return p;
-            });
-          });
-        }
-      }, [currentIndex, showSplash, feedTab]);
-
-      useEffect(() => {
-        if (!showSplash && videoRef.current && displayedPosts[currentIndex]) {
-          if (viewingCreator || activeTab !== 'feed' || showUploadModal || showCommentsModal || activeChat) {
-            videoRef.current.pause();
-            setIsPlaying(false);
-          } else {
-            videoRef.current.muted = isMuted;
-            videoRef.current.currentTime = 0;
-            setIsPlaying(true);
-            const playPromise = videoRef.current.play();
-            if (playPromise !== undefined) {
-              playPromise.catch(() => {});
-            }
+  // Simulation du Splash Screen
+  useEffect(() => {
+    if (showSplash) {
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setTimeout(() => setShowSplash(false), 400);
+            return 100;
           }
-        }
-      }, [currentIndex, isMuted, showSplash, viewingCreator, activeTab, showUploadModal, showCommentsModal, activeChat, feedTab]);
-
-      const showToast = (msg) => {
-        setToastMessage(msg);
-        setTimeout(() => setToastMessage(""), 2200);
-      };
-
-      const togglePlayPause = () => {
-        if (!videoRef.current) return;
-        playSound('click');
-
-        if (videoRef.current.paused) {
-          videoRef.current.play();
-          setIsPlaying(true);
-        } else {
-          videoRef.current.pause();
-          setIsPlaying(false);
-        }
-
-        setShowPlayIcon(true);
-        setTimeout(() => setShowPlayIcon(false), 800);
-      };
-
-      const handleLike = (postId, e) => {
-        e.stopPropagation();
-        playSound('like');
-        const isLiked = likedPosts[postId];
-        setLikedPosts(prev => ({ ...prev, [postId]: !isLiked }));
-        setLikeCounts(prev => ({
-          ...prev,
-          [postId]: isLiked ? prev[postId] - 1 : prev[postId] + 1
-        }));
-        setUserLikesCount(prev => isLiked ? prev - 1 : prev + 1);
-      };
-
-      const handleSave = (postId, e) => {
-        e.stopPropagation();
-        playSound('click');
-        const isSaved = savedPosts[postId];
-        setSavedPosts(prev => ({ ...prev, [postId]: !isSaved }));
-        setSavedCounts(prev => ({
-          ...prev,
-          [postId]: isSaved ? prev[postId] - 1 : prev[postId] + 1
-        }));
-        showToast(isSaved ? "Vidéo retirée des favoris" : "Vidéo enregistrée ! 📌");
-      };
-
-      const handleFollow = (authorKey, e) => {
-        e.stopPropagation();
-        playSound('click');
-        setFollowing(prev => {
-          const willFollow = !prev[authorKey];
-          showToast(willFollow ? `Abonné à ${authorKey} ! ✨` : `Désabonné de ${authorKey}`);
-          
-          setUserFollowingCount(c => willFollow ? c + 1 : Math.max(0, c - 1));
-
-          setCreatorFollowers(counts => {
-            const current = counts[authorKey] || 1000;
-            return {
-              ...counts,
-              [authorKey]: willFollow ? current + 1 : Math.max(0, current - 1)
-            };
-          });
-
-          return { ...prev, [authorKey]: willFollow };
+          return prev + 12;
         });
-      };
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [showSplash]);
 
-      const handleShare = (e) => {
-        e.stopPropagation();
-        playSound('click');
-        if (navigator.share) {
-          navigator.share({ title: 'ClipClap', url: window.location.href });
-        } else {
-          navigator.clipboard.writeText(window.location.href);
-          showToast("Lien de la vidéo copié ! 🔗");
+  const playSound = (type) => {
+    // Simulation audio
+  };
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 2500);
+  };
+  const displayedPosts = feedTab === 'following' 
+    ? posts.filter(p => following[p.authorId || p.user]) 
+    : posts;
+
+  useEffect(() => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.play().catch(() => {});
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  }, [currentIndex, isPlaying, feedTab]);
+
+  const togglePlayPause = () => {
+    setIsPlaying(!isPlaying);
+    setShowPlayIcon(true);
+    setTimeout(() => setShowPlayIcon(false), 800);
+  };
+
+  const handleTouchStart = (e) => {
+    window.touchStartY = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!window.touchStartY) return;
+    const touchEndY = e.changedTouches[0].clientY;
+    const diff = window.touchStartY - touchEndY;
+
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        // Swipe vers le haut (vidéo suivante)
+        if (currentIndex < displayedPosts.length - 1) {
+          setCurrentIndex(currentIndex + 1);
+          setIsPlaying(true);
+          playSound('swipe');
         }
-      };
+      } else {
+        // Swipe vers le bas (vidéo précédente)
+        if (currentIndex > 0) {
+          setCurrentIndex(currentIndex - 1);
+          setIsPlaying(true);
+          playSound('swipe');
+        }
+      }
+    }
+    window.touchStartY = null;
+  };
 
-      const handleAddComment = (e) => {
-        e.preventDefault();
-        if (!newCommentText.trim()) return;
-        playSound('click');
+  const handleProfileTouchStart = (e) => {
+    window.profileTouchStartY = e.touches[0].clientY;
+  };
 
-        const currentPost = displayedPosts[currentIndex];
-        const newComment = {
+  const handleProfileTouchEnd = (e) => {
+    if (!window.profileTouchStartY) return;
+    const diff = e.changedTouches[0].clientY - window.profileTouchStartY;
+    if (diff > 100) {
+      setViewingCreator(null);
+    }
+    window.profileTouchStartY = null;
+  };
+
+  const handleLike = (postId, e) => {
+    e.stopPropagation();
+    playSound('like');
+    const isLiked = !!likedPosts[postId];
+    setLikedPosts({ ...likedPosts, [postId]: !isLiked });
+    setLikeCounts({
+      ...likeCounts,
+      [postId]: isLiked ? likeCounts[postId] - 1 : likeCounts[postId] + 1
+    });
+  };
+
+  const handleSave = (postId, e) => {
+    e.stopPropagation();
+    playSound('save');
+    const isSaved = !!savedPosts[postId];
+    setSavedPosts({ ...savedPosts, [postId]: !isSaved });
+    setSavedCounts({
+      ...savedCounts,
+      [postId]: isSaved ? savedCounts[postId] - 1 : savedCounts[postId] + 1
+    });
+    showToast(isSaved ? "Retiré des favoris" : "Ajouté aux favoris ⭐");
+  };
+
+  const handleFollow = (author, e) => {
+    if (e) e.stopPropagation();
+    playSound('follow');
+    const isFollowing = !!following[author];
+    setFollowing({ ...following, [author]: !isFollowing });
+    
+    // Mettre à jour les abonnés du créateur
+    const currentFollowers = creatorFollowers[author] || 1200;
+    setCreatorFollowers({
+      ...creatorFollowers,
+      [author]: isFollowing ? currentFollowers - 1 : currentFollowers + 1
+    });
+
+    showToast(isFollowing ? `Vous ne suivez plus ${author}` : `Vous suivez maintenant ${author} 🎉`);
+  };
+
+  const handleShare = (e) => {
+    e.stopPropagation();
+    playSound('click');
+    if (navigator.share) {
+      navigator.share({
+        title: 'ClipClap Vidéo',
+        text: 'Regarde cette vidéo incroyable sur ClipClap !',
+        url: window.location.href,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      showToast("Lien copié dans le presse-papier ! 🔗");
+    }
+  };
+
+  const handleAddComment = (e) => {
+    e.preventDefault();
+    if (!newCommentText.trim()) return;
+    playSound('click');
+    
+    const currentPost = displayedPosts[currentIndex];
+    const updatedPosts = posts.map(p => {
+      if (p.id === currentPost.id) {
+        const newCommentObj = {
           id: Date.now(),
           user: userTag,
-          text: newCommentText.trim(),
+          text: newCommentText,
           time: "À l'instant"
         };
-
-        const updatedPosts = posts.map(post => {
-          if (post.id === currentPost.id) {
-            return {
-              ...post,
-              comments: (post.comments || 0) + 1,
-              commentsList: [newComment, ...(post.commentsList || [])]
-            };
-          }
-          return post;
-        });
-
-        setPosts(updatedPosts);
-        setNewCommentText("");
-        showToast("Commentaire publié ! 💬");
-      };
-
-      const handleSendMessage = (e) => {
-        e.preventDefault();
-        if (!newMessageText.trim() || !activeChat) return;
-        playSound('click');
-
-        const updated = chatConversations.map(conv => {
-          if (conv.id === activeChat.id) {
-            return {
-              ...conv,
-              lastMsg: newMessageText,
-              time: "À l'instant",
-              messages: [...conv.messages, { sender: userTag, text: newMessageText }]
-            };
-          }
-          return conv;
-        });
-
-        setChatConversations(updated);
-        setActiveChat(updated.find(c => c.id === activeChat.id));
-        setNewMessageText("");
-      };
-
-      const handlePublish = (e) => {
-        e.preventDefault();
-        playSound('click');
-
-        const createAndSavePost = (videoSrc) => {
-          const myNewPostItem = {
-            id: Date.now(),
-            authorId: userTag,
-            user: userTag,
-            desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
-            music: `Son original - ${userName} 🎵`,
-            likes: 1,
-            comments: 0,
-            bookmarks: 0,
-            shares: 0,
-            viewsCount: 1,
-            views: "1",
-            followers: 1,
-            followingCount: 0,
-            totalLikes: 1,
-            video: videoSrc,
-            commentsList: [],
-            userPosts: []
-          };
-
-          const updatedPosts = [myNewPostItem, ...posts];
-          setPosts(updatedPosts);
-          setLikeCounts(prev => ({ ...prev, [myNewPostItem.id]: 1 }));
-          setSavedCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
-          setCreatorFollowers(counts => ({ ...counts, [userTag]: 1280 }));
-          
-          setShowUploadModal(false);
-          setNewCaption("");
-          setSelectedFile(null);
-          setCurrentIndex(0);
-          setFeedTab('foryou');
-          showToast("Vidéo publiée et enregistrée ! 🚀");
+        return {
+          ...p,
+          commentsList: [...(p.commentsList || []), newCommentObj]
         };
+      }
+      return p;
+    });
 
-        if (selectedFile) {
-          const reader = new FileReader();
-          reader.readAsDataURL(selectedFile);
-          reader.onloadend = () => {
-            createAndSavePost(reader.result);
-          };
-        } else {
-          createAndSavePost("https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4");
-        }
-      };
+    setPosts(updatedPosts);
+    setNewCommentText('');
+  };
 
-      const handleTouchStart = (e) => {
-        touchStartX.current = e.touches[0].clientX;
-        touchStartY.current = e.touches[0].clientY;
-      };
+  const handlePublish = (e) => {
+    e.preventDefault();
+    if (!selectedFile) {
+      showToast("Veuillez sélectionner une vidéo !");
+      return;
+    }
 
-      const handleTouchEnd = (e) => {
-        if (displayedPosts.length === 0) return;
-        const touchEndX = e.changedTouches[0].clientX;
-        const touchEndY = e.changedTouches[0].clientY;
+    const videoUrl = URL.createObjectURL(selectedFile);
+    const newPostObj = {
+      id: Date.now(),
+      user: userTag,
+      authorId: userTag,
+      desc: newCaption || "Ma super vidéo sur ClipClap 🚀 #clipclap",
+      video: videoUrl,
+      music: `Original Sound - ${userTag}`,
+      likes: 1,
+      comments: 0,
+      views: "1",
+      followers: userFollowersCount,
+      totalLikes: userLikesCount,
+      followingCount: userFollowingCount,
+      commentsList: []
+    };
 
-        const diffX = touchStartX.current - touchEndX;
-        const diffY = touchStartY.current - touchEndY;
+    setPosts([newPostObj, ...posts]);
+    setSelectedFile(null);
+    setNewCaption('');
+    setShowUploadModal(false);
+    showToast("Vidéo publiée avec succès ! 🚀");
+  };
 
-        if (diffX > 40 && Math.abs(diffY) < 50) {
-          playSound('click');
-          setViewingCreator(displayedPosts[currentIndex]);
-          return;
-        }
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!newMessageText.trim() || !activeChat) return;
+    playSound('click');
 
-        if (Math.abs(diffY) > 40 && Math.abs(diffX) < 50) {
-          if (diffY > 0) {
-            setCurrentIndex(prev => (prev + 1) % displayedPosts.length);
-          } else {
-            setCurrentIndex(prev => (prev - 1 + displayedPosts.length) % displayedPosts.length);
-          }
-        }
-      };
+    const updatedConversations = chatConversations.map(c => {
+      if (c.id === activeChat.id) {
+        const updatedMsgs = [...c.messages, { sender: userTag, text: newMessageText }];
+        return { ...c, messages: updatedMsgs, lastMsg: newMessageText, time: "À l'instant" };
+      }
+      return c;
+    });
 
-      const handleProfileTouchStart = (e) => {
-        touchStartX.current = e.touches[0].clientX;
-        touchStartY.current = e.touches[0].clientY;
-      };
+    setChatConversations(updatedConversations);
+    setActiveChat({
+      ...activeChat,
+      messages: [...activeChat.messages, { sender: userTag, text: newMessageText }]
+    });
+    setNewMessageText('');
+  };
 
-      const handleProfileTouchEnd = (e) => {
-        const touchEndX = e.changedTouches[0].clientX;
-        const touchEndY = e.changedTouches[0].clientY;
+  return (
+    <div className="h-full w-full bg-[#0b0719] flex flex-col relative overflow-hidden text-white font-sans select-none">
+      
+      {/* ========================================================= */}
+      {/* SPLASH SCREEN MIS À JOUR (Design futuriste validé)       */}
+      {/* ========================================================= */}
+      {showSplash && (
+        <div className="fixed inset-0 bg-[#070412] z-50 flex flex-col items-center justify-between p-8 text-center overflow-hidden">
+          <div className="absolute -top-20 -left-20 w-72 h-72 bg-purple-600/30 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
+          <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-pink-600/30 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDelay: '1s' }}></div>
 
-        const diffX = touchStartX.current - touchEndX;
-        const diffY = touchStartY.current - touchEndY;
+          <div className="pt-8 z-10">
+            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[11px] font-extrabold uppercase tracking-widest bg-white/10 text-pink-300 border border-white/15 backdrop-blur-md shadow-lg">
+              <span className="w-2 h-2 rounded-full bg-pink-500 animate-ping"></span>
+              Édition 2026 • Le futur du divertissement
+            </span>
+          </div>
 
-        if (diffX < -40 && Math.abs(diffY) < 50) {
-          playSound('click');
-          setViewingCreator(null);
-        }
-      };
-      if (showSplash) {
-        return (
-          <div className="fixed inset-0 bg-[#070412] z-50 flex flex-col items-center justify-center p-6 text-center">
-            <div className="relative mb-6">
-              <div className="absolute -inset-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full blur-xl opacity-75 animate-pulse"></div>
-              <div className="relative w-24 h-24 bg-gradient-to-tr from-purple-600 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl border border-white/20">
-                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex flex-col items-center z-10 my-auto">
+            <div className="relative mb-8">
+              <div className="absolute -inset-6 bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 rounded-full blur-2xl opacity-60 animate-pulse"></div>
+              <div className="relative w-28 h-28 bg-gradient-to-tr from-purple-600 via-pink-500 to-amber-400 rounded-[2.5rem] flex items-center justify-center shadow-2xl border-2 border-white/30 transform hover:scale-105 transition-transform">
+                <svg className="w-14 h-14 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
-            <h1 className="text-4xl font-extrabold tracking-wider bg-gradient-to-r from-white via-pink-200 to-purple-300 bg-clip-text text-transparent mb-2">ClipClap</h1>
-            <p className="text-purple-300/80 text-sm font-medium mb-10 tracking-wide">Plongez dans le flux infini</p>
-            <div className="w-48 h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur">
-              <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-300 rounded-full" style={{ width: `${progress}%` }}></div>
+
+            <h1 className="text-5xl font-black tracking-wider bg-gradient-to-r from-white via-pink-200 to-purple-300 bg-clip-text text-transparent mb-3 drop-shadow-sm">
+              ClipClap
+            </h1>
+            <p className="text-purple-200/90 text-sm font-medium max-w-xs leading-relaxed tracking-wide mb-8">
+              Swipe, partage et vibre au rythme des meilleures créations de la communauté.
+            </p>
+
+            <div className="grid grid-cols-3 gap-3 w-full max-w-xs mb-6">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-3 backdrop-blur-sm flex flex-col items-center">
+                <span className="text-pink-400 font-black text-base mb-0.5">HD</span>
+                <span className="text-[10px] text-white/60 font-semibold uppercase">Flux Fluide</span>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-3 backdrop-blur-sm flex flex-col items-center">
+                <span className="text-purple-400 font-black text-base mb-0.5">100%</span>
+                <span className="text-[10px] text-white/60 font-semibold uppercase">Interactif</span>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-3 backdrop-blur-sm flex flex-col items-center">
+                <span className="text-amber-400 font-black text-base mb-0.5">VIP</span>
+                <span className="text-[10px] text-white/60 font-semibold uppercase">Créateurs</span>
+              </div>
             </div>
           </div>
-        );
-      }
 
-      const currentPost = displayedPosts[currentIndex];
-
-      return (
-        <div className="h-full w-full bg-[#0b0719] flex flex-col relative overflow-hidden text-white font-sans select-none">
-          {toastMessage && (
-            <div className="absolute top-16 left-1/2 transform -translate-x-1/2 bg-neutral-900/90 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-2xl z-50 border border-white/10 backdrop-blur animate-bounce">
-              {toastMessage}
+          <div className="w-full max-w-xs pb-6 z-10 flex flex-col items-center gap-3">
+            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden backdrop-blur border border-white/10 p-0.5">
+              <div className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-amber-400 transition-all duration-300 rounded-full shadow-lg" style={{ width: `${progress}%` }}></div>
             </div>
-          )}
+            <span className="text-[11px] text-purple-300/70 font-semibold tracking-wider">
+              {progress < 100 ? "Préparation de ton expérience..." : "C'est parti ! 🚀"}
+            </span>
+          </div>
+        </div>
+      )}
+      {toastMessage && (
+        <div className="absolute top-16 left-1/2 transform -translate-x-1/2 bg-black/80 border border-white/20 text-white text-xs font-bold px-4 py-2 rounded-xl backdrop-blur-md z-50 shadow-2xl animate-bounce">
+          {toastMessage}
+        </div>
+      )}
 
-          <div className="flex-1 relative overflow-hidden">
-            {activeTab === 'feed' && (
+      <div className="flex-1 relative overflow-hidden">
+        {activeTab === 'feed' && (
+          <div 
+            className="absolute inset-0 bg-neutral-950 flex flex-col justify-between overflow-hidden"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            {displayedPosts.length > 0 ? (
               <div 
-                className="absolute inset-0 video-swipe-area flex flex-col justify-center items-center bg-black"
-                onTouchStart={handleTouchStart}
-                onTouchEnd={handleTouchEnd}
+                className="absolute inset-0 cursor-pointer"
                 onClick={togglePlayPause}
               >
-                {currentPost ? (
-                  <>
-                    <video
-                      ref={videoRef}
-                      src={currentPost.video}
-                      className="absolute inset-0 w-full h-full object-cover"
-                      loop
-                      playsInline
-                      muted={isMuted}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none"></div>
+                <video 
+                  ref={videoRef}
+                  src={displayedPosts[currentIndex]?.video} 
+                  className="w-full h-full object-cover"
+                  loop 
+                  playsInline 
+                  muted={isMuted}
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80 pointer-events-none"></div>
 
-                    {showPlayIcon && (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-                        <div className="bg-black/50 p-4 rounded-full backdrop-blur-md transform transition-all duration-300 scale-110">
-                          {isPlaying ? (
-                            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          ) : (
-                            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="absolute top-12 left-0 right-0 flex justify-center items-center gap-6 z-30 pointer-events-auto">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setFeedTab('following'); }}
-                        className={`text-sm font-bold pb-1 transition-all ${feedTab === 'following' ? 'text-white border-b-2 border-white' : 'text-white/50'}`}
-                      >
-                        Abonnements
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setFeedTab('foryou'); }}
-                        className={`text-sm font-bold pb-1 transition-all ${feedTab === 'foryou' ? 'text-white border-b-2 border-white' : 'text-white/50'}`}
-                      >
-                        Pour toi
-                      </button>
+                {showPlayIcon && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-16 h-16 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white text-2xl shadow-2xl border border-white/20 animate-ping">
+                      {isPlaying ? '▶' : '⏸'}
                     </div>
-
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); playSound('click'); }}
-                      className="absolute top-12 right-4 bg-black/40 p-2.5 rounded-full backdrop-blur-md z-30 pointer-events-auto border border-white/10"
-                    >
-                      {isMuted ? (
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-                        </svg>
-                      ) : (
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                        </svg>
-                      )}
-                    </button>
-
-                    <div className="absolute right-4 bottom-20 flex flex-col items-center gap-5 z-30 pointer-events-auto">
-                      <div className="relative">
-                        <div 
-                          onClick={(e) => { e.stopPropagation(); setViewingCreator(currentPost); playSound('click'); }}
-                          className="w-12 h-12 rounded-full border-2 border-pink-500 overflow-hidden cursor-pointer shadow-lg bg-purple-900 flex items-center justify-center font-bold text-lg"
-                        >
-                          {currentPost.user ? currentPost.user.substring(1, 3).toUpperCase() : "CC"}
-                        </div>
-                        {(!following[currentPost.authorId || currentPost.user]) && (
-                          <button 
-                            onClick={(e) => handleFollow(currentPost.authorId || currentPost.user, e)}
-                            className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-pink-500 to-purple-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shadow-md hover:scale-110 transition-transform"
-                          >
-                            +
-                          </button>
-                        )}
-                      </div>
-
-                      <button 
-                        onClick={(e) => handleLike(currentPost.id, e)}
-                        className="flex flex-col items-center gap-1 group"
-                      >
-                        <div className={`p-3 rounded-full backdrop-blur-md transition-transform group-active:scale-125 ${likedPosts[currentPost.id] ? 'bg-pink-500/30 text-pink-500' : 'bg-black/40 text-white border border-white/10'}`}>
-                          <svg className="w-6 h-6" fill={likedPosts[currentPost.id] ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                          </svg>
-                        </div>
-                        <span className="text-xs font-bold drop-shadow">{likeCounts[currentPost.id]}</span>
-                      </button>
-
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setShowCommentsModal(true); playSound('click'); }}
-                        className="flex flex-col items-center gap-1 group"
-                      >
-                        <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 group-active:scale-125 transition-transform">
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                          </svg>
-                        </div>
-                        <span className="text-xs font-bold drop-shadow">{currentPost.commentsList ? currentPost.commentsList.length : currentPost.comments}</span>
-                      </button>
-
-                      <button 
-                        onClick={(e) => handleSave(currentPost.id, e)}
-                        className="flex flex-col items-center gap-1 group"
-                      >
-                        <div className={`p-3 rounded-full backdrop-blur-md transition-transform group-active:scale-125 ${savedPosts[currentPost.id] ? 'bg-amber-500/30 text-amber-400' : 'bg-black/40 text-white border border-white/10'}`}>
-                          <svg className="w-6 h-6" fill={savedPosts[currentPost.id] ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                          </svg>
-                        </div>
-                        <span className="text-xs font-bold drop-shadow">{savedCounts[currentPost.id]}</span>
-                      </button>
-
-                      <button 
-                        onClick={handleShare}
-                        className="flex flex-col items-center gap-1 group"
-                      >
-                        <div className="p-3 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 group-active:scale-125 transition-transform">
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                          </svg>
-                        </div>
-                        <span className="text-xs font-bold drop-shadow">Partager</span>
-                      </button>
-                    </div>
-
-                    <div className="absolute left-4 bottom-20 right-20 z-30 pointer-events-auto">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-extrabold text-sm tracking-wide">{currentPost.user}</span>
-                        {!following[currentPost.authorId || currentPost.user] && (
-                          <button 
-                            onClick={(e) => handleFollow(currentPost.authorId || currentPost.user, e)}
-                            className="border border-white/30 bg-white/10 backdrop-blur-sm px-3 py-0.5 rounded-full text-xs font-bold hover:bg-white/20 transition-all"
-                          >
-                            S'abonner
-                          </button>
-                        )}
-                      </div>
-                      <p className="text-sm text-white/90 mb-3 leading-snug drop-shadow">{currentPost.desc}</p>
-                      <div className="flex items-center gap-2 text-xs text-white/80 bg-black/30 backdrop-blur-md w-fit px-3 py-1 rounded-full border border-white/10">
-                        <svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2Z" />
-                        </svg>
-                        <span className="truncate max-w-[200px]">{currentPost.music}</span>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center justify-center p-6 text-center text-white/60">
-                    <p className="text-base font-semibold mb-2">Aucune vidéo dans les abonnements</p>
-                    <p className="text-xs">Abonnez-vous à des créateurs depuis le flux "Pour toi" !</p>
                   </div>
                 )}
               </div>
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-white/70">
+                <p className="text-sm font-bold mb-2">Aucune vidéo dans "Abonnements"</p>
+                <p className="text-xs text-white/40 mb-4">Abonne-toi à des créateurs pour voir leurs vidéos ici !</p>
+                <button 
+                  onClick={() => setFeedTab('foryou')} 
+                  className="bg-gradient-to-r from-pink-500 to-purple-600 px-6 py-2.5 rounded-xl text-xs font-bold text-white shadow-lg"
+                >
+                  Découvrir le flux "Pour toi"
+                </button>
+              </div>
             )}
+
+            {/* HEADER - ABONNEMENTS / POUR TOI (Remonté plus haut à pt-12 pour ne pas cacher la vidéo) */}
+            <div className="absolute top-0 left-0 right-0 z-30 flex justify-center items-center gap-6 pt-12 pb-3 pointer-events-auto">
+              <button 
+                onClick={() => { setFeedTab('following'); setCurrentIndex(0); playSound('click'); }}
+                className={`text-sm font-extrabold tracking-wide transition-all drop-shadow-md ${feedTab === 'following' ? 'text-white border-b-2 border-white pb-1 scale-105' : 'text-white/60 hover:text-white/90'}`}
+              >
+                Abonnements
+              </button>
+              <span className="text-white/30 font-light">|</span>
+              <button 
+                onClick={() => { setFeedTab('foryou'); setCurrentIndex(0); playSound('click'); }}
+                className={`text-sm font-extrabold tracking-wide transition-all drop-shadow-md ${feedTab === 'foryou' ? 'text-white border-b-2 border-white pb-1 scale-105' : 'text-white/60 hover:text-white/90'}`}
+              >
+                Pour toi
+              </button>
+            </div>
+
+            {displayedPosts.length > 0 && (
+              <div className="absolute right-3 bottom-20 z-30 flex flex-col items-center gap-5">
+                <div 
+                  onClick={() => {
+                    const post = displayedPosts[currentIndex];
+                    const targetUser = post.authorId || post.user;
+                    const fullCreatorData = {
+                      ...post,
+                      userPosts: posts.filter(p => (p.authorId || p.user) === targetUser)
+                    };
+                    setViewingCreator(fullCreatorData);
+                    playSound('click');
+                  }}
+                  className="relative w-11 h-11 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 p-0.5 cursor-pointer shadow-xl border border-white/20"
+                >
+                  <div className="w-full h-full rounded-full bg-black flex items-center justify-center font-bold text-xs text-white uppercase overflow-hidden">
+                    {(displayedPosts[currentIndex].authorId || displayedPosts[currentIndex].user).substring(1, 3)}
+                  </div>
+                  {!following[displayedPosts[currentIndex].authorId || displayedPosts[currentIndex].user] && (
+                    <button 
+                      onClick={(e) => handleFollow(displayedPosts[currentIndex].authorId || displayedPosts[currentIndex].user, e)}
+                      className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-5 h-5 bg-pink-500 rounded-full flex items-center justify-center text-white text-[12px] font-black shadow-md hover:scale-110 transition-transform"
+                    >
+                      +
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-col items-center gap-1">
+                  <button 
+                    onClick={(e) => handleLike(displayedPosts[currentIndex].id, e)}
+                    className={`w-11 h-11 rounded-full backdrop-blur-md flex items-center justify-center transition-transform active:scale-90 shadow-xl border ${likedPosts[displayedPosts[currentIndex].id] ? 'bg-pink-500/30 border-pink-500/50 text-pink-400' : 'bg-black/40 border-white/10 text-white'}`}
+                  >
+                    <svg className={`w-6 h-6 ${likedPosts[displayedPosts[currentIndex].id] ? 'fill-current text-pink-500' : 'none'}`} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                  </button>
+                  <span className="text-[11px] font-extrabold text-white drop-shadow">
+                    {likeCounts[displayedPosts[currentIndex].id] || displayedPosts[currentIndex].likes}
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center gap-1">
+                  <button 
+                    onClick={() => { setShowCommentsModal(true); playSound('click'); }}
+                    className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-transform active:scale-90 shadow-xl"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </button>
+                  <span className="text-[11px] font-extrabold text-white drop-shadow">
+                    {displayedPosts[currentIndex].commentsList ? displayedPosts[currentIndex].commentsList.length : displayedPosts[currentIndex].comments}
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center gap-1">
+                  <button 
+                    onClick={(e) => handleSave(displayedPosts[currentIndex].id, e)}
+                    className={`w-11 h-11 rounded-full backdrop-blur-md flex items-center justify-center transition-transform active:scale-90 shadow-xl border ${savedPosts[displayedPosts[currentIndex].id] ? 'bg-amber-500/30 border-amber-500/50 text-amber-400' : 'bg-black/40 border-white/10 text-white'}`}
+                  >
+                    <svg className={`w-6 h-6 ${savedPosts[displayedPosts[currentIndex].id] ? 'fill-current text-amber-400' : 'none'}`} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                  </button>
+                  <span className="text-[11px] font-extrabold text-white drop-shadow">
+                    {savedCounts[displayedPosts[currentIndex].id] || 340}
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center gap-1">
+                  <button 
+                    onClick={handleShare}
+                    className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-transform active:scale-90 shadow-xl"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                  </button>
+                  <span className="text-[11px] font-extrabold text-white drop-shadow">Partager</span>
+                </div>
+              </div>
+            )}
+
+            {displayedPosts.length > 0 && (
+              <div className="absolute left-4 bottom-20 z-30 max-w-[70%] flex flex-col gap-2 pointer-events-none">
+                <span 
+                  onClick={() => {
+                    const post = displayedPosts[currentIndex];
+                    const targetUser = post.authorId || post.user;
+                    const fullCreatorData = {
+                      ...post,
+                      userPosts: posts.filter(p => (p.authorId || p.user) === targetUser)
+                    };
+                    setViewingCreator(fullCreatorData);
+                    playSound('click');
+                  }}
+                  className="font-extrabold text-sm text-white drop-shadow-md pointer-events-auto cursor-pointer hover:underline"
+                >
+                  {displayedPosts[currentIndex].authorId || displayedPosts[currentIndex].user}
+                </span>
+                <p className="text-xs text-white/90 drop-shadow line-clamp-2 leading-snug">
+                  {displayedPosts[currentIndex].desc}
+                </p>
+                <div className="flex items-center gap-2 text-xs text-purple-200/80">
+                  <svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                  </svg>
+                  <span className="truncate">{displayedPosts[currentIndex].music}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
             {activeTab === 'discover' && (
               <div className="absolute inset-0 bg-[#0b0719] flex flex-col p-4 overflow-y-auto pb-24">
                 <div className="sticky top-0 bg-[#0b0719]/90 backdrop-blur-md pt-4 pb-3 z-20">
@@ -952,11 +874,11 @@
             </div>
           )}
 
-          {showCommentsModal && currentPost && (
+          {showCommentsModal && displayedPosts[currentIndex] && (
             <div className="absolute inset-0 bg-black/70 backdrop-blur-md z-50 flex flex-col justify-end animate-fadeIn">
               <div className="bg-[#0b0719] rounded-t-3xl border-t border-white/15 h-[65%] flex flex-col overflow-hidden">
                 <div className="flex justify-between items-center p-4 border-b border-white/10">
-                  <h3 className="font-extrabold text-sm">{currentPost.commentsList ? currentPost.commentsList.length : currentPost.comments} commentaires</h3>
+                  <h3 className="font-extrabold text-sm">{displayedPosts[currentIndex].commentsList ? displayedPosts[currentIndex].commentsList.length : displayedPosts[currentIndex].comments} commentaires</h3>
                   <button onClick={() => setShowCommentsModal(false)} className="p-2 text-white/60 hover:text-white">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
@@ -965,7 +887,7 @@
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-                  {currentPost.commentsList && currentPost.commentsList.map(c => (
+                  {displayedPosts[currentIndex].commentsList && displayedPosts[currentIndex].commentsList.map(c => (
                     <div key={c.id} className="flex gap-3 items-start">
                       <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center font-bold text-xs shrink-0">
                         {c.user.substring(1, 3).toUpperCase()}
