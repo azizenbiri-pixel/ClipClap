@@ -157,15 +157,15 @@
         return () => clearInterval(interval);
       }, []);
 
-      // Gestion propre de la lecture lors des changements (index, onglets, profil)
+      // Gestion propre de la lecture (pause si modal d'upload ouvert, profil ou autre onglet)
       useEffect(() => {
         if (!showSplash && videoRef.current) {
-          if (viewingCreator || activeTab !== 'feed') {
+          if (viewingCreator || activeTab !== 'feed' || showUploadModal) {
             videoRef.current.pause();
             setIsPlaying(false);
           } else {
             videoRef.current.muted = isMuted;
-            videoRef.current.currentTime = 0; // Reprend la vidéo au début lors du swipe
+            videoRef.current.currentTime = 0;
             setIsPlaying(true);
             const playPromise = videoRef.current.play();
             if (playPromise !== undefined) {
@@ -173,7 +173,7 @@
             }
           }
         }
-      }, [currentIndex, isMuted, showSplash, viewingCreator, activeTab]);
+      }, [currentIndex, isMuted, showSplash, viewingCreator, activeTab, showUploadModal]);
 
       const showToast = (msg) => {
         setToastMessage(msg);
