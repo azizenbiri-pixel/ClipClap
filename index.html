@@ -157,7 +157,7 @@
         return () => clearInterval(interval);
       }, []);
 
-      // Gestion fluide du changement de vidéo ou d'onglet
+      // Gestion sécurisée de la lecture lors des changements
       useEffect(() => {
         if (!showSplash && videoRef.current) {
           if (viewingCreator || activeTab !== 'feed' || showUploadModal) {
@@ -476,6 +476,11 @@
                   autoPlay
                   loop
                   playsInline
+                  onCanPlay={(e) => {
+                    if (!viewingCreator && activeTab === 'feed' && !showUploadModal) {
+                      e.target.play().catch(() => {});
+                    }
+                  }}
                 />
                 
                 <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/90 pointer-events-none"></div>
