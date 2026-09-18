@@ -157,6 +157,13 @@
       const [userName, setUserName] = useState("Aziz Enbiri");
       const [userTag, setUserTag] = useState("@azizenbiri");
       const [userBio, setUserBio] = useState("Créateur de contenu néon ⚡");
+      const [userAvatar, setUserAvatar] = useState(() => {
+        try {
+          return localStorage.getItem('clipclap_avatar') || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop";
+        } catch(e) {
+          return "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop";
+        }
+      });
       const [isEditingProfile, setIsEditingProfile] = useState(false);
 
       const [userFollowersCount, setUserFollowersCount] = useState(1280);
@@ -179,6 +186,12 @@
           localStorage.setItem('clipclap_posts', JSON.stringify(posts));
         } catch(e) {}
       }, [posts]);
+
+      useEffect(() => {
+        try {
+          localStorage.setItem('clipclap_avatar', userAvatar);
+        } catch(e) {}
+      }, [userAvatar]);
 
       useEffect(() => {
         const interval = setInterval(() => {
@@ -717,9 +730,35 @@
                 </div>
 
                 <div className="flex flex-col items-center mb-6">
-                  <div className="w-20 h-20 rounded-full border-2 border-pink-500 overflow-hidden bg-purple-900 mb-3 shadow-xl">
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop" alt="avatar" className="w-full h-full object-cover" />
+                  {/* Avatar modifiable */}
+                  <div className="relative group mb-3">
+                    <div className="w-20 h-20 rounded-full border-2 border-pink-500 overflow-hidden bg-purple-900 shadow-xl">
+                      <img src={userAvatar} alt="avatar" className="w-full h-full object-cover" />
+                    </div>
+                    {isEditingProfile && (
+                      <label className="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center text-white text-[10px] font-bold cursor-pointer opacity-90 hover:opacity-100 transition-opacity">
+                        <span>📷 Changer</span>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setUserAvatar(reader.result);
+                                playSound('click');
+                                showToast("Photo de profil mise à jour ! ✨");
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
                   </div>
+
                   {isEditingProfile ? (
                     <div className="w-full space-y-2 mb-2">
                       <input 
