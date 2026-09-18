@@ -66,7 +66,6 @@
         id: 1,
         authorId: "@neon_vibes",
         user: "@neon_vibes",
-        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
         desc: "Lumières de la ville 🌌 #neon #city #vibes #fyp",
         music: "Son original - Neon Vibes 🎵",
         likes: 12400,
@@ -84,7 +83,31 @@
           { id: 2, user: "@sarah_gfx", text: "Le rendu des néons est top 🌌", time: "Il y a 5h" }
         ],
         userPosts: [
-          { id: 101, views: "145.2K", video: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4", desc: "Mon ancienne vidéo néon 🌌" }
+          { id: 101, views: "145.2K", video: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4", desc: "Mon ancienne vidéo néon 🌌" },
+          { id: 102, views: "89.1K", video: "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4", desc: "Nature and chill 🌿" }
+        ]
+      },
+      {
+        id: 2,
+        authorId: "@cyber_dancer",
+        user: "@cyber_dancer",
+        desc: "Session freestyle sous les néons 💃✨ #dance #cyberpunk",
+        music: "Cyberpunk Beats 2077 🎶",
+        likes: 45200,
+        comments: 1200,
+        bookmarks: 1450,
+        shares: 430,
+        viewsCount: 520800,
+        views: "520.8K",
+        followers: 128000,
+        followingCount: 410,
+        totalLikes: 890000,
+        video: "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4",
+        commentsList: [
+          { id: 1, user: "@dance_King", text: "Quelle énergie ! 💃", time: "Il y a 1j" }
+        ],
+        userPosts: [
+          { id: 201, views: "520.8K", video: "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4", desc: "Session freestyle 💃✨" }
         ]
       }
     ];
@@ -148,7 +171,8 @@
       const [userLikesCount, setUserLikesCount] = useState(9420);
 
       const [chatConversations, setChatConversations] = useState([
-        { id: 1, user: "@neon_vibes", lastMsg: "Salut super tes vidéos !", time: "Il y a 10m", unread: true, messages: [{ sender: "@neon_vibes", text: "Salut super tes vidéos !" }] }
+        { id: 1, user: "@neon_vibes", lastMsg: "Salut super tes vidéos !", time: "Il y a 10m", unread: true, messages: [{ sender: "@neon_vibes", text: "Salut super tes vidéos !" }] },
+        { id: 2, user: "@cyber_dancer", lastMsg: "On collabore quand ?", time: "Il y a 1h", unread: false, messages: [{ sender: "@cyber_dancer", text: "On collabore quand ?" }] }
       ]);
       const [activeChat, setActiveChat] = useState(null);
       const [newMessageText, setNewMessageText] = useState("");
@@ -331,7 +355,6 @@
             id: Date.now(),
             authorId: userTag,
             user: userTag,
-            avatar: userAvatar,
             desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
             music: `Son original - ${userName} 🎵`,
             likes: 1, comments: 0, bookmarks: 0, shares: 0,
@@ -457,7 +480,7 @@
                     {/* Effet de fondu gradient */}
                     <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none"></div>
 
-                    {/* EN-TÊTE : Abonnements / Pour toi */}
+                    {/* EN-TÊTE : Abonnements / Pour toi remonté tout en haut */}
                     <div className="absolute top-0 left-0 right-0 z-30 pt-3 pb-2 flex items-center justify-center gap-6 px-4 bg-gradient-to-b from-black/90 via-black/50 to-transparent">
                       <button 
                         onClick={() => { playSound('click'); setFeedTab('following'); }}
@@ -504,13 +527,9 @@
                           onClick={() => { playSound('click'); setViewingCreator(currentPost); }}
                           className="w-11 h-11 rounded-full border-2 border-pink-500 overflow-hidden bg-purple-900 cursor-pointer shadow-lg"
                         >
-                          <img 
-                            src={currentPost.authorId === userTag ? userAvatar : (currentPost.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop")} 
-                            alt="avatar" 
-                            className="w-full h-full object-cover" 
-                          />
+                          <img src={`https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop`} alt="avatar" className="w-full h-full object-cover" />
                         </div>
-                        {currentPost.authorId !== userTag && !(following[currentPost.authorId || currentPost.user]) && (
+                        {!(following[currentPost.authorId || currentPost.user]) && (
                           <button 
                             onClick={(e) => handleFollow(currentPost.authorId || currentPost.user, e)}
                             className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-5 h-5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md hover:scale-110 transition-transform"
@@ -609,53 +628,57 @@
                 )}
               </div>
             )}
+            {/* ONGLET RECHERCHE / DÉCOUVRIR */}
             {activeTab === 'search' && (
-              <div className="absolute inset-0 bg-[#07040f] overflow-y-auto p-4 pt-12 pb-24">
-                <h2 className="text-xl font-extrabold mb-4">Découvrir</h2>
+              <div className="absolute inset-0 bg-[#0b0719] flex flex-col pt-6 px-4 pb-20 overflow-y-auto">
+                <h2 className="text-xl font-bold mb-4">Explorer</h2>
                 <div className="relative mb-6">
-                  <input
-                    type="text"
+                  <input 
+                    type="text" 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Rechercher un utilisateur, un hashtag..."
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-10 pr-4 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-pink-500 transition-colors"
+                    placeholder="Rechercher des vidéos, des tags, des créateurs..."
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 pl-10 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-pink-500"
                   />
-                  <span className="absolute left-3.5 top-3.5 text-sm">🔍</span>
+                  <span className="absolute left-3 top-3.5 text-sm text-gray-400">🔍</span>
                 </div>
 
                 <div className="mb-6">
                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Tendances du moment</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {['#neon', '#cyberpunk', '#dance', '#vibes', '#music', '#art'].map((tag, idx) => (
-                      <button 
+                  <div className="grid grid-cols-2 gap-3">
+                    {['#neon', '#cyberpunk', '#dance', '#vibes', '#art', '#music'].map((tag, idx) => (
+                      <div 
                         key={idx}
-                        onClick={() => { playSound('click'); setSearchQuery(tag); }}
-                        className="bg-white/5 hover:bg-white/10 border border-white/10 px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-200 transition-colors"
+                        onClick={() => { playSound('click'); setSearchQuery(tag); setActiveTab('feed'); }}
+                        className="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-between cursor-pointer hover:bg-white/10 transition-colors"
                       >
-                        {tag}
-                      </button>
+                        <span className="text-sm font-semibold">{tag}</span>
+                        <span className="text-xs text-pink-400">🔥 120k</span>
+                      </div>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Créateurs suggérés</h3>
-                  <div className="space-y-3">
-                    {posts.map((p, idx) => (
-                      <div key={idx} className="flex items-center justify-between bg-white/5 border border-white/10 p-3 rounded-2xl">
-                        <div className="flex items-center gap-3">
-                          <img src={p.authorId === userTag ? userAvatar : p.avatar} alt="avatar" className="w-10 h-10 rounded-full object-cover border border-pink-500" />
-                          <div>
-                            <h4 className="text-sm font-bold">{p.user}</h4>
-                            <p className="text-xs text-gray-400">{creatorFollowers[p.authorId || p.user] || 1000} abonnés</p>
-                          </div>
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Vidéos populaires</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {posts.map((post) => (
+                      <div 
+                        key={post.id}
+                        onClick={() => {
+                          playSound('click');
+                          const targetIdx = displayedPosts.findIndex(p => p.id === post.id);
+                          if (targetIdx !== -1) setCurrentIndex(targetIdx);
+                          setActiveTab('feed');
+                        }}
+                        className="relative h-48 rounded-2xl overflow-hidden bg-purple-900 border border-white/10 cursor-pointer group"
+                      >
+                        <video src={post.video} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-xs font-bold text-white">
+                          <span>❤️ {post.likes}</span>
+                          <span>👁️ {post.views}</span>
                         </div>
-                        <button 
-                          onClick={(e) => handleFollow(p.authorId || p.user, e)}
-                          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${following[p.authorId || p.user] ? 'bg-white/20 text-white' : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md'}`}
-                        >
-                          {following[p.authorId || p.user] ? 'Abonné' : 'Suivre'}
-                        </button>
                       </div>
                     ))}
                   </div>
@@ -663,106 +686,135 @@
               </div>
             )}
 
+            {/* ONGLET MESSAGES / INBOX */}
             {activeTab === 'inbox' && (
-              <div className="absolute inset-0 bg-[#07040f] overflow-y-auto p-4 pt-12 pb-24">
-                <h2 className="text-xl font-extrabold mb-4">Messages</h2>
+              <div className="absolute inset-0 bg-[#0b0719] flex flex-col pt-6 px-4 pb-20 overflow-y-auto">
+                <h2 className="text-xl font-bold mb-4">Messages</h2>
                 <div className="space-y-3">
                   {chatConversations.map((conv) => (
                     <div 
                       key={conv.id}
                       onClick={() => { playSound('click'); setActiveChat(conv); }}
-                      className="flex items-center justify-between bg-white/5 border border-white/10 p-3.5 rounded-2xl cursor-pointer hover:bg-white/10 transition-colors"
+                      className="bg-white/5 border border-white/10 p-3.5 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-white/10 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center font-bold text-base">
-                            {conv.user.charAt(1).toUpperCase()}
-                          </div>
-                          {conv.unread && <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-pink-500 rounded-full border-2 border-[#07040f]"></span>}
+                      <div className="relative">
+                        <div className="w-12 h-12 rounded-full border border-pink-500 overflow-hidden bg-purple-900">
+                          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop" alt="avatar" className="w-full h-full object-cover" />
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-bold">{conv.user}</h4>
-                            <span className="text-[10px] text-gray-400">{conv.time}</span>
-                          </div>
-                          <p className="text-xs text-gray-300 truncate max-w-[200px] mt-0.5">{conv.lastMsg}</p>
-                        </div>
+                        {conv.unread && <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-pink-500 rounded-full border-2 border-[#0b0719]"></span>}
                       </div>
-                      <span className="text-gray-400 text-sm">›</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="text-sm font-bold truncate">{conv.user}</h4>
+                          <span className="text-[10px] text-gray-400">{conv.time}</span>
+                        </div>
+                        <p className="text-xs text-gray-300 truncate">{conv.lastMsg}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
+            {/* ONGLET PROFIL */}
             {activeTab === 'profile' && (
-              <div 
-                className="absolute inset-0 bg-[#07040f] overflow-y-auto p-4 pt-10 pb-24 video-swipe-area"
-                onTouchStart={handleProfileTouchStart}
-                onTouchEnd={handleProfileTouchEnd}
-              >
-                <div className="flex flex-col items-center mt-4">
-                  <div className="relative mb-3">
-                    <div className="w-24 h-24 rounded-full border-2 border-pink-500 overflow-hidden bg-purple-900 shadow-xl">
+              <div className="absolute inset-0 bg-[#0b0719] flex flex-col pt-6 px-4 pb-20 overflow-y-auto">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold">Profil</h2>
+                  <button 
+                    onClick={() => { playSound('click'); setIsEditingProfile(!isEditingProfile); }}
+                    className="text-xs bg-white/10 border border-white/10 px-3 py-1.5 rounded-full font-semibold hover:bg-white/20"
+                  >
+                    {isEditingProfile ? 'Enregistrer' : 'Modifier le profil'}
+                  </button>
+                </div>
+
+                <div className="flex flex-col items-center mb-6">
+                  {/* Avatar modifiable */}
+                  <div className="relative group mb-3">
+                    <div className="w-20 h-20 rounded-full border-2 border-pink-500 overflow-hidden bg-purple-900 shadow-xl">
                       <img src={userAvatar} alt="avatar" className="w-full h-full object-cover" />
                     </div>
+                    {isEditingProfile && (
+                      <label className="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center text-white text-[10px] font-bold cursor-pointer opacity-90 hover:opacity-100 transition-opacity">
+                        <span>📷 Changer</span>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setUserAvatar(reader.result);
+                                playSound('click');
+                                showToast("Photo de profil mise à jour ! ✨");
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
                   </div>
-                  <h2 className="text-xl font-extrabold text-white flex items-center gap-1.5">
-                    {userName} <span className="text-pink-500 text-sm">✓</span>
-                  </h2>
-                  <p className="text-xs text-gray-400 font-medium mb-3">{userTag}</p>
-                  <p className="text-xs text-gray-200 text-center max-w-xs mb-5 font-normal px-4">
-                    {userBio}
-                  </p>
 
-                  <div className="flex items-center gap-6 mb-6 text-center">
+                  {isEditingProfile ? (
+                    <div className="w-full space-y-2 mb-2">
+                      <input 
+                        type="text" 
+                        value={userName} 
+                        onChange={(e) => setUserName(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-center text-sm font-bold text-white"
+                      />
+                      <input 
+                        type="text" 
+                        value={userBio} 
+                        onChange={(e) => setUserBio(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-center text-xs text-gray-300"
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="text-lg font-bold mb-0.5">{userName}</h3>
+                      <p className="text-xs text-gray-400 mb-2">{userTag}</p>
+                      <p className="text-xs text-center text-gray-300 mb-4 px-4">{userBio}</p>
+                    </>
+                  )}
+
+                  <div className="flex items-center gap-6 text-center">
                     <div>
-                      <span className="block font-extrabold text-base">{Object.keys(following).filter(k => following[k]).length + 245}</span>
+                      <span className="block text-base font-bold">{userFollowingCount}</span>
                       <span className="text-[11px] text-gray-400">Abonnements</span>
                     </div>
-                    <div className="w-[1px] h-6 bg-white/15"></div>
+                    <div className="w-[1px] h-6 bg-white/10"></div>
                     <div>
-                      <span className="block font-extrabold text-base">{userFollowersCount}</span>
+                      <span className="block text-base font-bold">{userFollowersCount}</span>
                       <span className="text-[11px] text-gray-400">Abonnés</span>
                     </div>
-                    <div className="w-[1px] h-6 bg-white/15"></div>
+                    <div className="w-[1px] h-6 bg-white/10"></div>
                     <div>
-                      <span className="block font-extrabold text-base">{userLikesCount}</span>
+                      <span className="block text-base font-bold">{userLikesCount}</span>
                       <span className="text-[11px] text-gray-400">J'aime</span>
                     </div>
-                  </div>
-
-                  <div className="flex gap-2 w-full max-w-xs mb-6">
-                    <button 
-                      onClick={() => { playSound('click'); setIsEditingProfile(true); }}
-                      className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 py-2 rounded-xl text-xs font-bold text-white transition-colors"
-                    >
-                      Modifier le profil
-                    </button>
-                    <button 
-                      onClick={() => { playSound('click'); showToast("Lien du profil partagé !"); }}
-                      className="w-10 bg-white/10 hover:bg-white/15 border border-white/10 py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center transition-colors"
-                    >
-                      share
-                    </button>
                   </div>
                 </div>
 
                 <div className="border-t border-white/10 pt-4">
-                  <div className="flex justify-center gap-8 mb-4">
-                    <span className="text-xs font-bold text-white border-b-2 border-pink-500 pb-1">Mes vidéos</span>
-                    <span className="text-xs font-semibold text-gray-400">Favoris</span>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-1">
-                    {posts.filter(p => p.authorId === userTag || p.user === userTag).map((p, idx) => (
-                      <div key={idx} className="relative aspect-[9/16] bg-gray-900 overflow-hidden rounded-lg">
-                        <video src={p.video} className="w-full h-full object-cover" muted />
-                        <div className="absolute bottom-1 left-1.5 flex items-center gap-1 text-[10px] text-white font-bold bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
-                          <span>▶</span> {p.viewsCount || p.views || 1}
+                  <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Mes publications</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {posts.filter(p => p.user === userTag).length > 0 ? (
+                      posts.filter(p => p.user === userTag).map(p => (
+                        <div key={p.id} className="relative h-44 rounded-2xl overflow-hidden bg-purple-900 border border-white/10">
+                          <video src={p.video} className="absolute inset-0 w-full h-full object-cover" />
+                          <div className="absolute bottom-2 left-2 right-2 text-xs font-bold text-white">❤️ {likeCounts[p.id] || p.likes}</div>
                         </div>
+                      ))
+                    ) : (
+                      <div className="col-span-2 text-center py-8 text-gray-400 text-xs font-medium">
+                        Tu n'as pas encore publié de vidéo. Appuie sur le bouton + pour commencer ! 🚀
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
@@ -770,268 +822,245 @@
           </div>
 
           {/* BARRE DE NAVIGATION INFÉRIEURE */}
-          <div className="absolute bottom-0 left-0 right-0 h-16 bg-[#090514]/95 backdrop-blur-xl border-t border-white/10 flex items-center justify-around px-2 z-40">
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-[#0b0719]/90 backdrop-blur-xl border-t border-white/10 flex items-center justify-around px-2 z-40">
             <button 
-              onClick={() => { playSound('click'); setActiveTab('feed'); setViewingCreator(null); }}
-              className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'feed' ? 'text-pink-500 font-bold' : 'text-gray-400 hover:text-white'}`}
+              onClick={() => { playSound('click'); setActiveTab('feed'); }}
+              className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'feed' ? 'text-pink-500 scale-105' : 'text-gray-400 hover:text-white'}`}
             >
-              <span className="text-xl">🏠</span>
-              <span className="text-[10px]">Accueil</span>
+              <span className="text-lg">🏠</span>
+              <span className="text-[10px] font-bold">Accueil</span>
             </button>
 
             <button 
-              onClick={() => { playSound('click'); setActiveTab('search'); setViewingCreator(null); }}
-              className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'search' ? 'text-pink-500 font-bold' : 'text-gray-400 hover:text-white'}`}
+              onClick={() => { playSound('click'); setActiveTab('search'); }}
+              className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'search' ? 'text-pink-500 scale-105' : 'text-gray-400 hover:text-white'}`}
             >
-              <span className="text-xl">🔍</span>
-              <span className="text-[10px]">Découvrir</span>
+              <span className="text-lg">🔍</span>
+              <span className="text-[10px] font-bold">Découvrir</span>
             </button>
 
-            {/* BOUTON CENTRAL + UPLOAD */}
             <button 
               onClick={() => { playSound('click'); setShowUploadModal(true); }}
-              className="relative -top-2 w-12 h-12 bg-gradient-to-tr from-pink-500 via-purple-600 to-cyan-400 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-pink-500/40 hover:scale-105 active:scale-95 transition-transform"
+              className="w-12 h-10 bg-gradient-to-r from-pink-500 to-cyan-400 rounded-xl flex items-center justify-center text-white shadow-lg shadow-pink-500/30 hover:scale-105 transition-transform"
             >
-              +
+              <span className="text-xl font-bold">+</span>
             </button>
 
             <button 
-              onClick={() => { playSound('click'); setActiveTab('inbox'); setViewingCreator(null); }}
-              className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'inbox' ? 'text-pink-500 font-bold' : 'text-gray-400 hover:text-white'}`}
+              onClick={() => { playSound('click'); setActiveTab('inbox'); }}
+              className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'inbox' ? 'text-pink-500 scale-105' : 'text-gray-400 hover:text-white'}`}
             >
-              <span className="text-xl">💬</span>
-              <span className="text-[10px]">Boîte de rép.</span>
+              <span className="text-lg">💬</span>
+              <span className="text-[10px] font-bold">Boîte de réception</span>
             </button>
 
             <button 
-              onClick={() => { playSound('click'); setActiveTab('profile'); setViewingCreator(null); }}
-              className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'profile' ? 'text-pink-500 font-bold' : 'text-gray-400 hover:text-white'}`}
+              onClick={() => { playSound('click'); setActiveTab('profile'); }}
+              className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'profile' ? 'text-pink-500 scale-105' : 'text-gray-400 hover:text-white'}`}
             >
-              <span className="text-xl">👤</span>
-              <span className="text-[10px]">Profil</span>
+              <span className="text-lg">👤</span>
+              <span className="text-[10px] font-bold">Profil</span>
             </button>
           </div>
 
-          {/* MODAL UPLOAD VIDÉO */}
-          {showUploadModal && (
-            <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
-              <div className="w-full sm:max-w-md bg-[#120c24] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-extrabold text-white">Publier une vidéo</h3>
-                  <button onClick={() => setShowUploadModal(false)} className="text-gray-400 hover:text-white text-xl font-bold">✕</button>
+          {/* MODAL : PROFIL CRÉATEUR (SWIPE GAUCHE) */}
+          {viewingCreator && (
+            <div 
+              className="absolute inset-0 bg-[#0b0719] z-50 flex flex-col pt-6 px-4 pb-6 overflow-y-auto animate-in slide-in-from-right duration-200"
+              onTouchStart={handleProfileTouchStart}
+              onTouchEnd={handleProfileTouchEnd}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <button 
+                  onClick={() => { playSound('click'); setViewingCreator(null); }}
+                  className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center text-white font-bold"
+                >
+                  ‹
+                </button>
+                <span className="text-xs font-semibold text-gray-400">Glisser vers la droite pour fermer</span>
+                <div className="w-9"></div>
+              </div>
+
+              <div className="flex flex-col items-center mb-6">
+                <div className="w-20 h-20 rounded-full border-2 border-pink-500 overflow-hidden bg-purple-900 mb-3 shadow-xl">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop" alt="avatar" className="w-full h-full object-cover" />
+                </div>
+                <h3 className="text-lg font-bold mb-0.5">{viewingCreator.user}</h3>
+                <p className="text-xs text-gray-400 mb-4">{viewingCreator.authorId || viewingCreator.user}</p>
+
+                <div className="flex items-center gap-6 text-center mb-4">
+                  <div>
+                    <span className="block text-base font-bold">{viewingCreator.followingCount || 120}</span>
+                    <span className="text-[11px] text-gray-400">Abonnements</span>
+                  </div>
+                  <div className="w-[1px] h-6 bg-white/10"></div>
+                  <div>
+                    <span className="block text-base font-bold">{creatorFollowers[viewingCreator.authorId || viewingCreator.user] || viewingCreator.followers}</span>
+                    <span className="text-[11px] text-gray-400">Abonnés</span>
+                  </div>
+                  <div className="w-[1px] h-6 bg-white/10"></div>
+                  <div>
+                    <span className="block text-base font-bold">{viewingCreator.totalLikes || 210000}</span>
+                    <span className="text-[11px] text-gray-400">J'aime</span>
+                  </div>
                 </div>
 
-                <form onSubmit={handlePublish} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1.5">Fichier Vidéo (MP4)</label>
-                    <input 
-                      type="file" 
-                      accept="video/*"
-                      onChange={(e) => setSelectedFile(e.target.files[0])}
-                      className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-pink-500 file:text-white hover:file:bg-pink-600 cursor-pointer"
-                    />
-                  </div>
+                <button 
+                  onClick={(e) => handleFollow(viewingCreator.authorId || viewingCreator.user, e)}
+                  className={`w-40 py-2.5 rounded-full font-bold text-xs shadow-lg transition-transform hover:scale-105 ${following[viewingCreator.authorId || viewingCreator.user] ? 'bg-white/10 text-white border border-white/20' : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'}`}
+                >
+                  {following[viewingCreator.authorId || viewingCreator.user] ? 'Abonné(e)' : "S'abonner"}
+                </button>
+              </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1.5">Description & Hashtags</label>
-                    <textarea 
-                      value={newCaption}
-                      onChange={(e) => setNewCaption(e.target.value)}
-                      placeholder="Décris ta vidéo avec des hashtags (#fyp, #dance...)"
-                      rows="3"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500 resize-none"
-                    ></textarea>
-                  </div>
-
-                  <button 
-                    type="submit"
-                    className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl text-white font-extrabold text-sm shadow-lg shadow-pink-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                  >
-                    Publier sur ClipClap 🚀
-                  </button>
-                </form>
+              <div className="border-t border-white/10 pt-4 flex-1">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Vidéos du créateur</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {(viewingCreator.userPosts && viewingCreator.userPosts.length > 0) ? viewingCreator.userPosts.map(p => (
+                    <div key={p.id} className="relative h-44 rounded-2xl overflow-hidden bg-purple-900 border border-white/10">
+                      <video src={p.video} className="absolute inset-0 w-full h-full object-cover" />
+                      <div className="absolute bottom-2 left-2 text-xs font-bold text-white">👁️ {p.views}</div>
+                    </div>
+                  )) : (
+                    <div className="relative h-44 rounded-2xl overflow-hidden bg-purple-900 border border-white/10">
+                      <video src={viewingCreator.video} className="absolute inset-0 w-full h-full object-cover" />
+                      <div className="absolute bottom-2 left-2 text-xs font-bold text-white">👁️ {viewingCreator.views}</div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
 
-          {/* MODAL COMMENTAIRES */}
+          {/* MODAL : COMMENTAIRES */}
           {showCommentsModal && currentPost && (
-            <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center">
-              <div className="w-full max-w-md h-[65%] bg-[#120c24] border-t border-white/10 rounded-t-3xl flex flex-col shadow-2xl">
-                <div className="flex items-center justify-between p-4 border-b border-white/10">
-                  <h3 className="text-sm font-extrabold">{currentPost.commentsList?.length || 0} commentaires</h3>
-                  <button onClick={() => setShowCommentsModal(false)} className="text-gray-400 hover:text-white text-lg font-bold">✕</button>
+            <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex flex-col justify-end animate-in fade-in duration-200">
+              <div className="bg-[#0b0719] border-t border-white/10 rounded-t-3xl h-[60vh] flex flex-col p-4 animate-in slide-in-from-bottom duration-300">
+                <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-3">
+                  <h3 className="text-sm font-bold">{currentPost.comments || 0} commentaires</h3>
+                  <button onClick={() => setShowCommentsModal(false)} className="text-gray-400 hover:text-white font-bold text-base">✕</button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div className="flex-1 overflow-y-auto space-y-4 mb-3 pr-1">
                   {currentPost.commentsList && currentPost.commentsList.length > 0 ? (
-                    currentPost.commentsList.map((c) => (
-                      <div key={c.id} className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center font-bold text-xs">
-                          {c.user.charAt(1).toUpperCase()}
+                    currentPost.commentsList.map(comment => (
+                      <div key={comment.id} className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-purple-900 border border-pink-500 overflow-hidden flex-shrink-0">
+                          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50&h=50&fit=crop" alt="avatar" className="w-full h-full object-cover" />
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-gray-300">{c.user}</span>
-                            <span className="text-[10px] text-gray-500">{c.time}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-300">{comment.user}</span>
+                            <span className="text-[10px] text-gray-500">{comment.time}</span>
                           </div>
-                          <p className="text-xs text-white mt-0.5">{c.text}</p>
+                          <p className="text-xs text-white mt-0.5 break-words">{comment.text}</p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-400 text-center">
-                      <span className="text-3xl mb-2">💬</span>
-                      <p className="text-xs">Aucun commentaire pour le moment. Sois le premier !</p>
-                    </div>
+                    <div className="text-center py-10 text-gray-400 text-xs">Aucun commentaire pour le moment. Sois le premier ! 💬</div>
                   )}
                 </div>
 
-                <form onSubmit={handleAddComment} className="p-3 border-t border-white/10 flex items-center gap-2 bg-[#0d081b]">
+                <form onSubmit={handleAddComment} className="flex items-center gap-2 pt-2 border-t border-white/10">
                   <input 
-                    type="text"
-                    value={newCommentText}
+                    type="text" 
+                    value={newCommentText} 
                     onChange={(e) => setNewCommentText(e.target.value)}
                     placeholder="Ajouter un commentaire..."
-                    className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-pink-500"
+                    className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-pink-500"
                   />
-                  <button type="submit" className="px-4 py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full text-xs font-bold text-white shadow-md">
-                    Envoyer
+                  <button type="submit" className="bg-pink-500 text-white px-4 py-2 rounded-full text-xs font-bold shadow-md">Publier</button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* MODAL : UPLOAD DE VIDÉO */}
+          {showUploadModal && (
+            <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+              <div className="bg-[#120c24] border border-white/10 rounded-3xl w-full max-w-sm p-5 flex flex-col shadow-2xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-bold">Publier une vidéo 🎬</h3>
+                  <button onClick={() => setShowUploadModal(false)} className="text-gray-400 hover:text-white font-bold text-base">✕</button>
+                </div>
+
+                <form onSubmit={handlePublish} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-300 mb-1.5">Fichier vidéo (MP4)</label>
+                    <input 
+                      type="file" 
+                      accept="video/*" 
+                      onChange={(e) => setSelectedFile(e.target.files[0])}
+                      className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-pink-500 file:text-white hover:file:bg-pink-600 cursor-pointer"
+                    />
+                    <p className="text-[10px] text-gray-500 mt-1">Si aucun fichier n'est choisi, une vidéo par défaut sera utilisée.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-300 mb-1.5">Légende & Hashtags</label>
+                    <textarea 
+                      value={newCaption} 
+                      onChange={(e) => setNewCaption(e.target.value)}
+                      placeholder="Décris ta vidéo... #fyp #viral"
+                      rows="3"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl p-3 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-pink-500 resize-none"
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="w-full py-3 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-400 text-white rounded-2xl text-xs font-bold shadow-lg shadow-pink-500/30 hover:opacity-95 transition-opacity"
+                  >
+                    Publier maintenant 🚀
                   </button>
                 </form>
               </div>
             </div>
           )}
 
-          {/* MODAL PROFIL CRÉATEUR (SWIPE DROITE) */}
-          {viewingCreator && (
-            <div className="absolute inset-0 z-50 bg-[#07040f] overflow-y-auto p-4 pt-10">
-              <button 
-                onClick={() => setViewingCreator(null)}
-                className="mb-4 w-9 h-9 bg-white/10 rounded-full flex items-center justify-center text-white text-base font-bold"
-              >
-                ‹
-              </button>
-              <div className="flex flex-col items-center mt-2">
-                <div className="w-20 h-20 rounded-full border-2 border-pink-500 overflow-hidden bg-purple-900 mb-3 shadow-lg">
-                  <img src={viewingCreator.authorId === userTag ? userAvatar : (viewingCreator.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop")} alt="avatar" className="w-full h-full object-cover" />
-                </div>
-                <h2 className="text-lg font-extrabold text-white">{viewingCreator.user}</h2>
-                <p className="text-xs text-gray-400 mb-3">{viewingCreator.authorId || "@createur"}</p>
-                <div className="flex items-center gap-6 mb-4 text-center">
-                  <div>
-                    <span className="block font-bold text-sm">140</span>
-                    <span className="text-[10px] text-gray-400">Abonnements</span>
-                  </div>
-                  <div className="w-[1px] h-5 bg-white/15"></div>
-                  <div>
-                    <span className="block font-bold text-sm">{creatorFollowers[viewingCreator.authorId || viewingCreator.user] || 1200}</span>
-                    <span className="text-[10px] text-gray-400">Abonnés</span>
-                  </div>
-                  <div className="w-[1px] h-5 bg-white/15"></div>
-                  <div>
-                    <span className="block font-bold text-sm">45.2K</span>
-                    <span className="text-[10px] text-gray-400">J'aime</span>
-                  </div>
-                </div>
-                <button 
-                  onClick={(e) => handleFollow(viewingCreator.authorId || viewingCreator.user, e)}
-                  className={`w-36 py-2 rounded-full text-xs font-bold transition-all ${following[viewingCreator.authorId || viewingCreator.user] ? 'bg-white/20 text-white' : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'}`}
-                >
-                  {following[viewingCreator.authorId || viewingCreator.user] ? 'Abonné' : 'S\'abonner'}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* MODAL MODIFIER PROFIL (AVEC SÉLECTEUR DE FICHIER GALERIE) */}
-          {isEditingProfile && (
-            <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-              <div className="w-full max-w-sm bg-[#120c24] border border-white/10 rounded-3xl p-6 shadow-2xl">
-                <h3 className="text-base font-extrabold mb-4 text-center">Modifier mon profil</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">Nom d'affichage</label>
-                    <input 
-                      type="text" 
-                      value={userName} 
-                      onChange={(e) => setUserName(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-pink-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">Bio</label>
-                    <textarea 
-                      value={userBio} 
-                      onChange={(e) => setUserBio(e.target.value)}
-                      rows="2"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500 resize-none"
-                    ></textarea>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-300 mb-1">Photo de profil (Galerie)</label>
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setUserAvatar(reader.result);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                      className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-pink-500 file:text-white hover:file:bg-pink-600 cursor-pointer"
-                    />
-                  </div>
-                  <button 
-                    onClick={() => { playSound('click'); setIsEditingProfile(false); showToast("Profil mis à jour ! ✨"); }}
-                    className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl text-white font-extrabold text-xs shadow-md"
-                  >
-                    Enregistrer
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* MODAL DISCUSSION MESSAGERIE */}
+          {/* MODAL : CHAT INDIVIDUEL */}
           {activeChat && (
-            <div className="absolute inset-0 z-50 bg-[#07040f] flex flex-col">
-              <div className="p-4 border-b border-white/10 flex items-center gap-3 bg-[#0d081b]">
-                <button onClick={() => setActiveChat(null)} className="text-white text-base font-bold">‹</button>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center font-bold text-xs">
-                  {activeChat.user.charAt(1).toUpperCase()}
+            <div className="absolute inset-0 z-50 bg-[#0b0719] flex flex-col animate-in slide-in-from-right duration-200">
+              <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#120c24]">
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setActiveChat(null)} className="text-white font-bold text-base">‹</button>
+                  <div className="w-9 h-9 rounded-full border border-pink-500 overflow-hidden bg-purple-900">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=50&h=50&fit=crop" alt="avatar" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold">{activeChat.user}</h4>
+                    <span className="text-[10px] text-green-400">En ligne</span>
+                  </div>
                 </div>
-                <h3 className="text-sm font-extrabold">{activeChat.user}</h3>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {activeChat.messages.map((m, idx) => (
-                  <div key={idx} className={`flex ${m.sender === userTag ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-xs ${m.sender === userTag ? 'bg-pink-500 text-white rounded-br-none' : 'bg-white/10 text-white rounded-bl-none'}`}>
-                      {m.text}
+                {activeChat.messages.map((m, idx) => {
+                  const isMe = m.sender === userTag;
+                  return (
+                    <div key={idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-xs ${isMe ? 'bg-pink-500 text-white rounded-br-none' : 'bg-white/10 text-white rounded-bl-none'}`}>
+                        {m.text}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
-              <form onSubmit={handleSendMessage} className="p-3 border-t border-white/10 flex items-center gap-2 bg-[#0d081b]">
+              <form onSubmit={handleSendMessage} className="p-3 border-t border-white/10 bg-[#120c24] flex items-center gap-2">
                 <input 
-                  type="text"
-                  value={newMessageText}
+                  type="text" 
+                  value={newMessageText} 
                   onChange={(e) => setNewMessageText(e.target.value)}
-                  placeholder="Écrire un message..."
-                  className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-pink-500"
+                  placeholder="Écris un message..."
+                  className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-pink-500"
                 />
-                <button type="submit" className="px-4 py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full text-xs font-bold text-white shadow-md">
-                  Envoyer
-                </button>
+                <button type="submit" className="bg-pink-500 text-white px-4 py-2 rounded-full text-xs font-bold shadow-md">Envoyer</button>
               </form>
             </div>
           )}
+
         </div>
       );
     }
