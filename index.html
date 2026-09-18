@@ -11,7 +11,7 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     body {
-      font-family: 'Plus Jakarta+Sans', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       background-color: #07040f;
       color: #ffffff;
       overflow: hidden;
@@ -266,6 +266,7 @@
           setViewingCreator(null);
         }
       };
+
       if (showSplash) {
         return (
           <div className="h-full w-full flex flex-col items-center justify-center bg-[#07040f] text-white select-none">
@@ -287,7 +288,6 @@
       }
 
       const currentPost = displayedPosts[currentIndex];
-
       return (
         <div className="h-full w-full flex flex-col bg-black overflow-hidden relative font-sans select-none">
           {toastMessage && (
@@ -354,7 +354,7 @@
                       <span className="text-white text-xs animate-pulse">‹</span>
                     </div>
 
-                    {/* BOUTONS D'ACTION LATÉRAUX (DROITE) AVEC CORRECTIF AVATAR & BOUTON + */}
+                    {/* BOUTONS D'ACTION LATÉRAUX (DROITE) */}
                     <div className="absolute right-3 bottom-20 z-30 flex flex-col items-center gap-4">
                       <div className="relative mb-1">
                         <div 
@@ -497,6 +497,7 @@
                 )}
               </div>
             )}
+
             {activeTab === 'search' && (
               <div className="absolute inset-0 bg-[#07040f] overflow-y-auto p-4 pt-12 pb-24">
                 <h2 className="text-xl font-extrabold mb-4">Découvrir</h2>
@@ -708,7 +709,7 @@
             </button>
           </div>
 
-          {/* VUE PROFIL CRÉATEUR (LORSQU'ON SWIPE OU CLIQUE SUR UN AVATAR) */}
+          {/* VUE PROFIL CRÉATEUR */}
           {viewingCreator && (
             <div 
               className="absolute inset-0 bg-[#07040f] z-50 overflow-y-auto p-4 pt-10 pb-24 video-swipe-area animate-in fade-in slide-in-from-right duration-200"
