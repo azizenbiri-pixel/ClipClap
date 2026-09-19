@@ -145,15 +145,7 @@
       const [userName, setUserName] = useState("Aziz Enbiri");
       const [userTag, setUserTag] = useState("@azizenbiri");
       const [userBio, setUserBio] = useState("Créateur de contenu néon ⚡");
-      const [userAvatar, setUserAvatar] = useState(() => {
-  try {
-    const saved = localStorage.getItem('clipclap_user_avatar');
-    return saved || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop";
-  } catch (e) {
-    return "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop";
-  }
-});
-
+      const [userAvatar, setUserAvatar] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop");
 
         
           
@@ -966,36 +958,15 @@
                       type="file" 
                       accept="image/*"
                       onChange={(e) => {
-                            const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const newAvatar = reader.result;
-          setUserAvatar(newAvatar);
-          localStorage.setItem('clipclap_user_avatar', newAvatar);
-        };
-        reader.readAsDataURL(file);
-      }
-
-                        
-                    
-                              
-          
-          
-       
-        
-      
-  
-  
-
-  
-
-
-                            
-                        
-                       
-                        
-                      
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setUserAvatar(reader.result);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
                       className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-pink-500 file:text-white hover:file:bg-pink-600 cursor-pointer"
                     />
                   </div>
