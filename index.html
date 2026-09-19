@@ -969,17 +969,23 @@
                         const file = e.target.files[0];
                         if (file) {
                           const reader = new FileReader();
-                          reader.onloadend = () => {
-  const newAvatar = reader.result;
-  setUserAvatar(newAvatar);
-  localStorage.setItem('clipclap_user_avatar', newAvatar);
-};
+                                reader.onloadend = () => {
+          const newAvatar = reader.result;
+          setUserAvatar(newAvatar);
+          localStorage.setItem('clipclap_user_avatar', newAvatar);
+        };
+        reader.readAsDataURL(file);
+  
+  
+
+  
+
 
                             
                         
-                          reader.readAsDataURL(file);
-                        }
-                      }}
+                       
+                        
+                      
                       className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-pink-500 file:text-white hover:file:bg-pink-600 cursor-pointer"
                     />
                   </div>
