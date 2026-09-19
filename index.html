@@ -145,13 +145,14 @@
       const [userName, setUserName] = useState("Aziz Enbiri");
       const [userTag, setUserTag] = useState("@azizenbiri");
       const [userBio, setUserBio] = useState("Créateur de contenu néon ⚡");
-      const [userAvatar, setUserAvatar] = useState(() => {
-        try {
-          return localStorage.getItem('clipclap_avatar') || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop";
-        } catch(e) {
-          return "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop";
-        }
-      });
+      const [userAvatar, setUserAvatar] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop");
+
+        
+          
+        
+          
+        
+      
       const [isEditingProfile, setIsEditingProfile] = useState(false);
 
       const [userFollowersCount, setUserFollowersCount] = useState(1280);
