@@ -966,15 +966,25 @@
                       type="file" 
                       accept="image/*"
                       onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const reader = new FileReader();
-                                reader.onloadend = () => {
+                            const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
           const newAvatar = reader.result;
           setUserAvatar(newAvatar);
           localStorage.setItem('clipclap_user_avatar', newAvatar);
         };
         reader.readAsDataURL(file);
+      }
+
+                        
+                    
+                              
+          
+          
+       
+        
+      
   
   
 
