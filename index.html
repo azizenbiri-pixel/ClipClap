@@ -175,10 +175,16 @@
       }, [posts]);
 
       useEffect(() => {
-        try {
-          localStorage.setItem('clipclap_avatar', userAvatar);
-        } catch(e) {}
-      }, [userAvatar]);
+  const savedAvatar = localStorage.getItem('clipclap_user_avatar');
+  if (savedAvatar) {
+    setUserAvatar(savedAvatar);
+  }
+}, []);
+
+        
+        
+        
+      
 
       useEffect(() => {
         const interval = setInterval(() => {
