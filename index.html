@@ -1,382 +1,406 @@
 <!DOCTYPE html>
-<html lang="fr" class="h-full">
+<html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ClipClap - Vidéos Courtes</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ClipClap</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    body {
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #0b0719;
       font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #000;
-      color: #fff;
-      overscroll-behavior-y: none;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
     }
-    .shadow-text {
-      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-    }
-    /* Masquer la barre de défilement tout en gardant le scroll fonctionnel */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+    .video-swipe-area {
+      touch-action: none;
     }
   </style>
 </head>
-<body class="h-full overflow-hidden flex items-center justify-center bg-black">
-  <div id="root" class="w-full h-full sm:max-w-md sm:h-[844px] sm:rounded-[40px] sm:border-8 sm:border-gray-800 sm:shadow-2xl overflow-hidden relative"></div>
+<body class="text-white select-none">
+  <div id="root" class="h-full w-full"></div>
 
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
+
+    const playSound = (type = 'click') => {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'click') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.05);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.05);
+        } else if (type === 'like') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(440, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.1);
+        }
+      } catch(e) {}
+    };
+
+    const INITIAL_POSTS = [
+      {
+        id: 1,
+        authorId: "@neon_vibes",
+        user: "@neon_vibes",
+        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
+        desc: "Lumières de la ville 🌌 #neon #city #vibes #fyp",
+        music: "Son original - Neon Vibes 🎵",
+        likes: 12400,
+        comments: 842,
+        bookmarks: 320,
+        shares: 156,
+        viewsCount: 145200,
+        views: "145.2K",
+        followers: 45200,
+        followingCount: 120,
+        totalLikes: 210000,
+        video: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4",
+        commentsList: [
+          { id: 1, user: "@lucas_92", text: "Incroyable cette vidéo ! 🔥", time: "Il y a 2h" },
+          { id: 2, user: "@sarah_gfx", text: "Le rendu des néons est top 🌌", time: "Il y a 5h" }
+        ],
+        userPosts: [
+          { id: 101, views: "145.2K", video: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4", desc: "Mon ancienne vidéo néon 🌌" }
+        ]
+      }
+    ];
+
     function ClipClapApp() {
-      // ÉTATS DE NAVIGATION ET APPLICATION
-      const [activeTab, setActiveTab] = useState('feed'); // 'feed', 'search', 'inbox', 'profile'
-      const [feedTab, setFeedTab] = useState('foryou'); // 'foryou', 'following'
       const [showSplash, setShowSplash] = useState(true);
       const [progress, setProgress] = useState(0);
+      const [isMuted, setIsMuted] = useState(false);
+      const [isPlaying, setIsPlaying] = useState(true);
+      const [showPlayIcon, setShowPlayIcon] = useState(false);
+      const [activeTab, setActiveTab] = useState('feed');
+      const [feedTab, setFeedTab] = useState('foryou');
+      const [searchQuery, setSearchQuery] = useState("");
 
-      // ÉTATS UTILISATEUR PROFIL
-      const [userName, setUserName] = useState('Alex Rivera');
-      const [userTag, setUserTag] = useState('@alexrivera');
-      const [userBio, setUserBio] = useState('✨ Créateur de contenus & Vibes futuristes 🚀\n📍 Paris');
-      const [userAvatar, setUserAvatar] = useState('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop');
-      const [isEditingProfile, setIsEditingProfile] = useState(false);
-      const [userFollowersCount, setUserFollowersCount] = useState(1420);
-      const [userLikesCount, setUserLikesCount] = useState('12.5K');
-
-      // ÉTATS VIDÉOS ET FIL D'ACTUALITÉ
-      const [posts, setPosts] = useState([
-        {
-          id: 1,
-          user: '@neon_luna',
-          authorId: '@neon_luna',
-          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
-          video: 'https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-lights-41689-large.video.mp4',
-          desc: 'Nuits cyberpunk à Tokyo ✨ Ambiance unique #neon #tokyo #cyberpunk',
-          music: 'Original Sound - Luna Neon',
-          likes: 3420,
-          comments: 128,
-          shares: 45,
-          saves: 210,
-          viewsCount: '12.4K',
-          commentsList: [
-            { id: 1, user: '@cyber_sam', text: 'Incroyable cette vidéo ! 🔥', time: 'Il y a 2h' },
-            { id: 2, user: '@sarah_art', text: 'J\'adore les couleurs 😍', time: 'Il y a 1h' }
-          ]
-        },
-        {
-          id: 2,
-          user: '@dj_max',
-          authorId: '@dj_max',
-          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
-          video: 'https://assets.mixkit.co/videos/preview/mixkit-dj-playing-music-at-a-party-41415-large.video.mp4',
-          desc: 'Nouveau set en live ce soir ! Soyez prêts 🎧🔥 #dj #party #music',
-          music: 'Bass Boosted Anthem - DJ Max',
-          likes: 8900,
-          comments: 432,
-          shares: 120,
-          saves: 950,
-          viewsCount: '45.1K',
-          commentsList: [
-            { id: 1, user: '@alexrivera', text: 'Le drop est lourd 🔊', time: 'Il y a 30min' }
-          ]
-        },
-        {
-          id: 3,
-          user: '@fitness_zoe',
-          authorId: '@fitness_zoe',
-          avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop',
-          video: 'https://assets.mixkit.co/videos/preview/mixkit-woman-doing-exercises-in-a-gym-42993-large.video.mp4',
-          desc: 'Routine abdos express 10 min par jour 💪 Let’s go ! #fitness #workout',
-          music: 'Workout Energy - Gym Beats',
-          likes: 5600,
-          comments: 95,
-          shares: 310,
-          saves: 1400,
-          viewsCount: '28.9K',
-          commentsList: []
+      const [posts, setPosts] = useState(() => {
+        try {
+          const saved = localStorage.getItem('clipclap_posts');
+          return saved ? JSON.parse(saved) : INITIAL_POSTS;
+        } catch(e) {
+          return INITIAL_POSTS;
         }
-      ]);
+      });
 
       const [currentIndex, setCurrentIndex] = useState(0);
-      const [isPlaying, setIsPlaying] = useState(true);
-      const [isMuted, setIsMuted] = useState(false);
-      const [showPlayIcon, setShowPlayIcon] = useState(false);
-      const videoRef = useRef(null);
-
-      // INTERACTIONS POSTS
       const [likedPosts, setLikedPosts] = useState({});
-      const [likeCounts, setLikeCounts] = useState({});
       const [savedPosts, setSavedPosts] = useState({});
-      const [savedCounts, setSavedCounts] = useState({});
+      const [likeCounts, setLikeCounts] = useState(() => 
+        posts.reduce((acc, post) => ({ ...acc, [post.id]: post.likes }), {})
+      );
+      const [savedCounts, setSavedCounts] = useState(() =>
+        posts.reduce((acc, post) => ({ ...acc, [post.id]: post.bookmarks }), {})
+      );
+      
       const [following, setFollowing] = useState({});
-      const [creatorFollowers, setCreatorFollowers] = useState({});
+      const [creatorFollowers, setCreatorFollowers] = useState(() =>
+        posts.reduce((acc, post) => ({ ...acc, [post.authorId || post.user]: post.followers }), {})
+      );
 
-      // MODALS & VUES SECONDAIRES
-      const [showCommentsModal, setShowCommentsModal] = useState(false);
-      const [newCommentText, setNewCommentText] = useState('');
+      const [toastMessage, setToastMessage] = useState("");
       const [showUploadModal, setShowUploadModal] = useState(false);
+      const [newCaption, setNewCaption] = useState("");
       const [selectedFile, setSelectedFile] = useState(null);
-      const [newCaption, setNewCaption] = useState('');
       const [viewingCreator, setViewingCreator] = useState(null);
-      const [toastMessage, setToastMessage] = useState(null);
+      const [showCommentsModal, setShowCommentsModal] = useState(false);
+      const [newCommentText, setNewCommentText] = useState("");
 
-      // RECHERCHE & MESSAGERIE
-      const [searchQuery, setSearchQuery] = useState('');
-      const [activeChat, setActiveChat] = useState(null);
-      const [newMessageText, setNewMessageText] = useState('');
-      const [chatConversations, setChatConversations] = useState([
-        {
-          id: 1,
-          user: '@neon_luna',
-          lastMsg: 'Super ta dernière vidéo !',
-          time: '14:25',
-          unread: true,
-          messages: [
-            { sender: '@neon_luna', text: 'Salut Alex !' },
-            { sender: '@neon_luna', text: 'Super ta dernière vidéo !' }
-          ]
-        },
-        {
-          id: 2,
-          user: '@dj_max',
-          lastMsg: 'On se fait une collab ?',
-          time: 'Hier',
-          unread: false,
-          messages: [
-            { sender: '@dj_max', text: 'On se fait une collab ?' }
-          ]
-        }
-      ]);
-
-      // GESTION DES SWIPES TACTILES
-      const [touchStartY, setTouchStartY] = useState(0);
-      const [touchStartX, setTouchStartX] = useState(0);
-
-      // SONS WEB AUDIO API
-      const playSound = (type) => {
+      const [userName, setUserName] = useState("Aziz Enbiri");
+      const [userTag, setUserTag] = useState("@azizenbiri");
+      const [userBio, setUserBio] = useState("Créateur de contenu néon ⚡");
+      const [userAvatar, setUserAvatar] = useState(() => {
         try {
-          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          const osc = audioCtx.createOscillator();
-          const gainNode = audioCtx.createGain();
-          osc.connect(gainNode);
-          gainNode.connect(audioCtx.destination);
-
-          if (type === 'click') {
-            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-            gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.05);
-          } else if (type === 'like') {
-            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.1);
-            gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.1);
-          }
-        } catch (e) {
-          // Audio non pris en charge ou bloqué par le navigateur
+          return localStorage.getItem('clipclap_avatar') || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop";
+        } catch(e) {
+          return "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop";
         }
-      };
+      });
+      const [isEditingProfile, setIsEditingProfile] = useState(false);
 
-      // INITIALISATION DES COMPTEURS ET SPLASH SCREEN
+      const [userFollowersCount, setUserFollowersCount] = useState(1280);
+      const [userFollowingCount, setUserFollowingCount] = useState(245);
+      const [userLikesCount, setUserLikesCount] = useState(9420);
+
+      const [chatConversations, setChatConversations] = useState([
+        { id: 1, user: "@neon_vibes", lastMsg: "Salut super tes vidéos !", time: "Il y a 10m", unread: true, messages: [{ sender: "@neon_vibes", text: "Salut super tes vidéos !" }] }
+      ]);
+      const [activeChat, setActiveChat] = useState(null);
+      const [newMessageText, setNewMessageText] = useState("");
+
+      const touchStartX = useRef(0);
+      const touchStartY = useRef(0);
+      const videoRef = useRef(null);
       useEffect(() => {
-        const initialLikes = {};
-        const initialLikeCounts = {};
-        const initialSaves = {};
-        const initialSaveCounts = {};
-        posts.forEach(p => {
-          initialLikes[p.id] = false;
-          initialLikeCounts[p.id] = p.likes;
-          initialSaves[p.id] = false;
-          initialSaveCounts[p.id] = p.saves;
-        });
-        setLikedPosts(initialLikes);
-        setLikeCounts(initialLikeCounts);
-        setSavedPosts(initialSaves);
-        setSavedCounts(initialSaveCounts);
+        try {
+          localStorage.setItem('clipclap_posts', JSON.stringify(posts));
+        } catch(e) {}
+      }, [posts]);
 
+      useEffect(() => {
+        try {
+          localStorage.setItem('clipclap_avatar', userAvatar);
+        } catch(e) {}
+      }, [userAvatar]);
+
+      useEffect(() => {
         const interval = setInterval(() => {
           setProgress(prev => {
             if (prev >= 100) {
               clearInterval(interval);
-              setShowSplash(false);
+              setTimeout(() => setShowSplash(false), 300);
               return 100;
             }
-            return prev + 15;
+            return prev + 10;
           });
-        }, 150);
+        }, 40);
         return () => clearInterval(interval);
       }, []);
 
-      // FONCTIONS LOGIQUES INTERACTIONS
+      const displayedPosts = posts.filter(post => {
+        if (feedTab === 'following') {
+          const authorKey = post.authorId || post.user;
+          return following[authorKey] === true;
+        }
+        return true;
+      });
+
+      useEffect(() => {
+        if (currentIndex >= displayedPosts.length) {
+          setCurrentIndex(0);
+        }
+      }, [feedTab, displayedPosts.length]);
+
+      useEffect(() => {
+        if (!showSplash && displayedPosts[currentIndex]) {
+          const currentPostId = displayedPosts[currentIndex].id;
+          setPosts(prevPosts => {
+            return prevPosts.map((p) => {
+              if (p.id === currentPostId) {
+                return { ...p, viewsCount: (p.viewsCount || 1000) + 1 };
+              }
+              return p;
+            });
+          });
+        }
+      }, [currentIndex, showSplash, feedTab]);
+
+      useEffect(() => {
+        if (!showSplash && videoRef.current && displayedPosts[currentIndex]) {
+          if (viewingCreator || activeTab !== 'feed' || showUploadModal || showCommentsModal || activeChat) {
+            videoRef.current.pause();
+            setIsPlaying(false);
+          } else {
+            videoRef.current.muted = isMuted;
+            videoRef.current.currentTime = 0;
+            setIsPlaying(true);
+            const playPromise = videoRef.current.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(() => {});
+            }
+          }
+        }
+      }, [currentIndex, isMuted, showSplash, viewingCreator, activeTab, showUploadModal, showCommentsModal, activeChat, feedTab]);
+
       const showToast = (msg) => {
         setToastMessage(msg);
-        setTimeout(() => setToastMessage(null), 2500);
+        setTimeout(() => setToastMessage(""), 2200);
+      };
+
+      const togglePlayPause = () => {
+        if (!videoRef.current) return;
+        playSound('click');
+        if (videoRef.current.paused) {
+          videoRef.current.play();
+          setIsPlaying(true);
+        } else {
+          videoRef.current.pause();
+          setIsPlaying(false);
+        }
+        setShowPlayIcon(true);
+        setTimeout(() => setShowPlayIcon(false), 800);
       };
 
       const handleLike = (postId, e) => {
         e.stopPropagation();
         playSound('like');
-        const isLiked = !likedPosts[postId];
-        setLikedPosts(prev => ({ ...prev, [postId]: isLiked }));
-        setLikeCounts(prev => ({
-          ...prev,
-          [postId]: isLiked ? prev[postId] + 1 : prev[postId] - 1
-        }));
-        if (isLiked) showToast("Ajouté à vos favoris ❤️");
+        const isLiked = likedPosts[postId];
+        setLikedPosts(prev => ({ ...prev, [postId]: !isLiked }));
+        setLikeCounts(prev => ({ ...prev, [postId]: isLiked ? prev[postId] - 1 : prev[postId] + 1 }));
+        setUserLikesCount(prev => isLiked ? prev - 1 : prev + 1);
       };
 
       const handleSave = (postId, e) => {
         e.stopPropagation();
         playSound('click');
-        const isSaved = !savedPosts[postId];
-        setSavedPosts(prev => ({ ...prev, [postId]: isSaved }));
-        setSavedCounts(prev => ({
-          ...prev,
-          [postId]: isSaved ? prev[postId] + 1 : prev[postId] - 1
-        }));
-        if (isSaved) showToast("Vidéo épinglée 📌");
+        const isSaved = savedPosts[postId];
+        setSavedPosts(prev => ({ ...prev, [postId]: !isSaved }));
+        setSavedCounts(prev => ({ ...prev, [postId]: isSaved ? prev[postId] - 1 : prev[postId] + 1 }));
+        showToast(isSaved ? "Vidéo retirée des favoris" : "Vidéo enregistrée ! 📌");
       };
 
-      const handleFollow = (authorId, e) => {
+      const handleFollow = (authorKey, e) => {
         e.stopPropagation();
         playSound('click');
-        const isFollowing = !!following[authorId];
-        setFollowing(prev => ({ ...prev, [authorId]: !isFollowing }));
-        setCreatorFollowers(prev => {
-          const current = prev[authorId] || 1200;
-          return { ...prev, [authorId]: isFollowing ? current - 1 : current + 1 };
+        setFollowing(prev => {
+          const willFollow = !prev[authorKey];
+          showToast(willFollow ? `Abonné à ${authorKey} ! ✨` : `Désabonné de ${authorKey}`);
+          setUserFollowingCount(c => willFollow ? c + 1 : Math.max(0, c - 1));
+          setCreatorFollowers(counts => {
+            const current = counts[authorKey] || 1000;
+            return { ...counts, [authorKey]: willFollow ? current + 1 : Math.max(0, current - 1) };
+          });
+          return { ...prev, [authorKey]: willFollow };
         });
-        showToast(!isFollowing ? "Abonné avec succès ✨" : "Désabonné");
       };
 
-      const togglePlayPause = () => {
-        if (videoRef.current) {
-          if (isPlaying) {
-            videoRef.current.pause();
-            setIsPlaying(false);
-          } else {
-            videoRef.current.play();
-            setIsPlaying(true);
-          }
-          setShowPlayIcon(true);
-          setTimeout(() => setShowPlayIcon(false), 800);
-        }
-      };
-
-      const handleShare = () => {
+      const handleShare = (e) => {
+        e.stopPropagation();
         playSound('click');
         if (navigator.share) {
-          navigator.share({ title: 'ClipClap Vidéo', url: window.location.href }).catch(() => {});
+          navigator.share({ title: 'ClipClap', url: window.location.href });
         } else {
-          showToast("Lien copié dans le presse-papier ! 🔗");
+          navigator.clipboard.writeText(window.location.href);
+          showToast("Lien de la vidéo copié ! 🔗");
         }
-      };
-
-      // GESTION DU DÉFILEMENT VERTICAL DES VIDÉOS (SWIPE HAUT / BAS)
-      const displayedPosts = feedTab === 'following' 
-        ? posts.filter(p => following[p.authorId || p.user]) 
-        : posts;
-
-      const handleTouchStart = (e) => {
-        setTouchStartY(e.touches[0].clientY);
-        setTouchStartX(e.touches[0].clientX);
-      };
-
-      const handleTouchEnd = (e) => {
-        const touchEndY = e.changedTouches[0].clientY;
-        const diff = touchStartY - touchEndY;
-
-        if (Math.abs(diff) > 50) {
-          if (diff > 0 && currentIndex < displayedPosts.length - 1) {
-            playSound('click');
-            setCurrentIndex(prev => prev + 1);
-            setIsPlaying(true);
-          } else if (diff < 0 && currentIndex > 0) {
-            playSound('click');
-            setCurrentIndex(prev => prev - 1);
-            setIsPlaying(true);
-          }
-        }
-      };
-
-      const handleProfileTouchStart = (e) => {
-        setTouchStartX(e.touches[0].clientX);
-      };
-
-      const handleProfileTouchEnd = (e) => {
-        const touchEndX = e.changedTouches[0].clientX;
-        if (touchEndX - touchStartX > 80 && activeTab === 'profile') {
-          playSound('click');
-          setActiveTab('feed');
-        }
-      };
-
-      const handlePublish = (e) => {
-        e.preventDefault();
-        if (!selectedFile && !newCaption) {
-          showToast("Veuillez ajouter une vidéo ou une description !");
-          return;
-        }
-        const newPostObj = {
-          id: posts.length + 1,
-          user: userTag,
-          authorId: userTag,
-          avatar: userAvatar,
-          video: selectedFile ? URL.createObjectURL(selectedFile) : posts[0].video,
-          desc: newCaption || "Ma nouvelle vidéo sur ClipClap 🚀 #clipclap",
-          music: "Original Sound - " + userName,
-          likes: 1,
-          comments: 0,
-          shares: 0,
-          saves: 0,
-          viewsCount: '1',
-          commentsList: []
-        };
-        setPosts([newPostObj, ...posts]);
-        setLikedPosts(prev => ({ ...prev, [newPostObj.id]: false }));
-        setLikeCounts(prev => ({ ...prev, [newPostObj.id]: 1 }));
-        setSavedPosts(prev => ({ ...prev, [newPostObj.id]: false }));
-        setSavedCounts(prev => ({ ...prev, [newPostObj.id]: 0 }));
-        setShowUploadModal(false);
-        setSelectedFile(null);
-        setNewCaption('');
-        setActiveTab('feed');
-        setCurrentIndex(0);
-        showToast("Vidéo publiée avec succès ! 🎉");
       };
 
       const handleAddComment = (e) => {
         e.preventDefault();
         if (!newCommentText.trim()) return;
         playSound('click');
-        const currentPostObj = displayedPosts[currentIndex];
-        const updatedComments = [
-          ...(currentPostObj.commentsList || []),
-          { id: Date.now(), user: userTag, text: newCommentText, time: 'À l\'instant' }
-        ];
-        setPosts(posts.map(p => p.id === currentPostObj.id ? { ...p, commentsList: updatedComments, comments: p.comments + 1 } : p));
-        setNewCommentText('');
+        const currentPost = displayedPosts[currentIndex];
+        const newComment = { id: Date.now(), user: userTag, text: newCommentText.trim(), time: "À l'instant" };
+        const updatedPosts = posts.map(post => {
+          if (post.id === currentPost.id) {
+            return { ...post, comments: (post.comments || 0) + 1, commentsList: [newComment, ...(post.commentsList || [])] };
+          }
+          return post;
+        });
+        setPosts(updatedPosts);
+        setNewCommentText("");
+        showToast("Commentaire publié ! 💬");
       };
 
       const handleSendMessage = (e) => {
         e.preventDefault();
         if (!newMessageText.trim() || !activeChat) return;
         playSound('click');
-        const updatedMsgs = [...activeChat.messages, { sender: userTag, text: newMessageText }];
-        const updatedChats = chatConversations.map(c => c.id === activeChat.id ? { ...c, messages: updatedMsgs, lastMsg: newMessageText, time: 'À l\'instant' } : c);
-        setChatConversations(updatedChats);
-        setActiveChat({ ...activeChat, messages: updatedMsgs });
-        setNewMessageText('');
+        const updated = chatConversations.map(conv => {
+          if (conv.id === activeChat.id) {
+            return { ...conv, lastMsg: newMessageText, time: "À l'instant", messages: [...conv.messages, { sender: userTag, text: newMessageText }] };
+          }
+          return conv;
+        });
+        setChatConversations(updated);
+        setActiveChat(updated.find(c => c.id === activeChat.id));
+        setNewMessageText("");
+      };
+
+      const handlePublish = (e) => {
+        e.preventDefault();
+        playSound('click');
+        const createAndSavePost = (videoSrc) => {
+          const myNewPostItem = {
+            id: Date.now(),
+            authorId: userTag,
+            user: userTag,
+            avatar: userAvatar,
+            desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
+            music: `Son original - ${userName} 🎵`,
+            likes: 1, comments: 0, bookmarks: 0, shares: 0,
+            viewsCount: 1, views: "1", followers: 1, followingCount: 0, totalLikes: 1,
+            video: videoSrc, commentsList: [], userPosts: []
+          };
+          const updatedPosts = [myNewPostItem, ...posts];
+          setPosts(updatedPosts);
+          setLikeCounts(prev => ({ ...prev, [myNewPostItem.id]: 1 }));
+          setSavedCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
+          setCreatorFollowers(counts => ({ ...counts, [userTag]: 1280 }));
+          setShowUploadModal(false);
+          setNewCaption("");
+          setSelectedFile(null);
+          setCurrentIndex(0);
+          setFeedTab('foryou');
+          showToast("Vidéo publiée et enregistrée ! 🚀");
+        };
+
+        if (selectedFile) {
+          const reader = new FileReader();
+          reader.readAsDataURL(selectedFile);
+          reader.onloadend = () => { createAndSavePost(reader.result); };
+        } else {
+          createAndSavePost("https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4");
+        }
+      };
+
+      const handleTouchStart = (e) => {
+        touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
+      };
+
+      const handleTouchEnd = (e) => {
+        if (displayedPosts.length === 0) return;
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const diffX = touchStartX.current - touchEndX;
+        const diffY = touchStartY.current - touchEndY;
+
+        if (diffX > 40 && Math.abs(diffY) < 50) {
+          playSound('click');
+          setViewingCreator(displayedPosts[currentIndex]);
+          return;
+        }
+
+        if (Math.abs(diffY) > 40 && Math.abs(diffX) < 50) {
+          if (diffY > 0) {
+            setCurrentIndex(prev => (prev + 1) % displayedPosts.length);
+          } else {
+            setCurrentIndex(prev => (prev - 1 + displayedPosts.length) % displayedPosts.length);
+          }
+        }
+      };
+
+      const handleProfileTouchStart = (e) => {
+        touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
+      };
+
+      const handleProfileTouchEnd = (e) => {
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const diffX = touchStartX.current - touchEndX;
+        const diffY = touchStartY.current - touchEndY;
+
+        if (diffX < -40 && Math.abs(diffY) < 50) {
+          playSound('click');
+          setViewingCreator(null);
+        }
       };
       if (showSplash) {
         return (
@@ -414,15 +438,7 @@
               <div 
                 className="absolute inset-0 video-swipe-area"
                 onTouchStart={handleTouchStart}
-                onTouchEnd={(e) => {
-                  handleTouchEnd(e);
-                  // Détection du swipe droit pour ouvrir le profil du créateur
-                  const touchX = e.changedTouches[0].clientX;
-                  if (touchX - touchStartX > 80 && currentPost) {
-                    playSound('click');
-                    setViewingCreator(currentPost);
-                  }
-                }}
+                onTouchEnd={handleTouchEnd}
               >
                 {displayedPosts.length > 0 && currentPost ? (
                   <div className="relative h-full w-full bg-black flex items-center justify-center">
@@ -439,7 +455,7 @@
 
                     <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none"></div>
 
-                    {/* EN-TÊTE HAUT */}
+                    {/* EN-TÊTE */}
                     <div className="absolute top-0 left-0 right-0 z-30 pt-3 pb-2 flex items-center justify-center gap-6 px-4 bg-gradient-to-b from-black/90 via-black/50 to-transparent">
                       <button 
                         onClick={() => { playSound('click'); setFeedTab('following'); }}
@@ -671,7 +687,7 @@
                       Modifier le profil
                     </button>
                     <button onClick={() => { playSound('click'); showToast("Lien du profil partagé !"); }} className="w-10 bg-white/10 hover:bg-white/15 border border-white/10 py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center transition-colors">
-                      ↗
+                      share
                     </button>
                   </div>
                 </div>
@@ -811,20 +827,9 @@
             </div>
           )}
 
-          {/* MODAL PROFIL CRÉATEUR (SWIPE DROITE / GESTION DU RETOUR) */}
+          {/* MODAL PROFIL CRÉATEUR (SWIPE DROITE) */}
           {viewingCreator && (
-            <div 
-              className="absolute inset-0 z-50 bg-[#07040f] overflow-y-auto p-4 pt-10 video-swipe-area"
-              onTouchStart={handleProfileTouchStart}
-              onTouchEnd={(e) => {
-                const touchX = e.changedTouches[0].clientX;
-                // Swipe gauche sur la vue créateur pour fermer et revenir au feed
-                if (touchStartX - touchX > 80) {
-                  playSound('click');
-                  setViewingCreator(null);
-                }
-              }}
-            >
+            <div className="absolute inset-0 z-50 bg-[#07040f] overflow-y-auto p-4 pt-10">
               <button onClick={() => setViewingCreator(null)} className="mb-4 w-9 h-9 bg-white/10 rounded-full flex items-center justify-center text-white text-base font-bold">
                 ‹
               </button>
@@ -857,7 +862,7 @@
             </div>
           )}
 
-          {/* MODAL MODIFIER PROFIL */}
+          {/* MODAL MODIFIER PROFIL (SYNCHRONISE L'AVATAR SUR LES VIDÉOS) */}
           {isEditingProfile && (
             <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
               <div className="w-full max-w-sm bg-[#120c24] border border-white/10 rounded-3xl p-6 shadow-2xl">
@@ -902,12 +907,15 @@
                   <button 
                     onClick={() => { 
                       playSound('click'); 
+                      
+                      // Met à jour l'avatar et propage le changement sur tous les posts créés par l'utilisateur
                       setPosts(prevPosts => prevPosts.map(p => {
                         if (p.authorId === userTag || p.user === userTag) {
                           return { ...p, avatar: userAvatar };
                         }
                         return p;
                       }));
+
                       setIsEditingProfile(false); 
                       showToast("Profil et avatar mis à jour ! ✨"); 
                     }}
