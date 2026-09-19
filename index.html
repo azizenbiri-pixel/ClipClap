@@ -962,8 +962,13 @@
                         if (file) {
                           const reader = new FileReader();
                           reader.onloadend = () => {
-                            setUserAvatar(reader.result);
-                          };
+  const newAvatar = reader.result;
+  setUserAvatar(newAvatar);
+  localStorage.setItem('clipclap_user_avatar', newAvatar);
+};
+
+                            
+                        
                           reader.readAsDataURL(file);
                         }
                       }}
