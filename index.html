@@ -879,7 +879,8 @@
                             <span className="text-xs font-bold text-gray-300">{c.user}</span>
                             <span className="text-[10px] text-gray-500">{c.time}</span>
                           </div>
-                          <p className="text-xs text-white mt-0.5">{c.text}</p>
+                          <p className="text-xs text-white mt-0.5">{c.text}</p><p className="text-xs text-white mt-0.5">{c.text}</p><button onClick={() => console.log("Répondre à :", c.id)} className="text-xs text-neutral-400 hover:text-white font-semibold mt-1 block">Répondre</button>
+
                         </div>
                       </div>
                     ))
