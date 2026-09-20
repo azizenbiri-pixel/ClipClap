@@ -834,18 +834,14 @@
           {/* MODAL COMMENTAIRES */}
           {showCommentsModal && currentPost && (
             <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center">
-              <div className="w-full max-w-md h-[65%] bg-[#120c24] border-t border-white/10 rounded-t-3xl flex flex-col shadow-2xl"> onTouchStart={(e) => {
-  window._commentsTouchStartY = e.touches[0].clientY;
-}}
-onTouchEnd={(e) => {
-  const touchEndY = e.changedTouches[0].clientY;
-  // On baisse le seuil à 50px pour que ce soit plus facile à déclencher
-  if (touchEndY - window._commentsTouchStartY > 50) {
-    setShowCommentsModal(false);
-  }
-}}
+              <div className="w-full max-w-md h-[65%] bg-[#120c24] border-t border-white/10 rounded-t-3xl flex flex-col shadow-2x1">
+  
+  
 
-   w
+  
+  
+
+  
    
  
 
