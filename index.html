@@ -834,7 +834,16 @@
           {/* MODAL COMMENTAIRES */}
           {showCommentsModal && currentPost && (
             <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center">
-              <div className="w-full max-w-md h-[65%] bg-[#120c24] border-t border-white/10 rounded-t-3xl flex flex-col shadow-2xl">
+              <div className="w-full max-w-md h-[65%] bg-[#120c24] border-t border-white/10 rounded-t-3xl flex flex-col shadow-2xl"> onTouchStart={(e) => {
+   window._commentsTouchStartY = e.touches[0].clientY;
+ }}
+ onTouchEnd={(e) => {
+   const touchEndY = e.changedTouches[0].clientY;
+   if (touchEndY - window._commentsTouchStartY > 100) {
+     setShowCommentsModal(false);
+   }
+ }}
+
                 <div className="flex items-center justify-between p-4 border-b border-white/10">
                   <h3 className="text-sm font-extrabold">{currentPost.commentsList?.length || 0} commentaires</h3>
                   <button onClick={() => setShowCommentsModal(false)} className="text-gray-400 hover:text-white text-lg font-bold">✕</button>
