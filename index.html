@@ -308,23 +308,36 @@ const [replyingTo, setReplyingTo] = useState(null);
           showToast("Lien de la vidéo copié ! 🔗");
         }
       };
+const handleAddComment = (e) => {
+  e.preventDefault();
+  if (!newCommentText.trim()) return;
+  playSound('click');
+  const currentPost = displayedPosts.find(p => p.id === activePostId) || posts[0];
+  
+  // Si on est en train de répondre, on ajoute la mention au début du texte
+  const textToSend = replyingTo ? `@${replyingTo.user} ${newCommentText}` : newCommentText;
 
-      const handleAddComment = (e) => {
-        e.preventDefault();
-        if (!newCommentText.trim()) return;
-        playSound('click');
-        const currentPost = displayedPosts[currentIndex];
-        const newComment = { id: Date.now(), user: userTag, text: newCommentText.trim(), time: "À l'instant" };
-        const updatedPosts = posts.map(post => {
-          if (post.id === currentPost.id) {
-            return { ...post, comments: (post.comments || 0) + 1, commentsList: [newComment, ...(post.commentsList || [])] };
-          }
-          return post;
-        });
-        setPosts(updatedPosts);
-        setNewCommentText("");
-        showToast("Commentaire publié ! 💬");
-      };
+  const newComment = { 
+    id: Date.now(), 
+    user: "@azizenbiri", 
+    text: textToSend, 
+    time: "À l'instant" 
+  };
+
+  const updatedPosts = posts.map(post => {
+    if (post.id === currentPost.id) {
+      return { ...post, commentsList: [newComment, ...(post.commentsList || [])] };
+    }
+    return post;
+  });
+
+  setPosts(updatedPosts);
+  setNewCommentText("");
+  setReplyingTo(null); // On réinitialise l'état de réponse après l'envoi
+  showToast("Commentaire publié !");
+};
+
+      
 
       const handleSendMessage = (e) => {
         e.preventDefault();
