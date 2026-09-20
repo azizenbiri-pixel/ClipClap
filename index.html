@@ -98,6 +98,7 @@
       const [activeTab, setActiveTab] = useState('feed');
       const [feedTab, setFeedTab] = useState('foryou');
       const [searchQuery, setSearchQuery] = useState("");
+const [replyingTo, setReplyingTo] = useState(null);
 
       const [posts, setPosts] = useState(() => {
         try {
