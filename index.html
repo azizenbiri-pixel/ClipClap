@@ -904,17 +904,7 @@ const [replyingTo, setReplyingTo] = useState(null);
                     </div>
                   )}
                 </div>
-{replyingTo && (
-  <div className="flex items-center justify-between bg-neutral-800 px-3 py-1.5 text-xs text-neutral-300 rounded-t-lg mb-2">
-    <span>Réponse à <strong className="text-white">@{replyingTo.user}</strong></span>
-    <button 
-      type="button"
-      onClick={() => setReplyingTo(null)} 
-      className="text-neutral-400 hover:text-white font-bold px-1"
-    >
-      ✕
-    </button>
-  </div>
+
 )}
 
 <form onSubmit={handleAddComment} className="flex items-center gap-2 p-3 bg-neutral-900 border-t border-neutral-800">
