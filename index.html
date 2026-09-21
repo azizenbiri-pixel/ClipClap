@@ -881,12 +881,44 @@ const [replyingTo, setReplyingTo] = useState(null);
                             <span className="text-[10px] text-gray-500">{c.time}</span>
                           </div>
                           <p className="text-xs text-white mt-0.5">{c.text}</p>
-<button 
-  onClick={() => setReplyingTo(c)}
-  className="text-xs text-neutral-400 hover:text-white font-semibold mt-1 block"
+<button
+  onClick={() => setReplyingTo(replyingTo?.id === c.id ? null : c)}
+  className="text-xs text-neutral-400 hover:text-white mt-1"
 >
   Répondre
 </button>
+
+{/* Petite fenêtre de réponse indépendante qui s'ouvre sous ce commentaire spécifique */}
+{replyingTo?.id === c.id && (
+  <div className="mt-2 p-2 bg-neutral-800 rounded-lg flex items-center gap-2">
+    <input
+      type="text"
+      placeholder={`Répondre à @${c.user}...`}
+      className="flex-1 bg-neutral-900 text-white px-3 py-1.5 rounded-full text-xs focus:outline-none focus:ring-1 focus:ring-pink-500"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && e.target.value.trim()) {
+          // Fonction pour envoyer la réponse pour ce commentaire précis
+          handleReplySubmit(c.id, e.target.value);
+          e.target.value = '';
+        }
+      }}
+    />
+    <button
+      type="button"
+      onClick={(e) => {
+        const input = e.currentTarget.previousSibling;
+        if (input.value.trim()) {
+          handleReplySubmit(c.id, input.value);
+          input.value = '';
+        }
+      }}
+      className="bg-pink-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold hover:bg-pink-600 transition"
+    >
+      Répondre
+    </button>
+  </div>
+)}
+
 
 
   
