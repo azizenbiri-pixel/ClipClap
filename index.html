@@ -917,7 +917,7 @@ const handleAddComment = (e) => {
                     </div>
                   )}
                 </div>
-{/* Panneau de saisie (adapté si on répond ou si c'est un commentaire normal) */}
+{/* Panneau de saisie */}
 <div className="p-3 bg-neutral-900 border-t border-neutral-800">
   {replyingTo && (
     <div className="flex items-center justify-between bg-neutral-800 px-3 py-1.5 text-xs text-neutral-300 rounded-t-lg mb-2">
@@ -939,7 +939,7 @@ const handleAddComment = (e) => {
       onChange={(e) => setNewCommentText(e.target.value)}
       placeholder={replyingTo ? `Répondre à ${replyingTo.user}...` : "Ajouter un commentaire..."}
       className="flex-1 bg-neutral-800 text-white px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-      autoFocus={!!replyingTo} 
+      autoFocus={!!replyingTo}
     />
     <button 
       type="submit" 
@@ -949,6 +949,7 @@ const handleAddComment = (e) => {
     </button>
   </form>
 </div>
+
 
                 
             
