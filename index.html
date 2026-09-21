@@ -308,36 +308,23 @@ const [replyingTo, setReplyingTo] = useState(null);
           showToast("Lien de la vidéo copié ! 🔗");
         }
       };
-const handleAddComment = (e) => {
-  e.preventDefault();
-  if (!newCommentText.trim()) return;
-  playSound('click');
-  const currentPost = displayedPosts.find(p => p.id === activePostId) || posts[0];
-  
-  // Si on est en train de répondre, on ajoute la mention au début du texte
-  const textToSend = replyingTo ? `@${replyingTo.user} ${newCommentText}` : newCommentText;
 
-  const newComment = { 
-    id: Date.now(), 
-    user: "@azizenbiri", 
-    text: textToSend, 
-    time: "À l'instant" 
-  };
-
-  const updatedPosts = posts.map(post => {
-    if (post.id === currentPost.id) {
-      return { ...post, commentsList: [newComment, ...(post.commentsList || [])] };
-    }
-    return post;
-  });
-
-  setPosts(updatedPosts);
-  setNewCommentText("");
-  setReplyingTo(null); // On réinitialise l'état de réponse après l'envoi
-  showToast("Commentaire publié !");
-};
-
-      
+      const handleAddComment = (e) => {
+        e.preventDefault();
+        if (!newCommentText.trim()) return;
+        playSound('click');
+        const currentPost = displayedPosts[currentIndex];
+        const newComment = { id: Date.now(), user: userTag, text: newCommentText.trim(), time: "À l'instant" };
+        const updatedPosts = posts.map(post => {
+          if (post.id === currentPost.id) {
+            return { ...post, comments: (post.comments || 0) + 1, commentsList: [newComment, ...(post.commentsList || [])] };
+          }
+          return post;
+        });
+        setPosts(updatedPosts);
+        setNewCommentText("");
+        showToast("Commentaire publié ! 💬");
+      };
 
       const handleSendMessage = (e) => {
         e.preventDefault();
@@ -917,42 +904,33 @@ const handleAddComment = (e) => {
                     </div>
                   )}
                 </div>
-{/* Panneau de saisie */}
-<div className="p-3 bg-neutral-900 border-t border-neutral-800">
-  {replyingTo && (
-    <div className="flex items-center justify-between bg-neutral-800 px-3 py-1.5 text-xs text-neutral-300 rounded-t-lg mb-2">
-      <span>Réponse à <strong className="text-white">@{replyingTo.user}</strong></span>
-      <button 
-        type="button"
-        onClick={() => setReplyingTo(null)} 
-        className="text-neutral-400 hover:text-white font-bold px-1"
-      >
-        ✕
-      </button>
-    </div>
-  )}
-
-  <form onSubmit={handleAddComment} className="flex items-center gap-2">
-    <input
-      type="text"
-      value={newCommentText}
-      onChange={(e) => setNewCommentText(e.target.value)}
-      placeholder={replyingTo ? `Répondre à ${replyingTo.user}...` : "Ajouter un commentaire..."}
-      className="flex-1 bg-neutral-800 text-white px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
-      autoFocus={!!replyingTo}
-    />
+{replyingTo && (
+  <div className="flex items-center justify-between bg-neutral-800 px-3 py-1.5 text-xs text-neutral-300 rounded-t-lg">
+    <span>Répondre à <strong className="text-white">{replyingTo.user}</strong></span>
     <button 
-      type="submit" 
-      className="bg-pink-500 text-white px-4 py-2.5 rounded-full text-sm font-semibold hover:bg-pink-600 transition"
+      type="button"
+      onClick={() => setReplyingTo(null)} 
+      className="text-neutral-400 hover:text-white font-bold px-1"
     >
-      Envoyer
+      ✕
     </button>
-  </form>
-</div>
+  </div>
+)}
 
+                <form onSubmit={handleAddComment} className="p-3 border-t border-white/10 flex items-center gap-2 bg-[#0d081b]">
+                  <input 
+                    type="text"
+                    value={newCommentText}
+                    onChange={(e) => setNewCommentText(e.target.value)}
+                  placeholder={replyingTo ? `Répondre à ${replyingTo.user}...` : "Ajouter un commentaire..."}
 
-                
-            
+                    className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-pink-500"
+                  />
+                  <button type="submit" className="px-4 py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full text-xs font-bold text-white shadow-md">
+                    Envoyer
+                  </button>
+                </form>
+              </div>
             </div>
           )}
 
