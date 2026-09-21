@@ -888,28 +888,34 @@ const [replyingTo, setReplyingTo] = useState(null);
   Répondre
 </button>
 
-{/* Petite fenêtre de réponse indépendante qui s'ouvre sous ce commentaire spécifique */}
+{/* Petite fenêtre de réponse indépendante */}
 {replyingTo?.id === c.id && (
   <div className="mt-2 p-2 bg-neutral-800 rounded-lg flex items-center gap-2">
     <input
       type="text"
       placeholder={`Répondre à @${c.user}...`}
+      defaultValue=""
+      id={`reply-input-${c.id}`}
       className="flex-1 bg-neutral-900 text-white px-3 py-1.5 rounded-full text-xs focus:outline-none focus:ring-1 focus:ring-pink-500"
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' && e.target.value.trim()) {
-          // Fonction pour envoyer la réponse pour ce commentaire précis
-          handleReplySubmit(c.id, e.target.value);
-          e.target.value = '';
-        }
-      }}
     />
     <button
       type="button"
-      onClick={(e) => {
-        const input = e.currentTarget.previousSibling;
-        if (input.value.trim()) {
-          handleReplySubmit(c.id, input.value);
-          input.value = '';
+      onClick={() => {
+        const inputElement = document.getElementById(`reply-input-${c.id}`);
+        const replyText = inputElement.value.trim();
+        
+        if (replyText) {
+          // On ajoute la réponse en utilisant ta logique existante (par exemple en créant un sous-commentaire ou en l'ajoutant à la liste)
+          const newReply = {
+            id: Date.now(),
+            user: "MonPseudo", // Remplace par ton état utilisateur actuel si besoin
+            text: `@${c.user} ${replyText}`,
+            time: "À l'instant"
+          };
+          
+          // Met à jour ta liste de commentaires
+          currentPost.commentsList.unshift(newReply);
+          setReplyingTo(null); // Ferme la fenêtre de réponse
         }
       }}
       className="bg-pink-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold hover:bg-pink-600 transition"
@@ -918,6 +924,7 @@ const [replyingTo, setReplyingTo] = useState(null);
     </button>
   </div>
 )}
+
 
 
 
