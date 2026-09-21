@@ -933,10 +933,25 @@ const [replyingTo, setReplyingTo] = useState(null);
         </div>
       )}
     </div>
-        </div>
-    </div>
-  ))}
+  </div>
+))}
+ 
 
+  
+
+
+
+
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-gray-400 text-center">
+                      <span className="text-3xl mb-2">💬</span>
+                      <p className="text-xs">Aucun commentaire pour le moment. Sois le premier !</p>
+                    </div>
+                  )}
+                </div>
 
 <form onSubmit={handleAddComment} className="flex items-center gap-2 p-3 bg-neutral-900 border-t border-neutral-800">
   <input
