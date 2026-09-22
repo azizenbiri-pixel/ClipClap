@@ -868,65 +868,74 @@ const [replyingTo, setReplyingTo] = useState(null);
                   <button onClick={() => setShowCommentsModal(false)} className="text-gray-400 hover:text-white text-lg font-bold">✕</button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {currentPost.commentsList && currentPost.commentsList.length > 0 ? (
-                    currentPost.commentsList.map((c) => (
-                      <div key={c.id} className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center font-bold text-xs">
-                          {c.user.charAt(1).toUpperCase()}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-gray-300">{c.user}</span>
-                            <span className="text-[10px] text-gray-500">{c.time}</span>
-                          </div>
-                          <p className="text-xs text-white mt-0.5">{c.text}</p>
-<button
-  onClick={() => setReplyingTo(replyingTo?.id === c.id ? null : c)}
-  className="text-xs text-neutral-400 hover:text-white mt-1"
->
-  Répondre
-</button>
+               {/* Boucle d'affichage des commentaires */}
+{currentPost.commentsList.map((c) => (
+  <div key={c.id} className="flex gap-3 mb-4 text-white text-sm">
+    <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center font-bold text-xs flex-shrink-0">
+      {c.user.charAt(0).toUpperCase()}
+    </div>
+    <div className="flex-1">
+      <div className="flex items-center gap-2">
+        <span className="font-semibold text-xs text-neutral-300">@{c.user}</span>
+        <span className="text-neutral-500 text-xs">{c.time}</span>
+      </div>
+      <p className="mt-1 text-sm">{c.text}</p>
+      
+      {/* Bouton Répondre */}
+      <button
+        type="button"
+        onClick={() => setReplyingTo(replyingTo?.id === c.id ? null : c)}
+        className="text-xs text-neutral-400 hover:text-white mt-1 font-medium"
+      >
+        Répondre
+      </button>
 
-{/* Petite fenêtre de réponse indépendante */}
-{replyingTo?.id === c.id && (
-  <div className="mt-2 p-2 bg-neutral-800 rounded-lg flex items-center gap-2">
-    <input
-      type="text"
-      placeholder={`Répondre à @${c.user}...`}
-      defaultValue=""
-      id={`reply-input-${c.id}`}
-      className="flex-1 bg-neutral-900 text-white px-3 py-1.5 rounded-full text-xs focus:outline-none focus:ring-1 focus:ring-pink-500"
-    />
-    <button
-      type="button"
-      onClick={() => {
-        const inputElement = document.getElementById(`reply-input-${c.id}`);
-        const replyText = inputElement.value.trim();
-        
-        if (replyText) {
-          // On ajoute la réponse en utilisant ta logique existante (par exemple en créant un sous-commentaire ou en l'ajoutant à la liste)
-          const newReply = {
-            id: Date.now(),
-            user: "MonPseudo", // Remplace par ton état utilisateur actuel si besoin
-            text: `@${c.user} ${replyText}`,
-            time: "À l'instant"
-          };
-          
-          // Met à jour ta liste de commentaires
-          currentPost.commentsList.unshift(newReply);
-          setReplyingTo(null); // Ferme la fenêtre de réponse
-        }
-      }}
-      className="bg-pink-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold hover:bg-pink-600 transition"
-    >
-      Répondre
-    </button>
+      {/* Petite fenêtre de réponse indépendante sous ce commentaire précis */}
+      {replyingTo?.id === c.id && (
+        <div className="mt-2 p-2 bg-neutral-800 rounded-lg flex items-center gap-2">
+          <input
+            type="text"
+            placeholder={`Répondre à @${c.user}...`}
+            defaultValue=""
+            id={`reply-input-${c.id}`}
+            className="flex-1 bg-neutral-900 text-white px-3 py-1.5 rounded-full text-xs focus:outline-none focus:ring-1 focus:ring-pink-500"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              const inputElement = document.getElementById(`reply-input-${c.id}`);
+              const replyText = inputElement.value.trim();
+              
+              if (replyText) {
+                const newReply = {
+                  id: Date.now(),
+                  user: "MonPseudo", 
+                  text: `@${c.user} ${replyText}`,
+                  time: "À l'instant"
+                };
+                
+                currentPost.commentsList.unshift(newReply);
+                setReplyingTo(null);
+              }
+            }}
+            className="bg-pink-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold hover:bg-pink-600 transition"
+          >
+            Répondre
+          </button>
+          <button
+            type="button"
+            onClick={() => setReplyingTo(null)}
+            className="text-neutral-400 hover:text-white text-xs px-1 font-bold"
+            title="Annuler"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+    </div>
   </div>
-)}
-
-
-
+))}
+ 
 
   
 
