@@ -901,8 +901,19 @@ const [replyingTo, setReplyingTo] = useState(null);
     <button
       type="button"
       onClick={() => {
-        const inputElement = document.getElementById(`reply-input-${c.id}`);
-        const replyText = inputElement.value.trim();
+        onClick={() => {
+  // On cible précisément l'input du commentaire concerné grâce à son ID unique
+  const inputElement = document.getElementById(`reply-input-${c.id}`);
+  const replyText = inputElement ? inputElement.value : '';
+
+  // On vérifie que l'utilisateur a bien écrit quelque chose (et pas un message vide)
+  if (replyText.trim() !== '') {
+    
+    console.log("Texte de la réponse :", replyText); // Juste pour tester pour l'instant
+
+  }
+}}
+
         
         if (replyText) {
           // On ajoute la réponse en utilisant ta logique existante (par exemple en créant un sous-commentaire ou en l'ajoutant à la liste)
