@@ -914,7 +914,11 @@ const [replyingTo, setReplyingTo] = useState(null);
                   time: "À l'instant"
                 };
                 
-                currentPost.commentsList.unshift(newReply);
+              if (!c.replies) {
+    c.replies = [];
+}
+c.replies.unshift(newReply);
+
                 setReplyingTo(null);
               }
             }}
