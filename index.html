@@ -906,22 +906,18 @@ const [replyingTo, setReplyingTo] = useState(null);
               const inputElement = document.getElementById(`reply-input-${c.id}`);
               const replyText = inputElement.value.trim();
               
-                  if (replyText) {
-            const newReply = {
-                id: Date.now(),
-                user: "MonPseudo",
-                text: `@${c.user} ${replyText.value}`,
-                time: "À l'instant"
-            };
-
-            if (!c.replies) {
-                c.replies = [];
-            }
-            c.replies.unshift(newReply);
-            
-            setReplyingTo(null);
-        }
-
+              if (replyText) {
+                const newReply = {
+                  id: Date.now(),
+                  user: "MonPseudo", 
+                  text: `@${c.user} ${replyText}`,
+                  time: "À l'instant"
+                };
+                
+                currentPost.commentsList.unshift(newReply);
+                setReplyingTo(null);
+              }
+            }}
             className="bg-pink-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold hover:bg-pink-600 transition"
           >
             Répondre
