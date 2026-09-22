@@ -900,28 +900,32 @@ const [replyingTo, setReplyingTo] = useState(null);
             id={`reply-input-${c.id}`}
             className="flex-1 bg-neutral-900 text-white px-3 py-1.5 rounded-full text-xs focus:outline-none focus:ring-1 focus:ring-pink-500"
           />
-          <button
-            type="button"
-            onClick={() => {
-              const inputElement = document.getElementById(`reply-input-${c.id}`);
-              const replyText = inputElement.value.trim();
-              
-              if (replyText) {
-                const newReply = {
-                  id: Date.now(),
-                  user: "MonPseudo", 
-                  text: `@${c.user} ${replyText}`,
-                  time: "À l'instant"
-                };
-                
-                currentPost.commentsList.unshift(newReply);
-                setReplyingTo(null);
-              }
-            }}
-            className="bg-pink-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold hover:bg-pink-600 transition"
-          >
-            Répondre
-          </button>
+              <button
+      type="button"
+      onClick={() => {
+        const inputElement = document.getElementById(`reply-input-${c.id}`);
+        const replyText = inputElement ? inputElement.value : '';
+
+        if (replyText.trim() !== '') {
+          const newReply = {
+            id: Date.now(),
+            user: "MonPseudo",
+            text: `@${c.user} ${replyText}`,
+            time: "À l'instant"
+          };
+          
+          if (!c.replies) {
+            c.replies = [];
+          }
+          c.replies.push(newReply);
+          setReplyingTo(null);
+        }
+      }}
+      className="bg-pink-500 text-white px-4 py-2 rounded-lg"
+    >
+      Répondre
+    </button>
+
           <button
             type="button"
             onClick={() => setReplyingTo(null)}
