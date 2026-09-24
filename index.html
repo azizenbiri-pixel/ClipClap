@@ -905,16 +905,12 @@ const [replyingTo, setReplyingTo] = useState(null);
   const replyText = inputElement.value.trim();
   
   if (replyText) {
-    // 1. Calcul automatique de l'heure exacte actuelle
-    const maintenant = new Date();
-    const heures = maintenant.getHours().toString().padStart(2, '0');
-    const minutes = maintenant.getMinutes().toString().padStart(2, '0');
-const newReply = {
-  id: Date.now(),
-  user: "@azizenbiri", 
-  text: `@${c.user} ${replyText}`,
-  time: Date.now() // <-- On enregistre le timestamp exact ici
-};
+  const newReply = {
+    id: Date.now(),
+    user: "@azizenbiri", 
+    text: `@${c.user} ${replyText}`,
+    time: Date.now() // <-- Enregistre le moment exact de l'envoi pour le décompte
+  };
     
     
     // 2. Mise à jour sécurisée de React
