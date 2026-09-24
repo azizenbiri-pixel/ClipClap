@@ -915,10 +915,8 @@ const [replyingTo, setReplyingTo] = useState(null);
                           <p className="text-xs text-white mt-0.5">{c.text}</p>
 <button
   onClick={() => setReplyingTo(replyingTo?.id === c.id ? null : c)}
-<span className="text-xs text-neutral-400 hover:text-white mt-1">
-  <TempsEcoule dateCreation={c.time} />
-</span>  
-
+  className="text-xs text-neutral-400 hover:text-white mt-1"
+>
   Répondre
 </button>
 
