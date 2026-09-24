@@ -340,21 +340,36 @@ const [replyingTo, setReplyingTo] = useState(null);
           showToast("Lien de la vidéo copié ! 🔗");
         }
       };
+const handleAddComment = (e) => {
+  e.preventDefault();
+  if (!newCommentText.trim()) return;
+  playSound('click');
+  const currentPost = displayedPosts[currentIndex];
+  
+  const newComment = { 
+    id: Date.now(), 
+    user: userTag, 
+    text: newCommentText.trim(), 
+    time: Date.now() // <-- Enregistre le numéro exact pour le décompte
+  };
 
-      const handleAddComment = (e) => {
-        e.preventDefault();
-        if (!newCommentText.trim()) return;
-        playSound('click');
-        const currentPost = displayedPosts[currentIndex];
-        const newComment = { id: Date.now(), user: userTag, text: newCommentText.trim(), time: "À l'instant" };
-        const updatedPosts = posts.map(post => {
-          if (post.id === currentPost.id) {
-            return { ...post, comments: (post.comments || 0) + 1, commentsList: [newComment, ...(post.commentsList || [])] };
-          }
-          return post;
-        });
-        setPosts(updatedPosts);
-        setNewCommentText("");
+  // La sécurité anti-écran noir : On met à jour proprement via setPosts
+  setPosts(prevPosts => {
+    return prevPosts.map(post => {
+      if (post.id === currentPost.id) {
+        return { 
+          ...post, 
+          comments: (post.comments || 0) + 1, 
+          commentsList: [newComment, ...(post.commentsList || [])] 
+        };
+      }
+      return post;
+    });
+  });
+
+  setNewCommentText(""); // Vide le champ de texte après l'envoi
+};
+  
         showToast("Commentaire publié ! 💬");
       };
 
