@@ -909,13 +909,13 @@ const [replyingTo, setReplyingTo] = useState(null);
     const maintenant = new Date();
     const heures = maintenant.getHours().toString().padStart(2, '0');
     const minutes = maintenant.getMinutes().toString().padStart(2, '0');
-
-    const newReply = {
-      id: Date.now(),
-      user: "@azizenbiri", 
-      text: `@${c.user} ${replyText}`,
-      time: `À ${heures}:${minutes}` // Affiche la vraie heure (ex: À 22:15)
-    };
+const newReply = {
+  id: Date.now(),
+  user: "@azizenbiri", 
+  text: `@${c.user} ${replyText}`,
+  time: Date.now() // <-- On enregistre le timestamp exact ici
+};
+    
     
     // 2. Mise à jour sécurisée de React
     setPosts(prevPosts => {
