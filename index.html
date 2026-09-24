@@ -901,44 +901,48 @@ const [replyingTo, setReplyingTo] = useState(null);
     <button
       type="button"
       onClick={() => {
-        const inputElement = document.getElementById(`reply-input-${c.id}`);
-        const replyText = inputElement.value.trim();
-        
-        if (replyText) {
-          const newReply = {
-            id: Date.now(),
-            user: "@azizenbiri", 
-            text: `@${c.user} ${replyText}`,
-            time: "À l'instant"
+  const inputElement = document.getElementById(`reply-input-${c.id}`);
+  const replyText = inputElement.value.trim();
+  
+  if (replyText) {
+    // 1. Calcul automatique de l'heure exacte actuelle
+    const maintenant = new Date();
+    const heures = maintenant.getHours().toString().padStart(2, '0');
+    const minutes = maintenant.getMinutes().toString().padStart(2, '0');
+
+    const newReply = {
+      id: Date.now(),
+      user: "@azizenbiri", 
+      text: `@${c.user} ${replyText}`,
+      time: `À ${heures}:${minutes}` // Affiche la vraie heure (ex: À 22:15)
+    };
+    
+    // 2. Mise à jour sécurisée de React
+    setPosts(prevPosts => {
+      return prevPosts.map(post => {
+        if (post.id === currentPost.id) {
+          let updatedComments = [...post.commentsList];
+          const parentIndex = updatedComments.findIndex(comment => comment.id === c.id);
+          
+          if (parentIndex !== -1) {
+            updatedComments.splice(parentIndex + 1, 0, newReply);
+          } else {
+            updatedComments.push(newReply);
+          }
+          
+          return {
+            ...post,
+            commentsList: updatedComments,
+            comments: (post.comments || 0) + 1
           };
-          
-          // LA SÉCURITÉ ANTI-ÉCRAN NOIR : On passe par setPosts
-          setPosts(prevPosts => {
-            return prevPosts.map(post => {
-              // On cherche le bon post dans votre application ClipClap
-              if (post.id === currentPost.id) {
-                // On crée une copie propre de la liste pour ne pas faire planter React
-                let updatedComments = [...post.commentsList];
-                const parentIndex = updatedComments.findIndex(comment => comment.id === c.id);
-                
-                if (parentIndex !== -1) {
-                  // Place la réponse juste en dessous du commentaire
-                  updatedComments.splice(parentIndex + 1, 0, newReply);
-                } else {
-                  updatedComments.push(newReply);
-                }
-                
-                return {
-                  ...post,
-                  commentsList: updatedComments,
-                  comments: (post.comments || 0) + 1 // Met à jour le compteur du bouton de l'application
-                };
-              }
-              return post;
-            });
-          });
-          
-          setReplyingTo(null); // Ferme la fenêtre de réponse
+        }
+        return post;
+      });
+    });
+    
+    setReplyingTo(null); // Ferme la fenêtre de réponse
+  }
+}}
         }
       }}
       className="bg-pink-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold hover:bg-pink-600 transition"
