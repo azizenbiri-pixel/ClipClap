@@ -936,40 +936,40 @@ const [replyingTo, setReplyingTo] = useState(null);
   const inputElement = document.getElementById(`reply-input-${c.id}`);
   const replyText = inputElement.value.trim();
   
-  if (replyText) {
+if (replyText) {
   const newReply = {
     id: Date.now(),
     user: "@azizenbiri", 
     text: `@${c.user} ${replyText}`,
-    time: Date.now() // <-- Enregistre le moment exact de l'envoi pour le décompte
+    time: "Il y a 1 min"
   };
-    
-    
-    // 2. Mise à jour sécurisée de React
-    setPosts(prevPosts => {
-      return prevPosts.map(post => {
-        if (post.id === currentPost.id) {
-          let updatedComments = [...post.commentsList];
-          const parentIndex = updatedComments.findIndex(comment => comment.id === c.id);
-          
-          if (parentIndex !== -1) {
-            updatedComments.splice(parentIndex + 1, 0, newReply);
-          } else {
-            updatedComments.push(newReply);
-          }
-          
-          return {
-            ...post,
-            commentsList: updatedComments,
-            comments: (post.comments || 0) + 1
-          };
+  
+  // La sécurité anti-écran noir : On passe par setPosts
+  setPosts(prevPosts => {
+    return prevPosts.map(post => {
+      if (post.id === currentPost.id) {
+        let updatedComments = [...post.commentsList];
+        const parentIndex = updatedComments.findIndex(comment => comment.id === c.id);
+        
+        if (parentIndex !== -1) {
+          // Place la réponse juste en dessous du commentaire
+          updatedComments.splice(parentIndex + 1, 0, newReply);
+        } else {
+          updatedComments.push(newReply);
         }
-        return post;
-      });
+        
+        return {
+          ...post,
+          commentsList: updatedComments,
+          comments: (post.comments || 0) + 1
+        };
+      }
+      return post;
     });
-    
-    setReplyingTo(null); // Ferme la fenêtre de réponse
-  }
+  });
+  
+  setReplyingTo(null); // Ferme la fenêtre de réponse
+}            
 }}
         
       
