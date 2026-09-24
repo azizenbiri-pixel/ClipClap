@@ -888,8 +888,7 @@ const [replyingTo, setReplyingTo] = useState(null);
   Répondre
 </button>
 
-
-{/* Petite fenêtre de réponse indépendante */}
+jsx{/* Petite fenêtre de réponse indépendante */}
 {replyingTo?.id === c.id && (
   <div className="mt-2 p-2 bg-neutral-800 rounded-lg flex items-center gap-2">
     <input
@@ -906,16 +905,39 @@ const [replyingTo, setReplyingTo] = useState(null);
         const replyText = inputElement.value.trim();
         
         if (replyText) {
-          // On ajoute la réponse en utilisant ta logique existante (par exemple en créant un sous-commentaire ou en l'ajoutant à la liste)
           const newReply = {
             id: Date.now(),
-            user: "MonPseudo", // Remplace par ton état utilisateur actuel si besoin
+            user: "@azizenbiri", 
             text: `@${c.user} ${replyText}`,
             time: "À l'instant"
           };
           
-          // Met à jour ta liste de commentaires
-          currentPost.commentsList.unshift(newReply);
+          // LA SÉCURITÉ ANTI-ÉCRAN NOIR : On passe par setPosts
+          setPosts(prevPosts => {
+            return prevPosts.map(post => {
+              // On cherche le bon post dans votre application ClipClap
+              if (post.id === currentPost.id) {
+                // On crée une copie propre de la liste pour ne pas faire planter React
+                let updatedComments = [...post.commentsList];
+                const parentIndex = updatedComments.findIndex(comment => comment.id === c.id);
+                
+                if (parentIndex !== -1) {
+                  // Place la réponse juste en dessous du commentaire
+                  updatedComments.splice(parentIndex + 1, 0, newReply);
+                } else {
+                  updatedComments.push(newReply);
+                }
+                
+                return {
+                  ...post,
+                  commentsList: updatedComments,
+                  comments: (post.comments || 0) + 1 // Met à jour le compteur du bouton de l'application
+                };
+              }
+              return post;
+            });
+          });
+          
           setReplyingTo(null); // Ferme la fenêtre de réponse
         }
       }}
@@ -925,6 +947,7 @@ const [replyingTo, setReplyingTo] = useState(null);
     </button>
   </div>
 )}
+
 
 
 
