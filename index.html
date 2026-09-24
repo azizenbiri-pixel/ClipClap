@@ -941,7 +941,7 @@ if (replyText) {
     id: Date.now(),
     user: "@azizenbiri", 
     text: `@${c.user} ${replyText}`,
-    time: "Il y a 1 min" // En remettant du texte ici, les grands chiffres vont disparaître !
+    time: Date.now() // On remet le chiffre précis ici (ex: 1727221600000)
   };
   
   // La sécurité anti-écran noir : On passe par setPosts
