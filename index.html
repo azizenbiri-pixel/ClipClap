@@ -88,7 +88,39 @@
         ]
       }
     ];
+function TempsEcoule({ dateCreation }) {
+  if (typeof dateCreation === 'string') {
+    return <span className="text-xs text-gray-500">{dateCreation}</span>;
+  }
 
+  const [texte, setTexte] = React.useState("");
+
+  React.useEffect(() => {
+    const calculerTemps = () => {
+      const secondes = Math.floor((Date.now() - dateCreation) / 1000);
+      const minutes = Math.floor(secondes / 60);
+      const heures = Math.floor(minutes / 60);
+      const jours = Math.floor(heures / 24);
+
+      if (minutes < 1) {
+        setTexte("À l'instant");
+      } else if (minutes < 60) {
+        setTexte(`Il y a ${minutes} min`);
+      } else if (heures < 24) {
+        setTexte(`Il y a ${heures} h`);
+      } else {
+        setTexte(`Il y a ${jours} j`);
+      }
+    };
+
+    calculerTemps();
+    const interval = setInterval(calculerTemps, 60000);
+
+    return () => clearInterval(interval);
+  }, [dateCreation]);
+
+  return <span className="text-xs text-gray-500">{texte}</span>;
+}
     function ClipClapApp() {
       const [showSplash, setShowSplash] = useState(true);
       const [progress, setProgress] = useState(0);
