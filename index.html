@@ -827,16 +827,22 @@ function ClipClapApp() {
                       className="relative aspect-[9/16] bg-gray-900 overflow-hidden rounded-lg cursor-pointer group hover:opacity-90 transition"
 >
   {/* On ajoute le clic directement sur la vidéo ici */}
-    <video 
+     <video 
                           src={p.video} 
                           className="w-full h-full object-cover" 
                           muted 
                           playsInline 
                         />
                         
-                        {/* On utilise temporairement viewsCount pour voir le chiffre exact défiler */}
                         <div className="absolute top-2 left-2 z-10 flex items-center gap-1 text-[11px] text-white font-bold bg-black/70 px-2 py-0.5 rounded backdrop-blur-sm shadow-md">
-                          <span>▶</span> {p.viewsCount || 0}
+                          <span>▶</span> {
+                            (() => {
+                              const v = p.viewsCount || 0;
+                              if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`; // Ex: 1.2M
+                              if (v >= 1000) return `${(v / 1000).toFixed(1)}K`;    // Ex: 1.5K, 10.0K
+                              return v; // En dessous de 1000, affiche le chiffre normal (Ex: 850)
+                            })()
+                          }
                         </div>
                       </div>
                     ))}
