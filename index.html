@@ -132,9 +132,17 @@ function ClipClapApp() {
       const [searchQuery, setSearchQuery] = useState("");
       const [replyingTo, setReplyingTo] = useState(null);
 
-      // Notre nouvelle ligne pour mémoriser les vidéos de votre profil
-      const [userPosts, setUserPosts] = useState([]);
+      // 1. Chargement automatique des vidéos du profil depuis la mémoire
+      const [userPosts, setUserPosts] = useState(() => {
+        try {
+          const saved = localStorage.getItem('clipclap_user_posts');
+          return saved ? JSON.parse(saved) : [];
+        } catch(e) {
+          return [];
+        }
+      });
 
+      // 2. Chargement automatique des vidéos générales
       const [posts, setPosts] = useState(() => {
         try {
           const saved = localStorage.getItem('clipclap_posts');
@@ -143,15 +151,16 @@ function ClipClapApp() {
           return INITIAL_POSTS;
         }
       });
-// Sauvegarde automatique des posts généraux et des vues
-useEffect(() => {
-  localStorage.setItem('clipclap_posts', JSON.stringify(posts));
-}, [posts]);
 
-// Sauvegarde automatique des vidéos publiées sur votre profil
-useEffect(() => {
-  localStorage.setItem('clipclap_user_posts', JSON.stringify(userPosts));
-}, [userPosts]);
+      // 3. Sauvegarde automatique des posts généraux quand ils changent (les vues, etc.)
+      useEffect(() => {
+        localStorage.setItem('clipclap_posts', JSON.stringify(posts));
+      }, [posts]);
+
+      // 4. Sauvegarde automatique du profil quand vous publiez une vidéo
+      useEffect(() => {
+        localStorage.setItem('clipclap_user_posts', JSON.stringify(userPosts));
+      }, [userPosts]);
   
     
     
