@@ -827,25 +827,17 @@ function ClipClapApp() {
                       className="relative aspect-[9/16] bg-gray-900 overflow-hidden rounded-lg cursor-pointer group hover:opacity-90 transition"
 >
   {/* On ajoute le clic directement sur la vidéo ici */}
-  <video 
+  video 
     src={p.video} 
     className="w-full h-full object-cover" 
     muted 
     playsInline 
-    onClick={() => {
-      setPosts(prevPosts => prevPosts.map(post => {
-        if (post.id === p.id) {
-          const nouvellesVues = (post.viewsCount || 0) + 1;
-          return { 
-            ...post, 
-            viewsCount: nouvellesVues,
-            views: nouvellesVues >= 1000 ? `${(nouvellesVues/1000).toFixed(1)}K` : `${nouvellesVues}`
-          };
-        }
-        return post;
-      }));
-    }}
   />
+  
+  {/* Affichage du compteur tout en haut à gauche, propre et lisible */}
+  <div className="absolute top-2 left-2 z-10 flex items-center gap-1 text-[11px] text-white font-bold bg-black/70 px-2 py-0.5 rounded backdrop-blur-sm shadow-md">
+    <span>▶</span> {p.views || '0'}
+  </div>
   
       {/* Le compteur est maintenant fixé tout en haut à gauche avec top-2 */}
   <div className="absolute top-2 left-2 z-10 flex items-center gap-1 text-[11px] text-white font-bold bg-black/70 px-2 py-0.5 rounded backdrop-blur-sm shadow-md">
