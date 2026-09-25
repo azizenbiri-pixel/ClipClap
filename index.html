@@ -824,13 +824,34 @@ function ClipClapApp() {
                             return post;
                           }));
                         }}
-                        className="relative aspect-[9/16] bg-gray-900 overflow-hidden rounded-lg cursor-pointer group hover:opacity-90 transition"
-                      >
-                        <video src={p.video} className="w-full h-full object-cover" muted playsInline />
-                        <div className="absolute bottom-1 left-1.5 flex items-center gap-1 text-[10px] text-white font-bold bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
-                          <span>▶</span> {p.viewsCount || 0}
-                        </div>
-                      </div>
+                      className="relative aspect-[9/16] bg-gray-900 overflow-hidden rounded-lg cursor-pointer group hover:opacity-90 transition"
+>
+  {/* On ajoute le clic directement sur la vidéo ici */}
+  <video 
+    src={p.video} 
+    className="w-full h-full object-cover" 
+    muted 
+    playsInline 
+    onClick={() => {
+      setPosts(prevPosts => prevPosts.map(post => {
+        if (post.id === p.id) {
+          const nouvellesVues = (post.viewsCount || 0) + 1;
+          return { 
+            ...post, 
+            viewsCount: nouvellesVues,
+            views: nouvellesVues >= 1000 ? `${(nouvellesVues/1000).toFixed(1)}K` : `${nouvellesVues}`
+          };
+        }
+        return post;
+      }));
+    }}
+  />
+  
+  {/* L'affichage utilise maintenant p.viewsCount */}
+  <div className="absolute bottom-1 left-1.5 flex items-center gap-1 text-[10px] text-white font-bold bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
+    <span>▶</span> {p.viewsCount || 0}
+  </div>
+</div>
                     ))}
                   </div>
                 </div>
