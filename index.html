@@ -1101,15 +1101,19 @@ if (replyText) {
                       type="file" 
                       accept="image/*"
                       onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setUserAvatar(reader.result);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
+                      const file = e.target.files[0];
+if (file) {
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    // 1. On affiche l'image à l'écran
+    setUserAvatar(reader.result);
+    
+    // 2. On sauvegarde IMMÉDIATEMENT l'image dans la mémoire du navigateur
+    localStorage.setItem('clipclap_user_avatar', reader.result);
+  };
+  reader.readAsDataURL(file);
+}
+}}
                       className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-pink-500 file:text-white hover:file:bg-pink-600 cursor-pointer"
                     />
                   </div>
