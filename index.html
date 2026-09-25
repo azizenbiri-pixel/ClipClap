@@ -384,13 +384,20 @@ const [replyingTo, setReplyingTo] = useState(null);
             avatar: userAvatar,
             desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
             music: `Son original - ${userName} 🎵`,
-            likes: 1, comments: 0, bookmarks: 0, shares: 0,
-            viewsCount: 1, views: "1", followers: 1, followingCount: 0, totalLikes: 1,
-            video: videoSrc, commentsList: [], userPosts: []
+            likes: 0, comments: 0, bookmarks: 0, shares: 0,
+            viewsCount: 0, views: "0", followers: 1280, followingCount: 245, totalLikes: 9420,
+            video: videoSrc, commentsList: []
           };
+
           const updatedPosts = [myNewPostItem, ...posts];
           setPosts(updatedPosts);
-          setLikeCounts(prev => ({ ...prev, [myNewPostItem.id]: 1 }));
+          
+          // IMPORTANT : On ajoute aussi la vidéo dans la liste de votre profil (si vous avez cette fonction)
+          if (typeof setUserPosts === 'function') {
+            setUserPosts(prev => [myNewPostItem, ...prev]);
+          }
+
+          setLikeCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
           setSavedCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
           setCreatorFollowers(counts => ({ ...counts, [userTag]: 1280 }));
           setShowUploadModal(false);
