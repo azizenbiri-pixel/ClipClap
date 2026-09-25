@@ -827,15 +827,16 @@ function ClipClapApp() {
                       className="relative aspect-[9/16] bg-gray-900 overflow-hidden rounded-lg cursor-pointer group hover:opacity-90 transition"
 >
   {/* On ajoute le clic directement sur la vidéo ici */}
-   <video 
+    <video 
                           src={p.video} 
                           className="w-full h-full object-cover" 
                           muted 
                           playsInline 
                         />
                         
+                        {/* On utilise temporairement viewsCount pour voir le chiffre exact défiler */}
                         <div className="absolute top-2 left-2 z-10 flex items-center gap-1 text-[11px] text-white font-bold bg-black/70 px-2 py-0.5 rounded backdrop-blur-sm shadow-md">
-                          <span>▶</span> {p.views || '0'}
+                          <span>▶</span> {p.viewsCount || 0}
                         </div>
                       </div>
                     ))}
