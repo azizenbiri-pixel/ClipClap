@@ -1116,8 +1116,7 @@ if (replyText) {
                   <button 
                     onClick={() => { 
                       playSound('click'); 
-                      
-                      // Met à jour l'avatar et propage le changement sur tous les posts créés par l'utilisateur
+   // Met à jour l'avatar et propage le changement sur tous les posts créés par l'utilisateur
                       setPosts(prevPosts => prevPosts.map(p => {
                         if (p.authorId === userTag || p.user === userTag) {
                           return { ...p, avatar: userAvatar };
@@ -1125,6 +1124,8 @@ if (replyText) {
                         return p;
                       }));
 
+                      // LA SÉCURITÉ ANTI-PERTE : On sauvegarde de manière permanente dans le navigateur
+                      localStorage.setItem('clipclap_user_avatar', userAvatar);
 
                       setIsEditingProfile(false); 
                       showToast("Profil et avatar mis à jour ! ✨"); 
@@ -1136,7 +1137,8 @@ if (replyText) {
                 </div>
               </div>
             </div>
-          )}
+          )}                    
+              
 
           {/* MODAL DISCUSSION MESSAGERIE */}
           {activeChat && (
