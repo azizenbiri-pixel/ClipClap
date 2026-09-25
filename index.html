@@ -143,7 +143,15 @@ function ClipClapApp() {
           return INITIAL_POSTS;
         }
       });
+// Sauvegarde automatique des posts généraux et des vues
+useEffect(() => {
+  localStorage.setItem('clipclap_posts', JSON.stringify(posts));
+}, [posts]);
 
+// Sauvegarde automatique des vidéos publiées sur votre profil
+useEffect(() => {
+  localStorage.setItem('clipclap_user_posts', JSON.stringify(userPosts));
+}, [userPosts]);
   
     
     
