@@ -121,7 +121,7 @@ function TempsEcoule({ dateCreation }) {
 
   return <span className="text-xs text-gray-500">{texte}</span>;
 }
-    function ClipClapApp() {
+function ClipClapApp() {
       const [showSplash, setShowSplash] = useState(true);
       const [progress, setProgress] = useState(0);
       const [isMuted, setIsMuted] = useState(false);
@@ -130,7 +130,10 @@ function TempsEcoule({ dateCreation }) {
       const [activeTab, setActiveTab] = useState('feed');
       const [feedTab, setFeedTab] = useState('foryou');
       const [searchQuery, setSearchQuery] = useState("");
-const [replyingTo, setReplyingTo] = useState(null);
+      const [replyingTo, setReplyingTo] = useState(null);
+
+      // Notre nouvelle ligne pour mémoriser les vidéos de votre profil
+      const [userPosts, setUserPosts] = useState([]);
 
       const [posts, setPosts] = useState(() => {
         try {
