@@ -824,29 +824,13 @@ function ClipClapApp() {
                             return post;
                           }));
                         }}
-                      className="relative aspect-[9/16] bg-gray-900 overflow-hidden rounded-lg cursor-pointer group hover:opacity-90 transition"
-  onClick={() => {
-    // 2. LE COMPTEUR RÉEL : On ajoute +1 vue au clic
-    setPosts(prevPosts => prevPosts.map(post => {
-      if (post.id === p.id) {
-        const nouvellesVues = (post.viewsCount || 0) + 1;
-        return { 
-          ...post, 
-          viewsCount: nouvellesVues,
-          views: nouvellesVues >= 1000 ? `${(nouvellesVues/1000).toFixed(1)}K` : `${nouvellesVues}`
-        };
-      }
-      return post;
-    }));
-  }}
->
-  <video src={p.video} className="w-full h-full object-cover" muted playsInline />
-  
-  {/* L'affichage des vues mis à jour avec p.views */}
-  <div className="absolute bottom-1 left-1.5 flex items-center gap-1 text-[10px] text-white font-bold bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
-    <span>▶</span> {p.views || '0'}
-  </div>
-</div>
+                        className="relative aspect-[9/16] bg-gray-900 overflow-hidden rounded-lg cursor-pointer group hover:opacity-90 transition"
+                      >
+                        <video src={p.video} className="w-full h-full object-cover" muted playsInline />
+                        <div className="absolute bottom-1 left-1.5 flex items-center gap-1 text-[10px] text-white font-bold bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm">
+                          <span>▶</span> {p.viewsCount || 0}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
