@@ -3,12 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ClipClap</title>
+  title>ClipClap</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <script src="https://cloudflare.com"></script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    html
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
     html, body {
       height: 100%;
@@ -82,10 +85,7 @@
         commentsList: [
           { id: 1, user: "@lucas_92", text: "Incroyable cette vidéo ! 🔥", time: "Il y a 2h" },
           { id: 2, user: "@sarah_gfx", text: "Le rendu des néons est top 🌌", time: "Il y a 5h" }
-        ],
-        userPosts: [
-          { id: 101, views: "145.2K", video: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4", desc: "Mon ancienne vidéo néon 🌌" }
-        ]
+        ] // NETTOYÉ : Le sous-bloc userPosts en doublon a été supprimé ici
       }
     ];
 function TempsEcoule({ dateCreation }) {
@@ -132,15 +132,23 @@ function ClipClapApp() {
       const [searchQuery, setSearchQuery] = useState("");
       const [replyingTo, setReplyingTo] = useState(null);
 
-      // Notre nouvelle ligne pour mémoriser les vidéos de votre profil
-      const [userPosts, setUserPosts] = useState([]);
+          // 1. Chargement sécurisé des vidéos de votre profil
+      const [userPosts, setUserPosts] = React.useState(() => {
+        try {
+          const saved = localStorage.getItem('clipclap_user_posts');
+          return saved ? JSON.parse(saved) : [];
+        } catch(e) {
+          return [];
+        }
+      });
 
-      const [posts, setPosts] = useState(() => {
+      // 2. Chargement sécurisé des vidéos globales
+      const [posts, setPosts] = React.useState(() => {
         try {
           const saved = localStorage.getItem('clipclap_posts');
-          return saved ? JSON.parse(saved) : INITIAL_POSTS;
+          return saved ? JSON.parse(saved) : (typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : []);
         } catch(e) {
-          return INITIAL_POSTS;
+          return typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : [];
         }
       });
 
@@ -182,6 +190,12 @@ function ClipClapApp() {
       const [userTag, setUserTag] = useState("@azizenbiri");
       const [userBio, setUserBio] = useState("Créateur de contenu néon ⚡");
       const [userAvatar, setUserAvatar] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop");
+useEffect(() => {
+  const savedAvatar = localStorage.getItem('clipclap_user_avatar');
+  if (savedAvatar) {
+    setUserAvatar(savedAvatar);
+  }
+}, []);
 
         
           
@@ -216,7 +230,41 @@ function ClipClapApp() {
     setUserAvatar(savedAvatar);
   }
 }, []);
+// 1. LE BLOC DE L'AVATAR (On ne le touche pas) :
+useEffect(() => {
+  const savedAvatar = localStorage.getItem('clipclap_user_avatar');
+  if (savedAvatar) {
+    setUserAvatar(savedAvatar);
+  }
+}, []);
 
+// CET AUTOMATISME INTERCEPTE, COMPRESSE ET SAUVEGARDE SANS FAIRE PLANTER LE BOUTON
+      React.useEffect(() => {
+        try {
+          if (typeof posts !== 'undefined' && posts && posts.length > 0) {
+            
+            // On nettoie la liste des posts pour que les vidéos publiées ne saturent pas la mémoire
+            const postsLegers = posts.map(post => {
+              // Si la vidéo est un énorme texte Base64 (commence par data:video), on met une vidéo de test à la place pour le stockage
+              if (post.video && post.video.startsWith('data:')) {
+                return { ...post, video: "https://mixkit.co" };
+              }
+              return post;
+            });
+
+            // Sauvegarde de la liste allégée sur le disque dur
+            localStorage.setItem('clipclap_posts', JSON.stringify(postsLegers));
+            
+            if (typeof setUserPosts === 'function' && typeof userTag !== 'undefined') {
+              const mesVideosDuProfil = postsLegers.filter(p => p.user === userTag || p.authorId === userTag);
+              setUserPosts(mesVideosDuProfil);
+              localStorage.setItem('clipclap_user_posts', JSON.stringify(mesVideosDuProfil));
+            }
+          }
+        } catch (error) {
+          console.error("Erreur invisible de sauvegarde :", error);
+        }
+      }, [posts]);
         
         
         
@@ -395,7 +443,8 @@ function ClipClapApp() {
 
           const updatedPosts = [myNewPostItem, ...posts];
           setPosts(updatedPosts);
-            
+        
+   
           // IMPORTANT : On ajoute aussi la vidéo dans la liste de votre profil
           if (typeof setUserPosts === 'function') {
             setUserPosts(prev => [myNewPostItem, ...prev]);
@@ -905,7 +954,17 @@ function ClipClapApp() {
                     ></textarea>
                   </div>
 
-                  <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl text-white font-extrabold text-sm shadow-lg shadow-pink-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                  <button 
+                    type="button" 
+                    onClick={(e) => {
+                      if (typeof handlePublish === 'function') {
+                        handlePublish(e);
+                      } else {
+                        console.log("handlePublish n'est pas encore prête.");
+                      }
+                    }}
+                    className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl text-white font-extrabold text-sm shadow-lg shadow-pink-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  >
                     Publier sur ClipClap 🚀
                   </button>
                 </form>
