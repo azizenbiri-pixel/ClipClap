@@ -146,9 +146,9 @@ function ClipClapApp() {
       const [posts, setPosts] = React.useState(() => {
         try {
           const saved = localStorage.getItem('clipclap_posts');
-          return saved ? JSON.parse(saved) : INITIAL_POSTS;
+          return saved ? JSON.parse(saved) : (typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : []);
         } catch(e) {
-          return INITIAL_POSTS;
+          return typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : [];
         }
       });
 
