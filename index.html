@@ -905,7 +905,17 @@ function ClipClapApp() {
                     ></textarea>
                   </div>
 
-                  <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl text-white font-extrabold text-sm shadow-lg shadow-pink-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                  <button 
+                    type="button" 
+                    onClick={(e) => {
+                      if (typeof handlePublish === 'function') {
+                        handlePublish(e);
+                      } else {
+                        console.log("handlePublish n'est pas encore prête.");
+                      }
+                    }}
+                    className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl text-white font-extrabold text-sm shadow-lg shadow-pink-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  >
                     Publier sur ClipClap 🚀
                   </button>
                 </form>
