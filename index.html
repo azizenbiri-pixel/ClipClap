@@ -129,7 +129,7 @@ function ClipClapApp() {
       const [searchQuery, setSearchQuery] = useState("");
       const [replyingTo, setReplyingTo] = useState(null);
 
-         // 1. Chargement sécurisé des vidéos de votre profil
+          // 1. Chargement sécurisé des vidéos de votre profil
       const [userPosts, setUserPosts] = React.useState(() => {
         try {
           const saved = localStorage.getItem('clipclap_user_posts');
@@ -148,20 +148,6 @@ function ClipClapApp() {
           return typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : [];
         }
       });
-
-      // 3. SAUVEGARDE AUTOMATIQUE : Écrit les vidéos globales dans le disque dur dès qu'il y a du changement
-      React.useEffect(() => {
-        if (typeof posts !== 'undefined' && posts && posts.length > 0) {
-          localStorage.setItem('clipclap_posts', JSON.stringify(posts));
-        }
-      }, [posts]);
-
-      // 4. SAUVEGARDE AUTOMATIQUE : Écrit les vidéos du profil dans le disque dur dès que vous publiez
-      React.useEffect(() => {
-        if (typeof userPosts !== 'undefined' && userPosts && userPosts.length > 0) {
-          localStorage.setItem('clipclap_user_posts', JSON.stringify(userPosts));
-        }
-      }, [userPosts]);
 
   
     
