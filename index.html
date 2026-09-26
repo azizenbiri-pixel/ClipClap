@@ -132,10 +132,18 @@ function ClipClapApp() {
       const [searchQuery, setSearchQuery] = useState("");
       const [replyingTo, setReplyingTo] = useState(null);
 
-      // Notre nouvelle ligne pour mémoriser les vidéos de votre profil
-      const [userPosts, setUserPosts] = useState([]);
+          // 1. Chargement sécurisé des vidéos de votre profil
+      const [userPosts, setUserPosts] = React.useState(() => {
+        try {
+          const saved = localStorage.getItem('clipclap_user_posts');
+          return saved ? JSON.parse(saved) : [];
+        } catch(e) {
+          return [];
+        }
+      });
 
-      const [posts, setPosts] = useState(() => {
+      // 2. Chargement sécurisé des vidéos globales
+      const [posts, setPosts] = React.useState(() => {
         try {
           const saved = localStorage.getItem('clipclap_posts');
           return saved ? JSON.parse(saved) : INITIAL_POSTS;
