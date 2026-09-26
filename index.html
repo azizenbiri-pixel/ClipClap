@@ -380,42 +380,49 @@ function ClipClapApp() {
   e.preventDefault();
   playSound('click');
   
-  const createAndSavePost = (videoSrc) => {
-    const myNewPostItem = {
-      id: Date.now(),
-      authorId: userTag,
-      user: userTag,
-      avatar: userAvatar,
-      desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
-      music: `Son original - ${userName} 🎵`,
-      likes: 0, 
-      comments: 0, 
-      bookmarks: 0, 
-      shares: 0,
-      viewsCount: 0, 
-      views: "0", 
-      followers: 1280, 
-      followingCount: 245, 
-      totalLikes: 9420,
-      video: videoSrc, 
-      commentsList: []
-    };
+  // 1. On récupère la source de la vidéo sélectionnée
+  const videoUrlToPublish = selectedVideo || (newVideoFile ? URL.createObjectURL(newVideoFile) : "");
+  
+  if (!videoUrlToPublish) {
+    alert("Veuillez sélectionner une vidéo avant de publier !");
+    return;
+  }
 
-    const updatedPosts = [myNewPostItem, ...posts];
-    setPosts(updatedPosts);
-    
-    // On ajoute proprement la vidéo dans la liste de votre profil
-    if (typeof setUserPosts === 'function') {
-      setUserPosts(prev => [myNewPostItem, ...prev]);
-    }
+  // 2. On crée l'objet de la vidéo
+  const myNewPostItem = {
+    id: Date.now(),
+    authorId: userTag,
+    user: userTag,
+    avatar: userAvatar,
+    desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
+    music: `Son original - ${userName} 🎵`,
+    likes: 0, 
+    comments: 0, 
+    bookmarks: 0, 
+    shares: 0,
+    viewsCount: 0, 
+    views: "0", 
+    followers: 1280, 
+    followingCount: 245, 
+    totalLikes: 9420,
+    video: videoUrlToPublish, 
+    commentsList: []
   };
 
-  // On récupère la source de la vidéo sélectionnée
-  const videoUrlToPublish = selectedVideo || (newVideoFile ? URL.createObjectURL(newVideoFile) : "");
-  if (videoUrlToPublish) {
-    createAndSavePost(videoUrlToPublish);
-  } else {
-    alert("Veuillez sélectionner une vidéo !");
+  // 3. On met à jour les listes (flux général + votre profil)
+  setPosts([myNewPostItem, ...posts]);
+  if (typeof setUserPosts === 'function') {
+    setUserPosts(prev => [myNewPostItem, ...prev]);
+  }
+
+  // 4. On vide le formulaire et on ferme la fenêtre de publication
+  setNewCaption("");
+  setSelectedVideo("");
+  setNewVideoFile(null);
+  if (typeof setIsPublishModalOpen === 'function') {
+    setIsPublishModalOpen(false);
+  } else if (typeof setIsModalOpen === 'function') {
+    setIsModalOpen(false);
   }
 };
 
