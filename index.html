@@ -447,17 +447,14 @@ React.useEffect(() => {
           showToast("Vidéo publiée et enregistrée ! 🚀");
         };
 
-           // CORRECTION : On utilise une adresse locale légère au lieu du gros texte Base64
         if (selectedFile) {
-          try {
-            const URLTemporaire = URL.createObjectURL(selectedFile);
-            createAndSavePost(URLTemporaire);
-          } catch(err) {
-            createAndSavePost("https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4");
-          }
+          const reader = new FileReader();
+          reader.readAsDataURL(selectedFile);
+          reader.onloadend = () => { createAndSavePost(reader.result); };
         } else {
           createAndSavePost("https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4");
         }
+      };
 
       const handleTouchStart = (e) => {
         touchStartX.current = e.touches[0].clientX;
