@@ -182,12 +182,7 @@ function ClipClapApp() {
       const [userTag, setUserTag] = useState("@azizenbiri");
       const [userBio, setUserBio] = useState("Créateur de contenu néon ⚡");
       const [userAvatar, setUserAvatar] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop");
-      // CET AUTOMATISME SAUVEGARDE TOUT EN ARRIÈRE-PLAN DÈS QUE LA VIDÉO EST SUR VOTRE PROFIL
-      useEffect(() => {
-        if (typeof userPosts !== 'undefined' && userPosts && userPosts.length > 0) {
-          localStorage.setItem('clipclap_user_posts', JSON.stringify(userPosts));
-        }
-      }, [userPosts]);
+
         
           
         
