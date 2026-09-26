@@ -377,47 +377,24 @@ function ClipClapApp() {
       };
 
       const handlePublish = (e) => {
-  e.preventDefault();
-  playSound('click');
-
-  // 1. On prépare l'adresse de la vidéo (utilise la vidéo sélectionnée)
-  const videoSrc = selectedVideo || (newVideoFile ? URL.createObjectURL(newVideoFile) : "");
-
-  if (!videoSrc) {
-    alert("Veuillez sélectionner une vidéo avant de publier !");
-    return;
-  }
-
-  // 2. On crée la structure propre de la nouvelle vidéo
-  const myNewPostItem = {
-    id: Date.now(),
-    authorId: userTag || "@user",
-    user: userTag || "@user",
-    avatar: userAvatar || "",
-    desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
-    music: `Son original - ${userName || "Utilisateur"} 🎵`,
-    likes: 0, 
-    comments: 0, 
-    bookmarks: 0, 
-    shares: 0,
-    viewsCount: 0, 
-    views: "0", 
-    followers: 1280, 
-    followingCount: 245, 
-    totalLikes: 9420,
-    video: videoSrc, 
-    commentsList: []
-  };
-
-  // 3. On l'ajoute dans le flux général et dans votre profil
-  setPosts(prevPosts => [myNewPostItem, ...prevPosts]);
-  setUserPosts(prevUserPosts => [myNewPostItem, ...prevUserPosts]);
-
-  // 4. On réinitialise le formulaire de publication
-  setNewCaption("");
-  setSelectedVideo("");
-  setNewVideoFile(null);
-  setIsPublishModalOpen(false); // Ferme la fenêtre si vous en avez une
+        e.preventDefault();
+        playSound('click');
+        const createAndSavePost = (videoSrc) => {
+        const myNewPostItem = {
+  id: Date.now(),
+  authorId: userTag,
+  user: userTag,
+  avatar: userAvatar,
+  desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
+  music: `Son original - ${userName} 🎵`,
+  likes: 0, comments: 0, bookmarks: 0, shares: 0,
+  viewsCount: 0, views: "0", followers: 1280, followingCount: 245, totalLikes: 9420,
+  video: videoSrc, 
+  commentsList: [],
+  // LA CORRECTION : On prépare la structure de la vidéo pour qu'elle s'affiche sur votre profil
+  userPosts: [
+    { id: Date.now(), views: "0", viewsCount: 0, video: videoSrc, desc: newCaption }
+  ]
 };
 
           const updatedPosts = [myNewPostItem, ...posts];
