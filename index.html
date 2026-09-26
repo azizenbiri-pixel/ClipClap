@@ -381,26 +381,22 @@ function ClipClapApp() {
         playSound('click');
         const createAndSavePost = (videoSrc) => {
         const myNewPostItem = {
-  id: Date.now(),
-  authorId: userTag,
-  user: userTag,
-  avatar: userAvatar,
-  desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
-  music: `Son original - ${userName} 🎵`,
-  likes: 0, comments: 0, bookmarks: 0, shares: 0,
-  viewsCount: 0, views: "0", followers: 1280, followingCount: 245, totalLikes: 9420,
-  video: videoSrc, 
-  commentsList: [],
-  // LA CORRECTION : On prépare la structure de la vidéo pour qu'elle s'affiche sur votre profil
-  userPosts: [
-    { id: Date.now(), views: "0", viewsCount: 0, video: videoSrc, desc: newCaption }
-  ]
-};
+          id: Date.now(),
+          authorId: userTag,
+          user: userTag,
+          avatar: userAvatar,
+          desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
+          music: `Son original - ${userName} 🎵`,
+          likes: 0, comments: 0, bookmarks: 0, shares: 0,
+          viewsCount: 0, views: "0", followers: 1280, followingCount: 245, totalLikes: 9420,
+          video: videoSrc, 
+          commentsList: [] // NETTOYÉ : On supprime le sous-bloc userPosts inutile ici
+        };
 
           const updatedPosts = [myNewPostItem, ...posts];
           setPosts(updatedPosts);
           
-          // IMPORTANT : On ajoute aussi la vidéo dans la liste de votre profil (si vous avez cette fonction)
+          // IMPORTANT : On ajoute aussi la vidéo dans la liste de votre profil
           if (typeof setUserPosts === 'function') {
             setUserPosts(prev => [myNewPostItem, ...prev]);
           }
