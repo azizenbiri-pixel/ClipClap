@@ -82,10 +82,7 @@
         commentsList: [
           { id: 1, user: "@lucas_92", text: "Incroyable cette vidéo ! 🔥", time: "Il y a 2h" },
           { id: 2, user: "@sarah_gfx", text: "Le rendu des néons est top 🌌", time: "Il y a 5h" }
-        ],
-        userPosts: [
-          { id: 101, views: "145.2K", video: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4", desc: "Mon ancienne vidéo néon 🌌" }
-        ]
+        ] // NETTOYÉ : Le sous-bloc userPosts en doublon a été supprimé ici
       }
     ];
 function TempsEcoule({ dateCreation }) {
@@ -407,12 +404,8 @@ useEffect(() => {
           commentsList: [] // NETTOYÉ : On supprime le sous-bloc userPosts inutile ici
         };
 
-          // On fusionne la nouvelle vidéo directement avec les posts actuels
           const updatedPosts = [myNewPostItem, ...posts];
           setPosts(updatedPosts);
-          
-          // On force le téléphone à retenir cette liste complète
-          localStorage.setItem('clipclap_posts', JSON.stringify(updatedPosts));
         
    
           // IMPORTANT : On ajoute aussi la vidéo dans la liste de votre profil
