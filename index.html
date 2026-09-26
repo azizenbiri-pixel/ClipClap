@@ -407,8 +407,12 @@ useEffect(() => {
           commentsList: [] // NETTOYÉ : On supprime le sous-bloc userPosts inutile ici
         };
 
+          // On fusionne la nouvelle vidéo directement avec les posts actuels
           const updatedPosts = [myNewPostItem, ...posts];
           setPosts(updatedPosts);
+          
+          // On force le téléphone à retenir cette liste complète
+          localStorage.setItem('clipclap_posts', JSON.stringify(updatedPosts));
         
    
           // IMPORTANT : On ajoute aussi la vidéo dans la liste de votre profil
