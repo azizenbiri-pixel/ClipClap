@@ -182,18 +182,7 @@ function ClipClapApp() {
       const [userTag, setUserTag] = useState("@azizenbiri");
       const [userBio, setUserBio] = useState("Créateur de contenu néon ⚡");
       const [userAvatar, setUserAvatar] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop");
- // CET AUTOMATISME SURVEILLE ET SAUVEGARDE TOUT SEUL SUR LE DISQUE DUR
-      useEffect(() => {
-        if (posts && posts.length > 0) {
-          localStorage.setItem('clipclap_posts', JSON.stringify(posts));
-        }
-      }, [posts]);
 
-      useEffect(() => {
-        if (userPosts && userPosts.length > 0) {
-          localStorage.setItem('clipclap_user_posts', JSON.stringify(userPosts));
-        }
-      }, [userPosts]);
         
           
         
@@ -388,61 +377,76 @@ function ClipClapApp() {
       };
 
       const handlePublish = (e) => {
-  e.preventDefault();
-  playSound('click');
-  
-  const createAndSavePost = (videoSrc) => {
-    // Structure propre et nettoyée du post pour éviter le crash
-    const myNewPostItem = {
-      id: Date.now(),
-      authorId: userTag,
-      user: userTag,
-      avatar: userAvatar,
-      desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
-      music: `Son original - ${userName} 🎵`,
-      likes: 0, 
-      comments: 0, 
-      bookmarks: 0, 
-      shares: 0,
-      viewsCount: 0, 
-      views: "0", 
-      followers: 1280, 
-      followingCount: 245, 
-      totalLikes: 9420,
-      video: videoSrc, 
-      commentsList: []
-    };
+        e.preventDefault();
+        playSound('click');
+        const createAndSavePost = (videoSrc) => {
+        const myNewPostItem = {
+          id: Date.now(),
+          authorId: userTag,
+          user: userTag,
+          avatar: userAvatar,
+          desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
+          music: `Son original - ${userName} 🎵`,
+          likes: 0, comments: 0, bookmarks: 0, shares: 0,
+          viewsCount: 0, views: "0", followers: 1280, followingCount: 245, totalLikes: 9420,
+          video: videoSrc, 
+          commentsList: [] // NETTOYÉ : On supprime le sous-bloc userPosts inutile ici
+        };
 
-    // Ajout aux vidéos globales
-    const updatedPosts = [myNewPostItem, ...posts];
-    setPosts(updatedPosts);
-    
-    // Ajout sécurisé au profil utilisateur
-    if (typeof setUserPosts === 'function') {
-      setUserPosts(prev => [myNewPostItem, ...(prev || [])]);
-    }
+          const updatedPosts = [myNewPostItem, ...posts];
+          setPosts(updatedPosts);
+          
+          // IMPORTANT : On ajoute aussi la vidéo dans la liste de votre profil
+          if (typeof setUserPosts === 'function') {
+            setUserPosts(prev => [myNewPostItem, ...prev]);
+          }
 
-    // Réinitialisation des compteurs et fermeture de la fenêtre
-    setLikeCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
-    setSavedCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
-    setCreatorFollowers(counts => ({ ...counts, [userTag]: 1280 }));
-    setShowUploadModal(false);
-    setNewCaption("");
-    setSelectedFile(null);
-    setCurrentIndex(0);
-    setFeedTab('foryou');
-    showToast("Vidéo publiée et enregistrée ! 🚀");
-  };
+          setLikeCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
+          setSavedCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
+          setCreatorFollowers(counts => ({ ...counts, [userTag]: 1280 }));
+          setShowUploadModal(false);
+          setNewCaption("");
+          setSelectedFile(null);
+          setCurrentIndex(0);
+          setFeedTab('foryou');
+          showToast("Vidéo publiée et enregistrée ! 🚀");
+        };
 
-  // Gestion sécurisée du fichier vidéo d'origine
-  if (selectedFile) {
-    const reader = new FileReader();
-    reader.readAsDataURL(selectedFile);
-    reader.onloadend = () => { createAndSavePost(reader.result); };
-  } else {
-    createAndSavePost("https://mixkit.co");
-  }
-};
+        if (selectedFile) {
+          const reader = new FileReader();
+          reader.readAsDataURL(selectedFile);
+          reader.onloadend = () => { createAndSavePost(reader.result); };
+        } else {
+          createAndSavePost("https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4");
+        }
+      };
+
+      const handleTouchStart = (e) => {
+        touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
+      };
+
+      const handleTouchEnd = (e) => {
+        if (displayedPosts.length === 0) return;
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const diffX = touchStartX.current - touchEndX;
+        const diffY = touchStartY.current - touchEndY;
+
+        if (diffX > 40 && Math.abs(diffY) < 50) {
+          playSound('click');
+          setViewingCreator(displayedPosts[currentIndex]);
+          return;
+        }
+
+        if (Math.abs(diffY) > 40 && Math.abs(diffX) < 50) {
+          if (diffY > 0) {
+            setCurrentIndex(prev => (prev + 1) % displayedPosts.length);
+          } else {
+            setCurrentIndex(prev => (prev - 1 + displayedPosts.length) % displayedPosts.length);
+          }
+        }
+      };
 
       const handleProfileTouchStart = (e) => {
         touchStartX.current = e.touches[0].clientX;
