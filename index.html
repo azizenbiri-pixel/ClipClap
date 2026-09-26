@@ -395,11 +395,6 @@ function ClipClapApp() {
 
           const updatedPosts = [myNewPostItem, ...posts];
           setPosts(updatedPosts);
-          
-          // La sauvegarde simplifiée et sécurisée sur votre téléphone :
-          localStorage.setItem('clipclap_posts', JSON.stringify(updatedPosts));
-          localStorage.setItem('clipclap_user_posts', JSON.stringify([myNewPostItem, ...posts.filter(p => p.user === userTag)]));
-
             
           // IMPORTANT : On ajoute aussi la vidéo dans la liste de votre profil
           if (typeof setUserPosts === 'function') {
