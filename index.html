@@ -395,10 +395,15 @@ function ClipClapApp() {
 
           const updatedPosts = [myNewPostItem, ...posts];
           setPosts(updatedPosts);
+          localStorage.setItem('clipclap_posts', JSON.stringify(updatedPosts));
           
-          // IMPORTANT : On ajoute aussi la vidéo dans la liste de votre profil
+          // On ajoute la vidéo dans la liste de votre profil ET on la sauvegarde
           if (typeof setUserPosts === 'function') {
-            setUserPosts(prev => [myNewPostItem, ...prev]);
+            setUserPosts(prev => {
+              const updatedUserPosts = [myNewPostItem, ...prev];
+              localStorage.setItem('clipclap_user_posts', JSON.stringify(updatedUserPosts));
+              return updatedUserPosts;
+            });
           }
 
           setLikeCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
