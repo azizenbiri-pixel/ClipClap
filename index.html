@@ -82,7 +82,10 @@
         commentsList: [
           { id: 1, user: "@lucas_92", text: "Incroyable cette vidéo ! 🔥", time: "Il y a 2h" },
           { id: 2, user: "@sarah_gfx", text: "Le rendu des néons est top 🌌", time: "Il y a 5h" }
-        ] // NETTOYÉ : Le sous-bloc userPosts en doublon a été supprimé ici
+        ],
+        userPosts: [
+          { id: 101, views: "145.2K", video: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4", desc: "Mon ancienne vidéo néon 🌌" }
+        ]
       }
     ];
 function TempsEcoule({ dateCreation }) {
@@ -129,23 +132,15 @@ function ClipClapApp() {
       const [searchQuery, setSearchQuery] = useState("");
       const [replyingTo, setReplyingTo] = useState(null);
 
-          // 1. Chargement sécurisé des vidéos de votre profil
-      const [userPosts, setUserPosts] = React.useState(() => {
-        try {
-          const saved = localStorage.getItem('clipclap_user_posts');
-          return saved ? JSON.parse(saved) : [];
-        } catch(e) {
-          return [];
-        }
-      });
+      // Notre nouvelle ligne pour mémoriser les vidéos de votre profil
+      const [userPosts, setUserPosts] = useState([]);
 
-      // 2. Chargement sécurisé des vidéos globales
-      const [posts, setPosts] = React.useState(() => {
+      const [posts, setPosts] = useState(() => {
         try {
           const saved = localStorage.getItem('clipclap_posts');
-          return saved ? JSON.parse(saved) : (typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : []);
+          return saved ? JSON.parse(saved) : INITIAL_POSTS;
         } catch(e) {
-          return typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : [];
+          return INITIAL_POSTS;
         }
       });
 
@@ -187,12 +182,6 @@ function ClipClapApp() {
       const [userTag, setUserTag] = useState("@azizenbiri");
       const [userBio, setUserBio] = useState("Créateur de contenu néon ⚡");
       const [userAvatar, setUserAvatar] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop");
-useEffect(() => {
-  const savedAvatar = localStorage.getItem('clipclap_user_avatar');
-  if (savedAvatar) {
-    setUserAvatar(savedAvatar);
-  }
-}, []);
 
         
           
@@ -406,8 +395,7 @@ useEffect(() => {
 
           const updatedPosts = [myNewPostItem, ...posts];
           setPosts(updatedPosts);
-        
-   
+            
           // IMPORTANT : On ajoute aussi la vidéo dans la liste de votre profil
           if (typeof setUserPosts === 'function') {
             setUserPosts(prev => [myNewPostItem, ...prev]);
@@ -917,17 +905,7 @@ useEffect(() => {
                     ></textarea>
                   </div>
 
-                  <button 
-                    type="button" 
-                    onClick={(e) => {
-                      if (typeof handlePublish === 'function') {
-                        handlePublish(e);
-                      } else {
-                        console.log("handlePublish n'est pas encore prête.");
-                      }
-                    }}
-                    className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl text-white font-extrabold text-sm shadow-lg shadow-pink-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                  >
+                  <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl text-white font-extrabold text-sm shadow-lg shadow-pink-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all">
                     Publier sur ClipClap 🚀
                   </button>
                 </form>
