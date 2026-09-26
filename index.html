@@ -377,52 +377,53 @@ function ClipClapApp() {
       };
 
       const handlePublish = (e) => {
-  e.preventDefault();
-  playSound('click');
-  
-  const createAndSavePost = (videoSrc) => {
-    const myNewPostItem = {
-      id: Date.now(),
-      authorId: userTag,
-      user: userTag,
-      avatar: userAvatar,
-      desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
-      music: `Son original - ${userName} 🎵`,
-      likes: 0, 
-      comments: 0, 
-      bookmarks: 0, 
-      shares: 0,
-      viewsCount: 0, 
-      views: "0", 
-      followers: 1280, 
-      followingCount: 245, 
-      totalLikes: 9420,
-      video: videoSrc, 
-      commentsList: []
-    };
-
-    // 1. On l'ajoute dans le flux d'accueil
-    const updatedPosts = [myNewPostItem, ...posts];
-    setPosts(updatedPosts);
-    
-    // 2. LA LIGNE MAGIQUE : On l'ajoute AUSSI sur votre profil utilisateur
-    setUserPosts(prevUserPosts => [myNewPostItem, ...prevUserPosts]);
-
-    // 3. Fermeture et nettoyage automatique du formulaire
-    setNewCaption("");
-    setSelectedVideo("");
-    setNewVideoFile(null);
-    setIsPublishModalOpen(false);
-  };
-
-  // Déclenchement automatique de la fonction avec la vidéo choisie
-  const videoUrlToPublish = selectedVideo || (newVideoFile ? URL.createObjectURL(newVideoFile) : "");
-  if (videoUrlToPublish) {
-    createAndSavePost(videoUrlToPublish);
-  } else {
-    alert("Veuillez sélectionner une vidéo !");
-  }
+        e.preventDefault();
+        playSound('click');
+        const createAndSavePost = (videoSrc) => {
+        const myNewPostItem = {
+  id: Date.now(),
+  authorId: userTag,
+  user: userTag,
+  avatar: userAvatar,
+  desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
+  music: `Son original - ${userName} 🎵`,
+  likes: 0, comments: 0, bookmarks: 0, shares: 0,
+  viewsCount: 0, views: "0", followers: 1280, followingCount: 245, totalLikes: 9420,
+  video: videoSrc, 
+  commentsList: [],
+  // LA CORRECTION : On prépare la structure de la vidéo pour qu'elle s'affiche sur votre profil
+  userPosts: [
+    { id: Date.now(), views: "0", viewsCount: 0, video: videoSrc, desc: newCaption }
+  ]
 };
+
+          const updatedPosts = [myNewPostItem, ...posts];
+          setPosts(updatedPosts);
+          
+          // IMPORTANT : On ajoute aussi la vidéo dans la liste de votre profil (si vous avez cette fonction)
+          if (typeof setUserPosts === 'function') {
+            setUserPosts(prev => [myNewPostItem, ...prev]);
+          }
+
+          setLikeCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
+          setSavedCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
+          setCreatorFollowers(counts => ({ ...counts, [userTag]: 1280 }));
+          setShowUploadModal(false);
+          setNewCaption("");
+          setSelectedFile(null);
+          setCurrentIndex(0);
+          setFeedTab('foryou');
+          showToast("Vidéo publiée et enregistrée ! 🚀");
+        };
+
+        if (selectedFile) {
+          const reader = new FileReader();
+          reader.readAsDataURL(selectedFile);
+          reader.onloadend = () => { createAndSavePost(reader.result); };
+        } else {
+          createAndSavePost("https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4");
+        }
+      };
 
       const handleTouchStart = (e) => {
         touchStartX.current = e.touches[0].clientX;
