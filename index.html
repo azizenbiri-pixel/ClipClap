@@ -410,9 +410,14 @@ useEffect(() => {
           const updatedPosts = [myNewPostItem, ...posts];
           setPosts(updatedPosts);
             
-          // IMPORTANT : On ajoute aussi la vidéo dans la liste de votre profil
+          // On ajoute la vidéo sur votre profil ET on l'écrit directement dans le disque dur
           if (typeof setUserPosts === 'function') {
-            setUserPosts(prev => [myNewPostItem, ...prev]);
+            setUserPosts(prev => {
+              const laListeDuProfil = prev || [];
+              const nouvelleListeProfil = [myNewPostItem, ...laListeDuProfil];
+              localStorage.setItem('clipclap_user_posts', JSON.stringify(nouvelleListeProfil));
+              return nouvelleListeProfil;
+            });
           }
 
           setLikeCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
