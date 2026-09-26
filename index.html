@@ -196,7 +196,18 @@ useEffect(() => {
     setUserAvatar(savedAvatar);
   }
 }, []);
-
+ // L'automatisme qui copie la vidéo publiée sur votre profil et la sauvegarde
+      React.useEffect(() => {
+        if (typeof posts !== 'undefined' && posts && posts.length > 0) {
+          localStorage.setItem('clipclap_posts', JSON.stringify(posts));
+          
+          if (typeof setUserPosts === 'function') {
+            const mesVideosDuProfil = posts.filter(p => p.user === userTag || p.authorId === userTag);
+            setUserPosts(mesVideosDuProfil);
+            localStorage.setItem('clipclap_user_posts', JSON.stringify(mesVideosDuProfil));
+          }
+        }
+      }, [posts]);
         
           
         
