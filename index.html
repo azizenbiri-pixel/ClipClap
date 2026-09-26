@@ -227,7 +227,30 @@ useEffect(() => {
     setUserAvatar(savedAvatar);
   }
 }, []);
+// 1. LE BLOC DE L'AVATAR (On ne le touche pas) :
+useEffect(() => {
+  const savedAvatar = localStorage.getItem('clipclap_user_avatar');
+  if (savedAvatar) {
+    setUserAvatar(savedAvatar);
+  }
+}, []);
 
+// 2. COLLÉ JUSTE EN DESSOUS (À LA LIGNE SUIVANTE) :
+React.useEffect(() => {
+  try {
+    if (typeof posts !== 'undefined' && posts && posts.length > 0) {
+      localStorage.setItem('clipclap_posts', JSON.stringify(posts));
+      
+      if (typeof setUserPosts === 'function' && typeof userTag !== 'undefined') {
+        const mesVideosDuProfil = posts.filter(p => p.user === userTag || p.authorId === userTag);
+        setUserPosts(mesVideosDuProfil);
+        localStorage.setItem('clipclap_user_posts', JSON.stringify(mesVideosDuProfil));
+      }
+    }
+  } catch (error) {
+    console.error("Erreur de sauvegarde :", error);
+  }
+}, [posts]);
         
         
         
