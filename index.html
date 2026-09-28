@@ -129,25 +129,43 @@ function ClipClapApp() {
       const [searchQuery, setSearchQuery] = useState("");
       const [replyingTo, setReplyingTo] = useState(null);
 
-          // 1. Chargement sécurisé des vidéos de votre profil
-      const [userPosts, setUserPosts] = React.useState(() => {
-        try {
-          const saved = localStorage.getItem('clipclap_user_posts');
-          return saved ? JSON.parse(saved) : [];
-        } catch(e) {
-          return [];
-        }
-      });
+      import { supabase } from './supabase';
 
-      // 2. Chargement sécurisé des vidéos globales
-      const [posts, setPosts] = React.useState(() => {
-        try {
-          const saved = localStorage.getItem('clipclap_posts');
-          return saved ? JSON.parse(saved) : (typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : []);
-        } catch(e) {
-          return typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : [];
-        }
-      });
+// 1. Chargement sécurisé des vidéos depuis SUPABASE
+const [userPosts, setUserPosts] = React.useState([]);
+
+useEffect(() => {
+  const loadPosts = async () => {
+    const { data, error } = await supabase
+     .from('clips')
+     .select('*')
+     .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setUserPosts(data);
+    }
+  };
+  loadPosts();
+}, []);
+
+// 2. Quand tu ajoutes une vidéo, tu l'envoies à SUPABASE
+const addPost = async (newVideoUrl) => {
+  const { data, error } = await supabase
+   .from('clips')
+   .insert([{
+      video_url: newVideoUrl,
+      user_name: 'Aziz',
+      description: 'Ma vidéo ClipClap'
+    }])
+   .select();
+
+  if (!error && data) {
+    setUserPosts([data[0],...userPosts]);
+    alert("Vidéo enregistrée dans Supabase!");
+  } else {
+    console.log(error);
+  }
+};
 
   
     
