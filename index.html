@@ -8,7 +8,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
     html, body {
@@ -32,15 +31,7 @@
 
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
-let supabaseClient = null;
-try {
-  if (window.supabase) {
-    supabaseClient = window.supabase.createClient(
-      "https://yommeqomnbzlnszbfghm.supabase.co",
-      "sb_publishable_no3M4ZhcpnxkywA-UwJBRw_9JbbYsYj"
-    );
-  }
-} catch(e) {}
+
     const playSound = (type = 'click') => {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -138,9 +129,25 @@ function ClipClapApp() {
       const [searchQuery, setSearchQuery] = useState("");
       const [replyingTo, setReplyingTo] = useState(null);
 
-        const [userPosts, setUserPosts] = React.useState([]);
-const [posts, setPosts] = React.useState(INITIAL_POSTS);
-const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+          // 1. Chargement sécurisé des vidéos de votre profil
+      const [userPosts, setUserPosts] = React.useState(() => {
+        try {
+          const saved = localStorage.getItem('clipclap_user_posts');
+          return saved ? JSON.parse(saved) : [];
+        } catch(e) {
+          return [];
+        }
+      });
+
+      // 2. Chargement sécurisé des vidéos globales
+      const [posts, setPosts] = React.useState(() => {
+        try {
+          const saved = localStorage.getItem('clipclap_posts');
+          return saved ? JSON.parse(saved) : (typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : []);
+        } catch(e) {
+          return typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : [];
+        }
+      });
 
   
     
@@ -209,24 +216,10 @@ useEffect(() => {
       const touchStartY = useRef(0);
       const videoRef = useRef(null);
       useEffect(() => {
-  const fetchClips = async () => {
-    if (!supabaseClient) { setPosts(INITIAL_POSTS); setIsLoadingPosts(false); return; }
-    try {
-      const { data } = await supabaseClient.from('clips').select('*').order('created_at', {ascending:false});
-      if (data && data.length) {
-        const mapped = data.map(c => ({
-          id:c.id, authorId:c.author_id, user:c.author_id, avatar:userAvatar,
-          desc:c.caption, music:`Son original - ${userName} 🎵`, likes:c.likes||0, comments:0, bookmarks:0, shares:0,
-          viewsCount:0, views:"0", followers:1280, followingCount:245, totalLikes:9420, video:c.video_url, commentsList:[]
-        }));
-        setPosts([...mapped,...INITIAL_POSTS]);
-        setUserPosts(mapped.filter(m => m.authorId === userTag));
-      }
-    } catch(e) {}
-    setIsLoadingPosts(false);
-  };
-  fetchClips();
-}, []);
+        try {
+          localStorage.setItem('clipclap_posts', JSON.stringify(posts));
+        } catch(e) {}
+      }, [posts]);
 
       useEffect(() => {
   const savedAvatar = localStorage.getItem('clipclap_user_avatar');
@@ -394,26 +387,22 @@ useEffect(() => {
         setNewMessageText("");
       };
 
-      const handlePublish = async (e) => {
-  e.preventDefault();
-  playSound('click');
-  const videoSrc = selectedFile ? URL.createObjectURL(selectedFile) : "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4";
-  const myNewPostItem = {
-    id: Date.now(), authorId: userTag, user: userTag, avatar: userAvatar,
-    desc: newCaption || "Nouvelle vidéo !", music: `Son original - ${userName} 🎵`,
-    likes: 0, comments: 0, bookmarks: 0, shares: 0, viewsCount: 0, views: "0",
-    followers: 1280, followingCount: 245, totalLikes: 9420,
-    video: videoSrc, commentsList: []
-  };
-  if (supabaseClient) {
-    try {
-      await supabaseClient.from('clips').insert([{ author_id: userTag, caption: myNewPostItem.desc, video_url: videoSrc }]);
-    } catch(err) { console.log(err); }
-  }
-  setPosts(prev => [myNewPostItem, ...prev]);
-  setUserPosts(prev => [myNewPostItem, ...prev]);
-  setShowUploadModal(false); setNewCaption(""); setSelectedFile(null); setCurrentIndex(0); setFeedTab('foryou'); setActiveTab('feed');
-};
+      const handlePublish = (e) => {
+        e.preventDefault();
+        playSound('click');
+        const createAndSavePost = (videoSrc) => {
+        const myNewPostItem = {
+          id: Date.now(),
+          authorId: userTag,
+          user: userTag,
+          avatar: userAvatar,
+          desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
+          music: `Son original - ${userName} 🎵`,
+          likes: 0, comments: 0, bookmarks: 0, shares: 0,
+          viewsCount: 0, views: "0", followers: 1280, followingCount: 245, totalLikes: 9420,
+          video: videoSrc, 
+          commentsList: [] // NETTOYÉ : On supprime le sous-bloc userPosts inutile ici
+        };
 
           const updatedPosts = [myNewPostItem, ...posts];
           setPosts(updatedPosts);
