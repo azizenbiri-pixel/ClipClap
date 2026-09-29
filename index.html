@@ -480,13 +480,12 @@ useEffect(() => {
           setViewingCreator(displayedPosts[currentIndex]);
           return;
         }
-
         if (Math.abs(diffY) > 40 && Math.abs(diffX) < 50) {
           if (diffY > 0) {
             setCurrentIndex(prev => (prev + 1) % displayedPosts.length);
           } else {
             setCurrentIndex(prev => (prev - 1 + displayedPosts.length) % displayedPosts.length);
-                      }
+          }
         }
       };
 
@@ -542,7 +541,6 @@ useEffect(() => {
                 className="absolute inset-0 video-swipe-area"
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
-              >
                 {displayedPosts.length > 0 && currentPost ? (
                   <div className="relative h-full w-full bg-black flex items-center justify-center">
                     <video
@@ -562,13 +560,11 @@ useEffect(() => {
                       <button 
                         onClick={() => { playSound('click'); setFeedTab('following'); }}
                         className={`text-sm font-bold transition-all ${feedTab === 'following' ? 'text-white border-b-2 border-pink-500 pb-1' : 'text-white/60 hover:text-white'}`}
-                      >
                         Abonnements
                       </button>
                       <button 
                         onClick={() => { playSound('click'); setFeedTab('foryou'); }}
                         className={`text-sm font-bold transition-all ${feedTab === 'foryou' ? 'text-white border-b-2 border-pink-500 pb-1' : 'text-white/60 hover:text-white'}`}
-                      >
                         Pour toi
                       </button>
                     </div>
@@ -584,7 +580,6 @@ useEffect(() => {
                     <button 
                       onClick={() => { playSound('click'); setIsMuted(!isMuted); }}
                       className="absolute top-14 right-4 z-30 w-10 h-10 bg-black/40 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center text-white text-base shadow-lg"
-                    >
                       {isMuted ? '🔇' : '🔊'}
                     </button>
 
@@ -598,7 +593,6 @@ useEffect(() => {
                         <div 
                           onClick={() => { playSound('click'); setViewingCreator(currentPost); }}
                           className="w-11 h-11 rounded-full border-2 border-pink-500 overflow-hidden bg-purple-900 cursor-pointer shadow-lg"
-                        >
                           <img 
                             src={currentPost.authorId === userTag ? userAvatar : (currentPost.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop")} 
                             alt="avatar" 
@@ -609,7 +603,6 @@ useEffect(() => {
                           <button 
                             onClick={(e) => handleFollow(currentPost.authorId || currentPost.user, e)}
                             className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-5 h-5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md hover:scale-110 transition-transform"
-                          >
                             +
                           </button>
                         )}
@@ -727,10 +720,10 @@ useEffect(() => {
                     <div key={conv.id} onClick={() => { playSound('click'); setActiveChat(conv); }} className="flex items-center justify-between bg-white/5 border border-white/10 p-3.5 rounded-2xl cursor-pointer hover:bg-white/10 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center font-bold text-base">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center font-bold text-base">
                             {conv.user.charAt(1).toUpperCase()}
                           </div>
-                           {conv.unread && <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-pink-500 rounded-full border-2 border-[#07040f]"></span>}
+                          {conv.unread && <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-pink-500 rounded-full border-2 border-[#07040f]"></span>}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -760,8 +753,6 @@ useEffect(() => {
                     setActiveTab('feed');
                   }
                 }}                                                                                                  
-              >
-              >
                 <div className="flex flex-col items-center mt-4">
                   <div className="relative mb-3">
                     <div className="w-24 h-24 rounded-full border-2 border-pink-500 overflow-hidden bg-purple-900 shadow-xl">
@@ -830,7 +821,6 @@ useEffect(() => {
                           }));
                         }}
                       className="relative aspect-[9/16] bg-gray-900 overflow-hidden rounded-lg cursor-pointer group hover:opacity-90 transition"
->
      <video 
                           src={p.video} 
                           className="w-full h-full object-cover" 
@@ -914,7 +904,6 @@ useEffect(() => {
                   <button 
                     type="submit"
                     className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl text-white font-extrabold text-sm shadow-lg shadow-pink-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                  >
                     Publier sur ClipClap 🚀
                   </button>
                 </form>
@@ -936,7 +925,6 @@ useEffect(() => {
     }
   }}
   className="w-full flex justify-center p-2 cursor-grab active:cursor-grabbing touch-none"
->
   <div className="w-16 h-1.5 bg-neutral-600 rounded-full"></div>
 </div>
 
@@ -961,7 +949,6 @@ useEffect(() => {
 <button
   onClick={() => setReplyingTo(replyingTo?.id === c.id ? null : c)}
   className="text-xs text-neutral-400 hover:text-white mt-1"
->
   Répondre
 </button>
 
@@ -973,7 +960,8 @@ useEffect(() => {
       defaultValue=""
       id={`reply-input-${c.id}`}
       className="flex-1 bg-neutral-900 text-white px-3 py-1.5 rounded-full text-xs focus:outline-none focus:ring-1 focus:ring-pink-500"
-        <button
+    />
+      <button
       type="button"
       onClick={() => {
   const inputElement = document.getElementById(`reply-input-${c.id}`);
@@ -1013,7 +1001,6 @@ if (replyText) {
 }       
 }}
       className="bg-pink-500 text-white px-3 py-1.5 rounded-full text-xs font-semibold hover:bg-pink-600 transition"
-    >
       Répondre
     </button>
   </div>
@@ -1040,7 +1027,6 @@ if (replyText) {
   <button 
     type="submit" 
     className="bg-pink-500 text-white px-4 py-2.5 rounded-full text-sm font-semibold hover:bg-pink-600 transition"
-  >
     Envoyer
   </button>
 </form>
@@ -1062,7 +1048,6 @@ if (replyText) {
                     setViewingCreator(null);
                   }
                 }}
-              >
 
               <button onClick={() => setViewingCreator(null)} className="mb-4 w-9 h-9 bg-white/10 rounded-full flex items-center justify-center text-white text-base font-bold">
                 ‹
@@ -1170,7 +1155,6 @@ if (file) {
                       showToast("Profil et avatar mis à jour ! ✨"); 
                     }}
                     className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl text-white font-extrabold text-xs shadow-md"
-                  >
                     Enregistrer
                   </button>
                 </div>
