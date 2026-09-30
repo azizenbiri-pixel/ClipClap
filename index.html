@@ -85,29 +85,6 @@
         ] // NETTOYÉ : Le sous-bloc userPosts en doublon a été supprimé ici
       }
     ];
-    // --- FIX 500Mo + carré noir : on stocke les vidéos dans IndexedDB ---
-    const openDB = () => {
-      return new Promise((resolve, reject) => {
-        const req = indexedDB.open('ClipClapDB', 1);
-        req.onupgradeneeded = () => req.result.createObjectStore('videos');
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-      });
-    };
-    const saveVideoBlob = async (id, blob) => {
-      const db = await openDB();
-      db.transaction('videos', 'readwrite').objectStore('videos').put(blob, id);
-    };
-    const getVideoBlob = async (id) => {
-      const db = await openDB();
-      return new Promise(res => {
-        const req = db.transaction('videos').objectStore('videos').get(id);
-        req.onsuccess = () => res(req.result);
-      });
-    };
-    // --- FIN FIX ---
-
-function TempsEcoule({ dateCreation }) {
 function TempsEcoule({ dateCreation }) {
   if (typeof dateCreation === 'string') {
     return <span className="text-xs text-gray-500">{dateCreation}</span>;
@@ -410,54 +387,22 @@ useEffect(() => {
         setNewMessageText("");
       };
 
-      const handlePublish = async (e) => {
-  e.preventDefault();
-  playSound('click');
-
-  // Limite 500Mo
-  const MAX_SIZE = 500 * 1024 * 1024;
-  if (selectedFile && selectedFile.size > MAX_SIZE) {
-    showToast("Vidéo trop grosse, max 500Mo !");
-    return;
-  }
-
-  const postId = Date.now();
-  let videoSrc = "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4";
-
-  if (selectedFile) {
-    // On sauve le vrai fichier dans IndexedDB, pas en base64
-    await saveVideoBlob(postId, selectedFile);
-    videoSrc = URL.createObjectURL(selectedFile); // pour lecture immédiate
-  }
-
-  const myNewPostItem = {
-    id: postId,
-    authorId: userTag,
-    user: userTag,
-    avatar: userAvatar,
-    desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
-    music: `Son original - ${userName} 🎵`,
-    likes: 0, comments: 0, bookmarks: 0, shares: 0,
-    viewsCount: 0, views: "0",
-    video: videoSrc,
-    commentsList: [],
-    isLocalBlob: !!selectedFile
-  };
-
-  const updatedPosts = [myNewPostItem, ...posts];
-  setPosts(updatedPosts);
-  if (typeof setUserPosts === 'function') {
-    setUserPosts(prev => [myNewPostItem, ...prev]);
-  }
-
-  setLikeCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
-  setSavedCounts(prev => ({ ...prev, [myNewPostItem.id]: 0 }));
-  setShowUploadModal(false);
-  setNewCaption("");
-  setSelectedFile(null);
-  setCurrentIndex(0);
-  showToast("Vidéo publiée 500Mo OK ! 🚀");
-};
+      const handlePublish = (e) => {
+        e.preventDefault();
+        playSound('click');
+        const createAndSavePost = (videoSrc) => {
+        const myNewPostItem = {
+          id: Date.now(),
+          authorId: userTag,
+          user: userTag,
+          avatar: userAvatar,
+          desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
+          music: `Son original - ${userName} 🎵`,
+          likes: 0, comments: 0, bookmarks: 0, shares: 0,
+          viewsCount: 0, views: "0", followers: 1280, followingCount: 245, totalLikes: 9420,
+          video: videoSrc, 
+          commentsList: [] // NETTOYÉ : On supprime le sous-bloc userPosts inutile ici
+        };
 
           const updatedPosts = [myNewPostItem, ...posts];
           setPosts(updatedPosts);
