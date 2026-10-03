@@ -151,6 +151,25 @@ function ClipClapApp() {
 
       // 📍 Ici, on met bien "React.useState" aussi :
       const [selectedVideoMenu, setSelectedVideoMenu] = React.useState(null);
+  // Fonction pour supprimer un post proprement
+  const handleDeletePost = (postId) => {
+    // 1. On met à jour la liste globale des posts
+    const updatedPosts = posts.filter(p => p.id !== postId);
+    setPosts(updatedPosts);
+    try {
+      localStorage.setItem('clipclap_posts', JSON.stringify(updatedPosts));
+    } catch(e) {}
+
+    // 2. On met à jour la liste des posts du profil
+    const updatedUserPosts = userPosts.filter(p => p.id !== postId);
+    setUserPosts(updatedUserPosts);
+    try {
+      localStorage.setItem('clipclap_user_posts', JSON.stringify(updatedUserPosts));
+    } catch(e) {}
+
+    // 3. On ferme le menu
+    setSelectedVideoMenu(null);
+  };
 
 
   
