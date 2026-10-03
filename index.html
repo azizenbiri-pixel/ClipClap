@@ -31,12 +31,7 @@
 
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
-javascript
-    // === CONNEXION SUPABASE ===
-    const supabaseUrl = https://yommeqomnbzlnszbfghm.supabase.co
-    const supabasekey =sb_publishable_no3M4ZhcpnxkywA-UwJBRw_9JbbYsYj
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    //
+
     const playSound = (type = 'click') => {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -123,42 +118,36 @@ function TempsEcoule({ dateCreation }) {
 
   return <span className="text-xs text-gray-500">{texte}</span>;
 }
-const [searchQuery, setSearchQuery] = useState("");
+function ClipClapApp() {
+      const [showSplash, setShowSplash] = useState(true);
+      const [progress, setProgress] = useState(0);
+      const [isMuted, setIsMuted] = useState(false);
+      const [isPlaying, setIsPlaying] = useState(true);
+      const [showPlayIcon, setShowPlayIcon] = useState(false);
+      const [activeTab, setActiveTab] = useState('feed');
+      const [feedTab, setFeedTab] = useState('foryou');
+      const [searchQuery, setSearchQuery] = useState("");
       const [replyingTo, setReplyingTo] = useState(null);
 
-      // VOUS COLLEZ LE NOUVEAU BLOC SUPABASE ICI À LA PLACE DE L'ANCIEN :
-      const [userPosts, setUserPosts] = React.useState([]);
-      const [posts, setPosts] = React.useState([]);
-
-      React.useEffect(() => {
-        async function recupererVideosDuCloud() {
-          try {
-            const { data, error } = await _supabase
-              .from('videos')
-              .select('*')
-              .order('cree_le', { ascending: false });
-
-            if (error) throw error;
-
-            if (data) {
-              const videosFormatees = data.map(v => ({
-                id: v.id,
-                url: v.url,
-                likes: 0,
-                comments: [],
-                shares: 0
-              }));
-
-              setPosts(videosFormatees);
-              setUserPosts(videosFormatees);
-            }
-          } catch (e) {
-            console.error("Erreur de chargement Supabase :", e);
-          }
+          // 1. Chargement sécurisé des vidéos de votre profil
+      const [userPosts, setUserPosts] = React.useState(() => {
+        try {
+          const saved = localStorage.getItem('clipclap_user_posts');
+          return saved ? JSON.parse(saved) : [];
+        } catch(e) {
+          return [];
         }
-        recupererVideosDuCloud();
-      }, []);
-      
+      });
+
+      // 2. Chargement sécurisé des vidéos globales
+      const [posts, setPosts] = React.useState(() => {
+        try {
+          const saved = localStorage.getItem('clipclap_posts');
+          return saved ? JSON.parse(saved) : (typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : []);
+        } catch(e) {
+          return typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : [];
+        }
+      });
 
   
     
@@ -226,42 +215,12 @@ useEffect(() => {
       const touchStartX = useRef(0);
       const touchStartY = useRef(0);
       const videoRef = useRef(null);
-      javascript
-      // Sauvegarde automatique et synchronisation sécurisée avec Supabase
       useEffect(() => {
         try {
           localStorage.setItem('clipclap_posts', JSON.stringify(posts));
-          
-          // On vérifie s'il y a des vidéos dans la liste
-          if (posts && posts.length > 0) {
-            // On prend la toute première vidéo de la liste (la plus récente)
-            const derniereVideo = posts[0]; 
-            
-            // On l'envoie sur Supabase uniquement si elle a une URL valide
-            if (derniereVideo && derniereVideo.url) {
-              async function envoyerAuCloud() {
-                try {
-                  // On vérifie d'abord si elle n'existe pas déjà pour éviter les doublons
-                  const { data } = await _supabase
-                    .from('videos')
-                    .select('id')
-                    .eq('url', derniereVideo.url);
-                    
-                  if (!data || data.length === 0) {
-                    await _supabase.from('videos').insert([{ url: derniereVideo.url }]);
-                    console.log("Nouvelle vidéo sauvegardée dans le cloud !");
-                  }
-                } catch(err) {
-                  console.error("Erreur d'envoi :", err);
-                }
-              }
-              envoyerAuCloud();
-            }
-          }
-        } catch(e) {
-          console.error(e);
-        }
+        } catch(e) {}
       }, [posts]);
+
       useEffect(() => {
   const savedAvatar = localStorage.getItem('clipclap_user_avatar');
   if (savedAvatar) {
@@ -1314,6 +1273,5 @@ if (file) {
 
     ReactDOM.render(<ClipClapApp />, document.getElementById('root'));
   </script>
-  <script src="https://jsdelivr.net"></script>
 </body>
 </html>
