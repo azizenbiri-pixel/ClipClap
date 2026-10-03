@@ -148,23 +148,6 @@ function ClipClapApp() {
           return typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : [];
         }
       });
-// Sauvegarde automatique des posts globaux à chaque modification
-React.useEffect(() => {
-  try {
-    localStorage.setItem('clipclap_posts', JSON.stringify(posts));
-  } catch (e) {
-    console.error("Erreur de sauvegarde posts", e);
-  }
-}, [posts]);
-
-// Sauvegarde automatique des posts du profil à chaque modification
-React.useEffect(() => {
-  try {
-    localStorage.setItem('clipclap_user_posts', JSON.stringify(userPosts));
-  } catch (e) {
-    console.error("Erreur de sauvegarde userPosts", e);
-  }
-}, [userPosts]);
 
   
     
