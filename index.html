@@ -148,6 +148,7 @@ function ClipClapApp() {
           return typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : [];
         }
       });
+const [selectedVideoMenu, setSelectedVideoMenu] = useState(null);
 
   
     
@@ -816,52 +817,82 @@ useEffect(() => {
                           const indexInFeed = posts.findIndex(post => post.id === p.id);
                           if (indexInFeed !== -1) {
                             setCurrentIndex(indexInFeed); // Charge la vidéo dans le grand lecteur
-                            setActiveTab('feed'); // Allez sur l'onglet principal pour la regarder tourner
-                          }
+                            setActiveTab('feed'); // Allez sur l'onglet principal pour la regarder 
+                            {userPosts.map((p) => (
+  <div 
+    key={p.id}
+    onClick={() => setSelectedVideoMenu(p.id)}
+    className="relative aspect-[9/16] bg-gray-900 overflow-hidden rounded-lg cursor-pointer group hover:opacity-90 transition"
+  >
+    <video 
+      src={p.video} 
+      className="w-full h-full object-cover" 
+      muted 
+      playsInline 
+    />
+    
+    {/* Compteur de vues */}
+    <div className="absolute top-2 left-2 z-10 flex items-center gap-1 text-[11px] text-white font-bold bg-black/70 px-2 py-0.5 rounded backdrop-blur-sm shadow-md">
+      <span>▶</span> {
+        (() => {
+          const v = p.viewsCount || 0;
+          if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`;
+          if (v >= 1000) return `${(v / 1000).toFixed(1)}K`;
+          return v;
+        })()
+      }
+    </div>
 
-                          // 2. LE COMPTEUR RÉEL : On ajoute +1 vue au clic
-                          setPosts(prevPosts => prevPosts.map(post => {
-                            if (post.id === p.id) {
-                              const nouvellesVues = (post.viewsCount || 0) + 1;
-                              return { 
-                                ...post, 
-                                viewsCount: nouvellesVues,
-                                views: nouvellesVues >= 1000 ? `${(nouvellesVues/1000).toFixed(1)}K` : `${nouvellesVues}`
-                              };
-                            }
-                            return post;
-                          }));
-                        }}
-                      className="relative aspect-[9/16] bg-gray-900 overflow-hidden rounded-lg cursor-pointer group hover:opacity-90 transition"
->
-  {/* On ajoute le clic directement sur la vidéo ici */}
-     <video 
-                          src={p.video} 
-                          className="w-full h-full object-cover" 
-                          muted 
-                          playsInline 
-                        />
-                        
-                        <div className="absolute top-2 left-2 z-10 flex items-center gap-1 text-[11px] text-white font-bold bg-black/70 px-2 py-0.5 rounded backdrop-blur-sm shadow-md">
-                          <span>▶</span> {
-                            (() => {
-                              const v = p.viewsCount || 0;
-                              if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`; // Ex: 1.2M
-                              if (v >= 1000) return `${(v / 1000).toFixed(1)}K`;    // Ex: 1.5K, 10.0K
-                              return v; // En dessous de 1000, affiche le chiffre normal (Ex: 850)
-                            })()
-                          }
-                        </div>
-                        
+    {/* Le petit menu contextuel qui s'ouvre au clic */}
+    {selectedVideoMenu === p.id && (
+      <div className="absolute inset-0 z-30 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center gap-2.5 p-3">
+        
+        {/* Bouton Supprimer */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeletePost(p.id);
+            setSelectedVideoMenu(null);
+          }}
+          className="w-full py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow"
+        >
+          🗑️ Supprimer
+        </button>
 
+        {/* Bouton Regarder */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            const indexInFeed = posts.findIndex(post => post.id === p.id);
+            if (indexInFeed !== -1) {
+              setCurrentIndex(indexInFeed);
+              setActiveTab('feed');
+            }
+            setSelectedVideoMenu(null);
+          }}
+          className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow"
+        >
+          ▶️ Regarder
+        </button>
 
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+        {/* Bouton Annuler */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedVideoMenu(null);
+          }}
+          className="text-gray-400 hover:text-white text-[11px] mt-1 underline"
+        >
+          Annuler
+        </button>
+      </div>
+    )}
+  </div>
+))}
+
           {/* BARRE DE NAVIGATION INFÉRIEURE */}
           <div className="absolute bottom-0 left-0 right-0 h-16 bg-[#090514]/95 backdrop-blur-xl border-t border-white/10 flex items-center justify-around px-2 z-40">
             <button onClick={() => { playSound('click'); setActiveTab('feed'); setViewingCreator(null); }} className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'feed' ? 'text-pink-500 font-bold' : 'text-gray-400 hover:text-white'}`}>
