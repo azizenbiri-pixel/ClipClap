@@ -129,7 +129,7 @@ function ClipClapApp() {
       const [searchQuery, setSearchQuery] = useState("");
       const [replyingTo, setReplyingTo] = useState(null);
 
-          // 1. Chargement sécurisé des vidéos de votre profil
+                // 1. Chargement sécurisé des vidéos de votre profil
       const [userPosts, setUserPosts] = React.useState(() => {
         try {
           const saved = localStorage.getItem('clipclap_user_posts');
@@ -148,7 +148,10 @@ function ClipClapApp() {
           return typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : [];
         }
       });
-const [selectedVideoMenu, setSelectedVideoMenu] = useState(null);
+
+      // 📍 Ici, on met bien "React.useState" aussi :
+      const [selectedVideoMenu, setSelectedVideoMenu] = React.useState(null);
+
 
   
     
