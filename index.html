@@ -123,36 +123,42 @@ function TempsEcoule({ dateCreation }) {
 
   return <span className="text-xs text-gray-500">{texte}</span>;
 }
-function ClipClapApp() {
-      const [showSplash, setShowSplash] = useState(true);
-      const [progress, setProgress] = useState(0);
-      const [isMuted, setIsMuted] = useState(false);
-      const [isPlaying, setIsPlaying] = useState(true);
-      const [showPlayIcon, setShowPlayIcon] = useState(false);
-      const [activeTab, setActiveTab] = useState('feed');
-      const [feedTab, setFeedTab] = useState('foryou');
-      const [searchQuery, setSearchQuery] = useState("");
+const [searchQuery, setSearchQuery] = useState("");
       const [replyingTo, setReplyingTo] = useState(null);
 
-          // 1. Chargement sécurisé des vidéos de votre profil
-      const [userPosts, setUserPosts] = React.useState(() => {
-        try {
-          const saved = localStorage.getItem('clipclap_user_posts');
-          return saved ? JSON.parse(saved) : [];
-        } catch(e) {
-          return [];
-        }
-      });
+      // VOUS COLLEZ LE NOUVEAU BLOC SUPABASE ICI À LA PLACE DE L'ANCIEN :
+      const [userPosts, setUserPosts] = React.useState([]);
+      const [posts, setPosts] = React.useState([]);
 
-      // 2. Chargement sécurisé des vidéos globales
-      const [posts, setPosts] = React.useState(() => {
-        try {
-          const saved = localStorage.getItem('clipclap_posts');
-          return saved ? JSON.parse(saved) : (typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : []);
-        } catch(e) {
-          return typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : [];
+      React.useEffect(() => {
+        async function recupererVideosDuCloud() {
+          try {
+            const { data, error } = await _supabase
+              .from('videos')
+              .select('*')
+              .order('cree_le', { ascending: false });
+
+            if (error) throw error;
+
+            if (data) {
+              const videosFormatees = data.map(v => ({
+                id: v.id,
+                url: v.url,
+                likes: 0,
+                comments: [],
+                shares: 0
+              }));
+
+              setPosts(videosFormatees);
+              setUserPosts(videosFormatees);
+            }
+          } catch (e) {
+            console.error("Erreur de chargement Supabase :", e);
+          }
         }
-      });
+        recupererVideosDuCloud();
+      }, []);
+      
 
   
     
