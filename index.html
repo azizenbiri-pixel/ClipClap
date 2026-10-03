@@ -226,10 +226,28 @@ useEffect(() => {
       const touchStartX = useRef(0);
       const touchStartY = useRef(0);
       const videoRef = useRef(null);
+      javascript
+      // Sauvegarde automatique et synchronisation avec Supabase
       useEffect(() => {
         try {
           localStorage.setItem('clipclap_posts', JSON.stringify(posts));
-        } catch(e) {}
+          
+          // Si une nouvelle vidéo locale a été ajoutée, on l'envoie sur Supabase
+          if (posts.length > 0) {
+            const derniereVideo = posts[0]; // Récupère la vidéo fraîchement publiée
+            
+            // On vérifie qu'elle n'est pas déjà dans Supabase (id numérique généré)
+            if (typeof derniereVideo.id === 'string' || !derniereVideo.id) {
+              async function envoyerAuCloud() {
+                await _supabase.from('videos').insert([{ url: derniereVideo.url }]);
+                console.log("Nouvelle vidéo sauvegardée dans le cloud !");
+              }
+              envoyerAuCloud();
+            }
+          }
+        } catch(e) {
+          console.error(e);
+        }
       }, [posts]);
 
       useEffect(() => {
