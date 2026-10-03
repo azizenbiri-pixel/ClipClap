@@ -441,10 +441,10 @@ useEffect(() => {
           showToast("Vidéo publiée et enregistrée ! 🚀");
         };
 
-                if (selectedFile) {
-          // Utilisation d'un object URL au lieu du FileReader qui sature la mémoire
-          const videoUrl = URL.createObjectURL(selectedFile);
-          createAndSavePost(videoUrl);
+        if (selectedFile) {
+          const reader = new FileReader();
+          reader.readAsDataURL(selectedFile);
+          reader.onloadend = () => { createAndSavePost(reader.result); };
         } else {
           createAndSavePost("https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4");
         }
