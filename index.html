@@ -31,7 +31,12 @@
 
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
-
+javascript
+    // === CONNEXION SUPABASE ===
+    const supabaseUrl = https://yommeqomnbzlnszbfghm.supabase.co
+    const supabasekey =sb_publishable_no3M4ZhcpnxkywA-UwJBRw_9JbbYsYj
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    //
     const playSound = (type = 'click') => {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
