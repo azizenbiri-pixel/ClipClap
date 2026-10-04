@@ -944,7 +944,7 @@ useEffect(() => {
       className="w-full max-w-md h-[65%] bg-[#120c24] border-t border-white/10 rounded-t-3xl flex flex-col shadow-2xl transition-transform duration-75"
     >
       
-      {/* 🚀 Zone de swipe ultra-sensible */}
+      {/* 🚀 Zone de swipe ultra-sensible (seuil à 15px) */}
       <div 
         onTouchStart={(e) => {
           window._commentsTouchStartY = e.touches[0].clientY;
@@ -953,7 +953,6 @@ useEffect(() => {
           const currentY = e.touches[0].clientY;
           const diff = currentY - window._commentsTouchStartY;
           const sheet = document.getElementById('comments-sheet');
-          // Fait descendre la fenêtre en même temps que ton doigt si tu glisses vers le bas
           if (diff > 0 && sheet) {
             sheet.style.transform = `translateY(${diff}px)`;
           }
@@ -963,11 +962,10 @@ useEffect(() => {
           const diff = touchEndY - window._commentsTouchStartY;
           const sheet = document.getElementById('comments-sheet');
 
-          // Seuil très sensible abaissé à 30px
-          if (diff > 30) {
+          // Seuil abaissé à 15px pour une réactivité maximale
+          if (diff > 15) {
             setShowCommentsModal(false);
           } else if (sheet) {
-            // Si on n'a pas assez glissé, la fenêtre remonte toute seule en place
             sheet.style.transform = 'translateY(0px)';
           }
         }}
@@ -993,6 +991,7 @@ useEffect(() => {
           </button>
         </div>
       </div>
+
 
                 {/* Petite fenêtre de réponse indépendante */}
                 {replyingTo?.id === c.id && (
