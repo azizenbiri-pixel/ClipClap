@@ -694,6 +694,8 @@ useEffect(() => {
             )}
       {activeTab === 'inbox' && (
       <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col">
+      {activeTab === 'inbox' && (
+      <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col">
         
         {/* 🚀 En-tête tactile avec swipe vers le bas pour fermer l'inbox */}
         <div 
@@ -703,13 +705,18 @@ useEffect(() => {
           onTouchEnd={(e) => {
             const touchEndY = e.changedTouches[0].clientY;
             if (touchEndY - window._inboxTouchStartY > 15) {
-              setActiveChat(null);       // 👈 Ajoute ceci pour nettoyer le chat en arrière-plan
-              setActiveTab('accueil');   // Te renvoie sur l'accueil par un simple swipe vers le bas
+              // Petit délai pour laisser le tactile se finir avant de changer d'onglet
+              setTimeout(() => {
+                setActiveChat(null);
+                setActiveTab('accueil');
+              }, 50);
             }
           }}
-
           className="w-full pt-3 pb-2 px-4 cursor-grab active:cursor-grabbing touch-none border-b border-white/10 sticky top-0 bg-[#07040f] z-10"
         >
+  
+        
+        
           {/* Petite barre grise */}
           <div className="w-full flex justify-center pb-2">
             <div className="w-16 h-1.5 bg-neutral-600 rounded-full"></div>
