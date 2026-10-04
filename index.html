@@ -705,10 +705,8 @@ useEffect(() => {
             const touchEndY = e.changedTouches[0].clientY;
             if (touchEndY - window._inboxTouchStartY > 15) {
               // Petit délai pour laisser le tactile se finir avant de changer d'onglet
-              setTimeout(() => {
-  setActiveChat(null);
-  setActiveTab('accueil');
-}, 50);
+            setTimeout(() => { console.log("Swipe OK !"); setActiveChat(null); setActiveTab('accueil'); }, 50);
+
 
             }
           }}
