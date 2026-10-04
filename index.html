@@ -707,9 +707,10 @@ useEffect(() => {
             if (touchEndY - window._inboxTouchStartY > 15) {
               // Petit délai pour laisser le tactile se finir avant de changer d'onglet
               setTimeout(() => {
-                setActiveChat(null);
-                setActiveTab('accueil');
-              }, 50);
+  setActiveChat(null);
+  setActiveTab('accueil');
+}, 50);
+
             }
           }}
           className="w-full pt-3 pb-2 px-4 cursor-grab active:cursor-grabbing touch-none border-b border-white/10 sticky top-0 bg-[#07040f] z-10"
