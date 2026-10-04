@@ -692,9 +692,10 @@ useEffect(() => {
                 </div>
               </div>
             )}
-      {activeTab === 'inbox' && (
+{activeTab === 'inbox' && (
       <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col">
-      {activeTab === 'inbox' && (
+        
+        {activeTab === 'inbox' && (
       <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col">
         
         {/* 🚀 En-tête tactile avec swipe vers le bas pour fermer l'inbox */}
@@ -705,19 +706,12 @@ useEffect(() => {
           onTouchEnd={(e) => {
             const touchEndY = e.changedTouches[0].clientY;
             if (touchEndY - window._inboxTouchStartY > 15) {
-              // Petit délai pour laisser le tactile se finir avant de changer d'onglet
-              setTimeout(() => {
-  setActiveChat(null);
-  setActiveTab('accueil');
-}, 50);
-
+              setActiveChat(null);       // On s'assure de fermer le chat s'il était ouvert
+              setActiveTab('accueil');   // Te renvoie sur l'accueil
             }
           }}
           className="w-full pt-3 pb-2 px-4 cursor-grab active:cursor-grabbing touch-none border-b border-white/10 sticky top-0 bg-[#07040f] z-10"
         >
-  
-        
-        
           {/* Petite barre grise */}
           <div className="w-full flex justify-center pb-2">
             <div className="w-16 h-1.5 bg-neutral-600 rounded-full"></div>
@@ -728,7 +722,10 @@ useEffect(() => {
             <h2 className="text-lg font-extrabold">Messages</h2>
             <button 
               type="button"
-              onClick={() => setActiveTab('accueil')}
+              onClick={() => {
+                setActiveChat(null);     // On nettoie aussi ici
+                setActiveTab('accueil');
+              }}
               className="text-gray-400 hover:text-white text-sm font-bold px-2 py-1 bg-white/10 rounded-full"
             >
               Fermer ✕
@@ -762,6 +759,7 @@ useEffect(() => {
 
       </div>
   )}
+
 
                   
                             {activeTab === 'profile' && (
