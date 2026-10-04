@@ -692,105 +692,48 @@ useEffect(() => {
                 </div>
               </div>
             )}
-        {activeTab === 'inbox' && (
+      {activeTab === 'inbox' && (
+      <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col">
+      {activeTab === 'inbox' && (
       <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col">
         
-        {/* 🚀 En-tête tactile : swipe vers la droite pour retourner à l'accueil */}
+        {/* 🚀 En-tête tactile avec swipe vers le bas pour fermer l'inbox */}
         <div 
           onTouchStart={(e) => {
-            window._inboxTouchStartX = e.touches[0].clientX;
+            window._inboxTouchStartY = e.touches[0].clientY;
           }}
           onTouchEnd={(e) => {
-            const touchEndX = e.changedTouches[0].clientX;
-            if (touchEndX - window._inboxTouchStartX > 15) {
+            const touchEndY = e.changedTouches[0].clientY;
+            if (touchEndY - window._inboxTouchStartY > 15) {
+              // Petit délai pour laisser le tactile se finir avant de changer d'onglet
               setTimeout(() => {
                 setActiveChat(null);
                 setActiveTab('accueil');
               }, 50);
             }
           }}
-          className="w-full pt-3 pb-2 px-4 border-b border-white/10 sticky top-0 bg-[#07040f] z-10"
+          className="w-full pt-3 pb-2 px-4 cursor-grab active:cursor-grabbing touch-none border-b border-white/10 sticky top-0 bg-[#07040f] z-10"
         >
-          {/* Titre et bouton dynamique */}
+  
+        
+        
+          {/* Petite barre grise */}
+          <div className="w-full flex justify-center pb-2">
+            <div className="w-16 h-1.5 bg-neutral-600 rounded-full"></div>
+          </div>
+
+          {/* Titre et bouton retour/fermeture */}
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-extrabold">{activeChat ? activeChat.user : "Messages"}</h2>
+            <h2 className="text-lg font-extrabold">Messages</h2>
             <button 
               type="button"
-              onClick={() => {
-                if (activeChat) {
-                  setActiveChat(null);
-                } else {
-                  setActiveChat(null);
-                  setActiveTab('accueil');
-                }
-              }}
-              className="text-gray-400 hover:text-white text-sm font-bold px-2.5 py-1 bg-white/10 rounded-full"
+              onClick={() => setActiveTab('accueil')}
+              className="text-gray-400 hover:text-white text-sm font-bold px-2 py-1 bg-white/10 rounded-full"
             >
-              {activeChat ? "Retour ‹" : "Fermer ✕"}
+              Fermer ✕
             </button>
           </div>
         </div>
-
-        {/* Si aucun chat n'est sélectionné : Afficher la liste des messages en sécurité */}
-        {!activeChat ? (
-          <div className="p-4 pb-24 space-y-3 flex-1">
-            {(chatConversations || []).map((conv) => (
-              <div key={conv.id} onClick={() => { playSound('click'); setActiveChat(conv); }} className="flex items-center justify-between bg-white/5 border border-white/10 p-3.5 rounded-2xl cursor-pointer hover:bg-white/10 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center font-bold text-base">
-                      {conv.user ? conv.user.charAt(0).toUpperCase() : "U"}
-                    </div>
-                    {conv.unread && <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-pink-500 rounded-full border-2 border-[#07040f]"></span>}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-bold">{conv.user}</h4>
-                      <span className="text-[10px] text-gray-400">{conv.time}</span>
-                    </div>
-                    <p className="text-xs text-gray-300 truncate max-w-[200px] mt-0.5">{conv.lastMsg}</p>
-                  </div>
-                </div>
-                <span className="text-gray-400 text-sm">›</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          /* Si un chat est ouvert : Afficher la conversation au même endroit */
-          <div className="flex-1 flex flex-col justify-between p-4 pb-24">
-            <div className="space-y-3 overflow-y-auto flex-1">
-              <div className="bg-white/5 border border-white/10 p-3.5 rounded-2xl max-w-[80%] text-sm text-gray-200">
-                {activeChat.lastMsg}
-              </div>
-              <div className="bg-gradient-to-r from-pink-500 to-purple-600 p-3.5 rounded-2xl max-w-[80%] ml-auto text-sm text-white font-medium">
-                Merci
-              </div>
-            </div>
-
-            {/* Barre pour écrire et envoyer */}
-            <div className="mt-4 pt-3 border-t border-white/10 flex items-center gap-2">
-              <input 
-                type="text" 
-                placeholder="Écrire un message..." 
-                className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2.5 text-sm text-white focus:outline-none"
-              />
-              <button 
-                type="button" 
-                onClick={() => playSound('click')}
-                className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2.5 rounded-full text-sm font-bold"
-              >
-                Envoyer
-              </button>
-            </div>
-          </div>
-        )}
-
-      </div>
-  )}
-
-
-
-
 
         {/* Liste des conversations */}
         <div className="p-4 pb-24 space-y-3 flex-1">
