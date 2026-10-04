@@ -693,67 +693,102 @@ useEffect(() => {
               </div>
             )}
       {activeTab === 'inbox' && (
-      <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col">
+      <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col text-white">
         
-        {/* 🚀 En-tête tactile avec swipe vers le bas pour fermer l'inbox */}
+        {/* 🚀 En-tête : Titre "Messages" + Swipe vers la droite pour fermer */}
         <div 
           onTouchStart={(e) => {
-            window._inboxTouchStartY = e.touches[0].clientY;
+            window._inboxTouchStartX = e.touches[0].clientX;
           }}
           onTouchEnd={(e) => {
-            const touchEndY = e.changedTouches[0].clientY;
-            if (touchEndY - window._inboxTouchStartY > 15) {
-              setActiveChat(null);       // 👈 Ajoute ceci pour nettoyer le chat en arrière-plan
-              setActiveTab('accueil');   // Te renvoie sur l'accueil par un simple swipe vers le bas
+            const touchEndX = e.changedTouches[0].clientX;
+            if (touchEndX - window._inboxTouchStartX > 15) {
+              setTimeout(() => {
+                setActiveChat(null);
+                setActiveTab('accueil');
+              }, 50);
             }
           }}
-
-          className="w-full pt-3 pb-2 px-4 cursor-grab active:cursor-grabbing touch-none border-b border-white/10 sticky top-0 bg-[#07040f] z-10"
+          className="w-full pt-3 pb-2 px-4 border-b border-white/10 sticky top-0 bg-[#07040f] z-20 flex items-center justify-between"
         >
-          {/* Petite barre grise */}
-          <div className="w-full flex justify-center pb-2">
-            <div className="w-16 h-1.5 bg-neutral-600 rounded-full"></div>
-          </div>
-
-          {/* Titre et bouton retour/fermeture */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-extrabold">Messages</h2>
-            <button 
-              type="button"
-              onClick={() => setActiveTab('accueil')}
-              className="text-gray-400 hover:text-white text-sm font-bold px-2 py-1 bg-white/10 rounded-full"
-            >
-              Fermer ✕
-            </button>
-          </div>
+          <h2 className="text-lg font-extrabold">Messages</h2>
+          <button 
+            type="button"
+            onClick={() => {
+              setActiveChat(null);
+              setActiveTab('accueil');
+            }}
+            className="text-gray-400 hover:text-white text-sm font-bold px-3 py-1 bg-white/10 rounded-full"
+          >
+            Fermer ✕
+          </button>
         </div>
 
-        {/* Liste des conversations */}
-        <div className="p-4 pb-24 space-y-3 flex-1">
-          {chatConversations.map((conv) => (
-            <div key={conv.id} onClick={() => { playSound('click'); setActiveChat(conv); }} className="flex items-center justify-between bg-white/5 border border-white/10 p-3.5 rounded-2xl cursor-pointer hover:bg-white/10 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center font-bold text-base">
-                    {conv.user.charAt(1).toUpperCase()}
-                  </div>
-                  {conv.unread && <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-pink-500 rounded-full border-2 border-[#07040f]"></span>}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-bold">{conv.user}</h4>
-                    <span className="text-[10px] text-gray-400">{conv.time}</span>
-                  </div>
-                  <p className="text-xs text-gray-300 truncate max-w-[200px] mt-0.5">{conv.lastMsg}</p>
-                </div>
+        <div className="p-4 pb-24 space-y-4 flex-1 overflow-y-auto">
+          
+          {/* 1. 🟢 Carrousel des "Stories" / Profils en haut (façon TikTok) */}
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+            {/* Bouton Créer */}
+            <div className="flex flex-col items-center flex-shrink-0 cursor-pointer">
+              <div className="relative w-14 h-14 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
+                <span className="text-xl font-bold">+</span>
+                <span className="absolute bottom-0 right-0 w-4 h-4 bg-cyan-400 rounded-full border-2 border-[#07040f] flex items-center justify-center text-[10px] text-black font-extrabold">+</span>
               </div>
-              <span className="text-gray-400 text-sm">›</span>
+              <span className="text-xs text-gray-300 mt-1">Créer</span>
             </div>
-          ))}
-        </div>
 
+            {/* Exemples de profils dynamiques ou statiques */}
+            {(chatConversations || []).map((conv) => (
+              <div key={`story-${conv.id}`} onClick={() => { playSound('click'); setActiveChat(conv); }} className="flex flex-col items-center flex-shrink-0 cursor-pointer">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 p-[2px]">
+                  <div className="w-full h-full rounded-full bg-[#07040f] flex items-center justify-center font-bold text-sm">
+                    {conv.user ? conv.user.charAt(1).toUpperCase() : "U"}
+                  </div>
+                </div>
+                <span className="text-xs text-gray-300 mt-1 truncate w-14 text-center">{conv.user}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* 2. 🟢 Filtres (Principal, Demandes, Non lu) */}
+          <div className="flex gap-2 overflow-x-auto py-1">
+            <button className="px-4 py-1.5 bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 rounded-full text-xs font-bold whitespace-nowrap">Principal</button>
+            <button className="px-4 py-1.5 bg-white/5 text-gray-300 border border-white/10 rounded-full text-xs font-semibold whitespace-nowrap">Demandes</button>
+            <button className="px-4 py-1.5 bg-white/5 text-gray-300 border border-white/10 rounded-full text-xs font-semibold whitespace-nowrap">Non lu</button>
+          </div>
+
+          {/* 3. 🟢 Liste des conversations */}
+          <div className="space-y-2 pt-2">
+            {(chatConversations || []).map((conv) => (
+              <div 
+                key={conv.id} 
+                onClick={() => { playSound('click'); setActiveChat(conv); }} 
+                className="flex items-center justify-between bg-white/5 border border-white/10 p-3.5 rounded-2xl cursor-pointer hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center font-bold text-base">
+                      {conv.user ? conv.user.charAt(1).toUpperCase() : "U"}
+                    </div>
+                    {conv.unread && <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-pink-500 rounded-full border-2 border-[#07040f]"></span>}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold">{conv.user}</h4>
+                      <span className="text-[10px] text-gray-400">{conv.time}</span>
+                    </div>
+                    <p className="text-xs text-gray-300 truncate max-w-[180px] mt-0.5">{conv.lastMsg}</p>
+                  </div>
+                </div>
+                <span className="text-gray-400 text-sm">📷</span>
+              </div>
+            ))}
+          </div>
+
+        </div>
       </div>
   )}
+
 
                   
                             {activeTab === 'profile' && (
