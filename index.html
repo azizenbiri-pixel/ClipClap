@@ -939,47 +939,59 @@ useEffect(() => {
   {/* MODAL COMMENTAIRES */}
 {showCommentsModal && currentPost && (
   <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center">
-    <div className="w-full max-w-md h-[65%] bg-[#120c24] border-t border-white/10 rounded-t-3xl flex flex-col shadow-2xl">
+    <div 
+      id="comments-sheet"
+      className="w-full max-w-md h-[65%] bg-[#120c24] border-t border-white/10 rounded-t-3xl flex flex-col shadow-2xl transition-transform duration-75"
+    >
+      
+      {/* 🚀 Zone de swipe ultra-sensible (seuil à 15px) */}
       <div 
         onTouchStart={(e) => {
           window._commentsTouchStartY = e.touches[0].clientY;
         }}
-        onTouchEnd={(e) => {
-          const touchEndY = e.changedTouches[0].clientY;
-          if (touchEndY - window._commentsTouchStartY > 50) {
-            setShowCommentsModal(false);
+        onTouchMove={(e) => {
+          const currentY = e.touches[0].clientY;
+          const diff = currentY - window._commentsTouchStartY;
+          const sheet = document.getElementById('comments-sheet');
+          if (diff > 0 && sheet) {
+            sheet.style.transform = `translateY(${diff}px)`;
           }
         }}
-        className="w-full flex justify-center p-2 cursor-grab active:cursor-grabbing touch-none"
+        onTouchEnd={(e) => {
+          const touchEndY = e.changedTouches[0].clientY;
+          const diff = touchEndY - window._commentsTouchStartY;
+          const sheet = document.getElementById('comments-sheet');
+
+          // Seuil abaissé à 15px pour une réactivité maximale
+          if (diff > 15) {
+            setShowCommentsModal(false);
+          } else if (sheet) {
+            sheet.style.transform = 'translateY(0px)';
+          }
+        }}
+        className="w-full cursor-grab active:cursor-grabbing touch-none border-b border-white/10"
       >
-        <div className="w-16 h-1.5 bg-neutral-600 rounded-full"></div>
+        {/* La petite barre grise */}
+        <div className="w-full flex justify-center pt-2 pb-1">
+          <div className="w-16 h-1.5 bg-neutral-600 rounded-full"></div>
+        </div>
+
+        {/* Le titre et la croix */}
+        <div className="flex items-center justify-between px-4 pb-3 pt-1">
+          <h3 className="text-sm font-extrabold">{currentPost.commentsList?.length || 0} commentaires</h3>
+          <button 
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowCommentsModal(false);
+            }} 
+            className="text-gray-400 hover:text-white text-lg font-bold p-1"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
-        <h3 className="text-sm font-extrabold">{currentPost.commentsList?.length || 0} commentaires</h3>
-        <button onClick={() => setShowCommentsModal(false)} className="text-gray-400 hover:text-white text-lg font-bold">✕</button>
-      </div>
-
-
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {currentPost.commentsList && currentPost.commentsList.length > 0 ? (
-          currentPost.commentsList.map((c) => (
-            <div key={c.id} className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center font-bold text-xs">
-                {c.user.charAt(1).toUpperCase()}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-gray-300">{c.user}</span>
-                  <span className="text-[10px] text-gray-500">{c.time}</span>
-                </div>
-                <p className="text-xs text-white mt-0.5">{c.text}</p>
-                <button
-                  onClick={() => setReplyingTo(replyingTo?.id === c.id ? null : c)}
-                  className="text-xs text-neutral-400 hover:text-white mt-1"
-                >
-                  Répondre
-                </button>
 
                 {/* Petite fenêtre de réponse indépendante */}
                 {replyingTo?.id === c.id && (
