@@ -940,33 +940,19 @@ useEffect(() => {
 {showCommentsModal && currentPost && (
   <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center">
     <div 
-      id="comments-sheet"
       className="w-full max-w-md h-[65%] bg-[#120c24] border-t border-white/10 rounded-t-3xl flex flex-col shadow-2xl transition-transform duration-75"
     >
       
-      {/* 🚀 Zone de swipe ultra-sensible (seuil à 15px) */}
+      {/* 🚀 Zone de swipe propre et ultra-sensible sans bug */}
       <div 
         onTouchStart={(e) => {
           window._commentsTouchStartY = e.touches[0].clientY;
         }}
-        onTouchMove={(e) => {
-          const currentY = e.touches[0].clientY;
-          const diff = currentY - window._commentsTouchStartY;
-          const sheet = document.getElementById('comments-sheet');
-          if (diff > 0 && sheet) {
-            sheet.style.transform = `translateY(${diff}px)`;
-          }
-        }}
         onTouchEnd={(e) => {
           const touchEndY = e.changedTouches[0].clientY;
-          const diff = touchEndY - window._commentsTouchStartY;
-          const sheet = document.getElementById('comments-sheet');
-
-          // Seuil abaissé à 15px pour une réactivité maximale
-          if (diff > 15) {
+          // Seuil ultra-sensible à 15px
+          if (touchEndY - window._commentsTouchStartY > 15) {
             setShowCommentsModal(false);
-          } else if (sheet) {
-            sheet.style.transform = 'translateY(0px)';
           }
         }}
         className="w-full cursor-grab active:cursor-grabbing touch-none border-b border-white/10"
@@ -991,6 +977,7 @@ useEffect(() => {
           </button>
         </div>
       </div>
+
 
 
                 {/* Petite fenêtre de réponse indépendante */}
