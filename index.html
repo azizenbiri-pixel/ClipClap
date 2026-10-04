@@ -946,7 +946,7 @@ useEffect(() => {
         }}
         onTouchEnd={(e) => {
           const touchEndY = e.changedTouches[0].clientY;
-          if (touchEndY - window._commentsTouchStartY > 50) {
+          if (touchEndY - window._commentsTouchStartY > 15) {
             setShowCommentsModal(false);
           }
         }}
