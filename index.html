@@ -693,24 +693,26 @@ useEffect(() => {
               </div>
             )}
          {activeTab === 'inbox' && (
-      <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col text-white">
+      <div 
+        onTouchStart={(e) => {
+          window._inboxTouchStartX = e.touches[0].clientX;
+        }}
+        onTouchEnd={(e) => {
+          const touchEndX = e.changedTouches[0].clientX;
+          // Si on glisse vers la droite de plus de 50 pixels n'importe où sur la page
+          if (touchEndX - window._inboxTouchStartX > 50) {
+            setTimeout(() => {
+              setActiveChat(null);
+              setActiveTab('accueil');
+            }, 50);
+          }
+        }}
+        style={{ touchAction: 'pan-y' }}
+        className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col text-white"
+      >
         
-        {/* 🚀 En-tête : Titre "Messages" + Swipe vers la droite pour fermer */}
-        <div 
-          onTouchStart={(e) => {
-            window._inboxTouchStartX = e.touches[0].clientX;
-          }}
-          onTouchEnd={(e) => {
-            const touchEndX = e.changedTouches[0].clientX;
-            if (touchEndX - window._inboxTouchStartX > 15) {
-              setTimeout(() => {
-                setActiveChat(null);
-                setActiveTab('accueil');
-              }, 50);
-            }
-          }}
-          className="w-full pt-3 pb-2 px-4 border-b border-white/10 sticky top-0 bg-[#07040f] z-20 flex items-center justify-between"
-        >
+        {/* En-tête (plus besoin de mettre les touch events ici) */}
+        <div className="w-full pt-3 pb-2 px-4 border-b border-white/10 sticky top-0 bg-[#07040f] z-20 flex items-center justify-between">
           <h2 className="text-lg font-extrabold">Messages</h2>
           <button 
             type="button"
@@ -723,6 +725,8 @@ useEffect(() => {
             Fermer ✕
           </button>
         </div>
+
+        {/* Le reste de ta page (stories, filtres, liste...) continue ici... */}
 
 
         <div className="p-4 pb-24 space-y-4 flex-1 overflow-y-auto">
