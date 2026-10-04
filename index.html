@@ -696,20 +696,21 @@ useEffect(() => {
       <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col">
         
         
-        {/* 🚀 En-tête tactile avec swipe vers le bas pour fermer l'inbox */}
+        {/* 🚀 En-tête tactile avec swipe vers la droite pour fermer l'inbox */}
         <div 
           onTouchStart={(e) => {
-            window._inboxTouchStartY = e.touches[0].clientY;
+            window._inboxTouchStartX = e.touches[0].clientX;
           }}
           onTouchEnd={(e) => {
-            const touchEndY = e.changedTouches[0].clientY;
-            if (touchEndY - window._inboxTouchStartY > 15) {
-              // Petit délai pour laisser le tactile se finir avant de changer d'onglet
-            setTimeout(() => { console.log("Swipe OK !"); setActiveChat(null); setActiveTab('accueil'); }, 50);
-
-
+            const touchEndX = e.changedTouches[0].clientX;
+            if (touchEndX - window._inboxTouchStartX > 15) {
+              setTimeout(() => {
+                setActiveChat(null);
+                setActiveTab('accueil');
+              }, 50);
             }
           }}
+
           className="w-full pt-3 pb-2 px-4 cursor-grab active:cursor-grabbing touch-none border-b border-white/10 sticky top-0 bg-[#07040f] z-10"
         >
   
