@@ -940,19 +940,35 @@ useEffect(() => {
 {showCommentsModal && currentPost && (
   <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center">
     <div 
+      id="comments-sheet"
       className="w-full max-w-md h-[65%] bg-[#120c24] border-t border-white/10 rounded-t-3xl flex flex-col shadow-2xl transition-transform duration-75"
     >
       
-      {/* 🚀 Zone de swipe propre et ultra-sensible sans bug */}
+      {/* 🚀 Zone de swipe ultra-sensible */}
       <div 
         onTouchStart={(e) => {
           window._commentsTouchStartY = e.touches[0].clientY;
         }}
+        onTouchMove={(e) => {
+          const currentY = e.touches[0].clientY;
+          const diff = currentY - window._commentsTouchStartY;
+          const sheet = document.getElementById('comments-sheet');
+          // Fait descendre la fenêtre en même temps que ton doigt si tu glisses vers le bas
+          if (diff > 0 && sheet) {
+            sheet.style.transform = `translateY(${diff}px)`;
+          }
+        }}
         onTouchEnd={(e) => {
           const touchEndY = e.changedTouches[0].clientY;
-          // Seuil ultra-sensible à 15px
-          if (touchEndY - window._commentsTouchStartY > 15) {
+          const diff = touchEndY - window._commentsTouchStartY;
+          const sheet = document.getElementById('comments-sheet');
+
+          // Seuil très sensible abaissé à 30px
+          if (diff > 30) {
             setShowCommentsModal(false);
+          } else if (sheet) {
+            // Si on n'a pas assez glissé, la fenêtre remonte toute seule en place
+            sheet.style.transform = 'translateY(0px)';
           }
         }}
         className="w-full cursor-grab active:cursor-grabbing touch-none border-b border-white/10"
@@ -977,8 +993,6 @@ useEffect(() => {
           </button>
         </div>
       </div>
-
-
 
                 {/* Petite fenêtre de réponse indépendante */}
                 {replyingTo?.id === c.id && (
