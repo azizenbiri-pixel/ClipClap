@@ -1255,65 +1255,74 @@ if (file) {
               </div>
             </div>
           )}                    
-       {activeChat && (
-  <div 
-    onTouchStart={(e) => {
-      window._chatTouchStartX = e.touches[0].clientX;
-    }}
-    onTouchEnd={(e) => {
-      const touchEndX = e.changedTouches[0].clientX;
-      // Si on glisse vers la droite de plus de 50 pixels, on revient à la liste des messages
-      if (touchEndX - window._chatTouchStartX > 50) {
-        setActiveChat(null);
-      }
-    }}
-    style={{ touchAction: 'pan-y' }}
-    className="absolute inset-0 z-50 bg-[#07040f] flex flex-col text-white"
-  >
-    
-    {/* En-tête de la discussion */}
-    <div className="w-full pt-3 pb-2 px-4 border-b border-white/10 sticky top-0 bg-[#07040f] z-10 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <button 
-          type="button"
-          onClick={() => setActiveChat(null)} 
-          className="text-gray-400 hover:text-white text-lg font-bold pr-2"
-        >
-          ‹
-        </button>
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center font-bold text-xs">
-          {activeChat.user ? activeChat.user.charAt(1).toUpperCase() : "U"}
-        </div>
-        <h3 className="text-sm font-bold">{activeChat.user}</h3>
-      </div>
-    </div>
+              
 
-    {/* Corps des messages */}
-    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-      {(activeChat.messages || []).map((m, idx) => (
-        <div key={idx} className={`flex ${m.sender === userTag ? 'justify-end' : 'justify-start'}`}>
-          <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-xs ${m.sender === userTag ? 'bg-pink-500 text-white rounded-br-none' : 'bg-white/10 text-white rounded-bl-none'}`}>
-            {m.text}
-          </div>
-        </div>
-      ))}
-    </div>
+                    {/* MODAL DISCUSSION MESSAGERIE */}
+          {activeChat && (
+            <div className="absolute inset-0 z-50 bg-[#07040f] flex flex-col">
+              
+              {/* 🚀 En-tête de chat avec swipe vers le bas ultra-sensible (seuil à 15px) */}
+              <div 
+                onTouchStart={(e) => {
+                  window._chatTouchStartY = e.touches[0].clientY;
+                }}
+                onTouchEnd={(e) => {
+                  const touchEndY = e.changedTouches[0].clientY;
+                  if (touchEndY - window._chatTouchStartY > 15) {
+                    // Ferme le chat ET retourne directement à l'accueil d'un seul swipe
+                    setActiveChat(null);
+                    setActiveTab('accueil');
+                  }
+                }}
+                className="p-4 border-b border-white/10 flex flex-col bg-[#0d081b] cursor-grab active:cursor-grabbing touch-none"
+              >
+                {/* Petite barre grise de swipe */}
+                <div className="w-full flex justify-center pb-2">
+                  <div className="w-16 h-1.5 bg-neutral-600 rounded-full"></div>
+                </div>
 
-    {/* Formulaire d'envoi */}
-    <form onSubmit={handleSendMessage} className="p-3 border-t border-white/10 flex items-center gap-2 bg-[#07040f]">
-      <input 
-        type="text"
-        value={newMessageText}
-        onChange={(e) => setNewMessageText(e.target.value)}
-        placeholder="Écrire un message..."
-        className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-pink-500"
-      />
-      <button type="submit" className="px-4 py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full text-xs font-bold text-white shadow-md">
-        Envoyer
-      </button>
-    </form>
-  </div>
-)}
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setActiveChat(null)} 
+                    className="text-white text-base font-bold p-1"
+                  >
+                    ‹
+                  </button>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center font-bold text-xs">
+                    {activeChat.user.charAt(1).toUpperCase()}
+                  </div>
+                  <h3 className="text-sm font-extrabold">{activeChat.user}</h3>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {activeChat.messages.map((m, idx) => (
+                  <div key={idx} className={`flex ${m.sender === userTag ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-xs ${m.sender === userTag ? 'bg-pink-500 text-white rounded-br-none' : 'bg-white/10 text-white rounded-bl-none'}`}>
+                      {m.text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <form onSubmit={handleSendMessage} className="p-3 border-t border-white/10 flex items-center gap-2 bg-[#0d081b]">
+                <input 
+                  type="text"
+                  value={newMessageText}
+                  onChange={(e) => setNewMessageText(e.target.value)}
+                  placeholder="Écrire un message..."
+                  className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-pink-500"
+                />
+                <button type="submit" className="px-4 py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full text-xs font-bold text-white shadow-md">
+                  Envoyer
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+      );
+    }
+
 
     ReactDOM.render(<ClipClapApp />, document.getElementById('root'));
   </script>
