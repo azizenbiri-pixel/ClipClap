@@ -704,20 +704,21 @@ useEffect(() => {
     {/* Le contenu de la page 1 */}
     <div className="p-4 pb-24 space-y-4 flex-1 overflow-y-auto">
       
-      {/* Carrousel stories / Créer */}
-      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-        <div 
-          onClick={() => {
-            if (typeof playSound === 'function') playSound('click');
-            alert("Créer un message");
-          }}
-          className="flex flex-col items-center flex-shrink-0 cursor-pointer"
-        >
-          <div className="relative w-14 h-14 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors">
-            <span className="text-xl font-bold">+</span>
-          </div>
-          <span className="text-xs text-gray-300 mt-1">Créer</span>
-        </div>
+  {/* Carrousel stories / Créer */}
+<div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+  <div 
+    onClick={() => {
+      if (typeof playSound === 'function') playSound('click');
+      setShowCreateModal(true); // Ouvre la bibliothèque de création
+    }}
+    className="flex flex-col items-center flex-shrink-0 cursor-pointer"
+  >
+    <div className="relative w-14 h-14 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors">
+      <span className="text-xl font-bold">+</span>
+    </div>
+    <span className="text-xs text-gray-300 mt-1">Créer</span>
+  </div>
+
 
         {(chatConversations || []).map((conv) => (
           <div 
