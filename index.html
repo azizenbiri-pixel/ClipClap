@@ -692,22 +692,12 @@ useEffect(() => {
                 </div>
               </div>
             )}
-         {activeTab === 'inbox' && !activeChat && (
+       {activeTab === 'inbox' && !activeChat && (
   <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col text-white">
     
-    {/* En-tête de la liste des messages avec le bouton Fermer */}
+    {/* En-tête de la liste des messages (sans le bouton Fermer) */}
     <div className="w-full pt-3 pb-2 px-4 border-b border-white/10 sticky top-0 bg-[#07040f] z-20 flex items-center justify-between">
       <h2 className="text-lg font-extrabold">Messages</h2>
-      <button 
-        type="button"
-        onClick={() => {
-          setActiveChat(null);
-          setActiveTab('accueil'); // Retourne directement à l'accueil
-        }}
-        className="text-gray-400 hover:text-white text-sm font-bold px-3 py-1 bg-white/10 rounded-full cursor-pointer"
-      >
-        Fermer ✕
-      </button>
     </div>
 
     {/* Le contenu de ta page 1 (Stories, Filtres, Conversations) */}
@@ -769,6 +759,7 @@ useEffect(() => {
     </div>
   </div>
 )}
+
 
 
 
