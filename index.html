@@ -174,7 +174,7 @@ function ClipClapApp() {
       const [creatorFollowers, setCreatorFollowers] = useState(() =>
         posts.reduce((acc, post) => ({ ...acc, [post.authorId || post.user]: post.followers }), {})
       );
-
+const [showCreateModal, setShowCreateModal] = React.useState(false);
       const [toastMessage, setToastMessage] = useState("");
       const [showUploadModal, setShowUploadModal] = useState(false);
       const [newCaption, setNewCaption] = useState("");
@@ -705,10 +705,10 @@ useEffect(() => {
       
       {/* Carrousel stories / Créer */}
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-        <div 
+                <div 
           onClick={() => {
             if (typeof playSound === 'function') playSound('click');
-            alert("Créer un message");
+            setShowCreateModal(true); // Ouvre la bibliothèque de création
           }}
           className="flex flex-col items-center flex-shrink-0 cursor-pointer"
         >
@@ -717,6 +717,7 @@ useEffect(() => {
           </div>
           <span className="text-xs text-gray-300 mt-1">Créer</span>
         </div>
+
 
         {(chatConversations || []).map((conv) => (
           <div 
