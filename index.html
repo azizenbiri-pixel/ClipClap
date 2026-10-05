@@ -174,7 +174,7 @@ function ClipClapApp() {
       const [creatorFollowers, setCreatorFollowers] = useState(() =>
         posts.reduce((acc, post) => ({ ...acc, [post.authorId || post.user]: post.followers }), {})
       );
-const [showCreateModal, setShowCreateModal] = React.useState(false);
+
       const [toastMessage, setToastMessage] = useState("");
       const [showUploadModal, setShowUploadModal] = useState(false);
       const [newCaption, setNewCaption] = useState("");
@@ -692,104 +692,110 @@ useEffect(() => {
                 </div>
               </div>
             )}
-      {activeTab === 'inbox' && !activeChat && (
-  <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col text-white">
-    
-    {/* En-tête de la liste des messages */}
-    <div className="w-full pt-3 pb-2 px-4 border-b border-white/10 sticky top-0 bg-[#07040f] z-20 flex items-center justify-between">
-      <h2 className="text-lg font-extrabold">Messages</h2>
-    </div>
-
-    {/* Le contenu de la page 1 */}
-    <div className="p-4 pb-24 space-y-4 flex-1 overflow-y-auto">
-      
-      {/* Carrousel stories / Créer */}
-      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
-                <div 
-          onClick={() => {
-            if (typeof playSound === 'function') playSound('click');
-            setShowCreateModal(true); // Ouvre la bibliothèque de création
-          }}
-          className="flex flex-col items-center flex-shrink-0 cursor-pointer"
-        >
-          <div className="relative w-14 h-14 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors">
-            <span className="text-xl font-bold">+</span>
-          </div>
-          <span className="text-xs text-gray-300 mt-1">Créer</span>
+         {activeTab === 'inbox' && (
+      <div 
+        onTouchStart={(e) => {
+          window._inboxTouchStartX = e.touches[0].clientX;
+        }}
+        onTouchEnd={(e) => {
+          const touchEndX = e.changedTouches[0].clientX;
+          // Si on glisse vers la droite de plus de 50 pixels n'importe où sur la page
+          if (touchEndX - window._inboxTouchStartX > 50) {
+            setTimeout(() => {
+              setActiveChat(null);
+              setActiveTab('accueil');
+            }, 50);
+          }
+        }}
+        style={{ touchAction: 'pan-y' }}
+        className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col text-white"
+      >
+        
+        {/* En-tête (plus besoin de mettre les touch events ici) */}
+        <div className="w-full pt-3 pb-2 px-4 border-b border-white/10 sticky top-0 bg-[#07040f] z-20 flex items-center justify-between">
+          <h2 className="text-lg font-extrabold">Messages</h2>
+          <button 
+            type="button"
+            onClick={() => {
+              setActiveChat(null);
+              setActiveTab('accueil');
+            }}
+            className="text-gray-400 hover:text-white text-sm font-bold px-3 py-1 bg-white/10 rounded-full"
+          >
+            Fermer ✕
+          </button>
         </div>
 
+        {/* Le reste de ta page (stories, filtres, liste...) continue ici... */}
 
-        {(chatConversations || []).map((conv) => (
-          <div 
-            key={`story-${conv.id}`} 
-            onClick={() => { 
-              if (typeof playSound === 'function') playSound('click'); 
-              setActiveChat(conv); 
-            }} 
-            className="flex flex-col items-center flex-shrink-0 cursor-pointer"
-          >
-            <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 p-[2px]">
-              <div className="w-full h-full rounded-full bg-[#07040f] flex items-center justify-center font-bold text-sm">
-                {conv?.user ? conv.user.charAt(1).toUpperCase() : "U"}
+
+        <div className="p-4 pb-24 space-y-4 flex-1 overflow-y-auto">
+          
+          {/* 1. 🟢 Carrousel des "Stories" / Profils en haut (façon TikTok) */}
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none">
+            {/* Bouton Créer */}
+            <div className="flex flex-col items-center flex-shrink-0 cursor-pointer">
+              <div className="relative w-14 h-14 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
+                <span className="text-xl font-bold">+</span>
+                <span className="absolute bottom-0 right-0 w-4 h-4 bg-cyan-400 rounded-full border-2 border-[#07040f] flex items-center justify-center text-[10px] text-black font-extrabold">+</span>
               </div>
+              <span className="text-xs text-gray-300 mt-1">Créer</span>
             </div>
-            <span className="text-xs text-gray-300 mt-1 truncate w-14 text-center">{conv?.user}</span>
-          </div>
-        ))}
-      </div>
 
-      {/* Filtres simples (sans bug d'état) */}
-      <div className="flex gap-2 overflow-x-auto py-1">
-        <button 
-          type="button"
-          className="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap bg-cyan-400/20 text-cyan-300 border border-cyan-400/30"
-        >
-          Principal
-        </button>
-        <button 
-          type="button"
-          className="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-white/5 text-gray-300 border border-white/10"
-        >
-          Demandes
-        </button>
-        <button 
-          type="button"
-          className="px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-white/5 text-gray-300 border border-white/10"
-        >
-          Non lu
-        </button>
-      </div>
-
-      {/* Liste des conversations */}
-      <div className="space-y-2 pt-2">
-        {(chatConversations || []).map((conv) => (
-          <div 
-            key={conv.id} 
-            onClick={() => { 
-              if (typeof playSound === 'function') playSound('click'); 
-              setActiveChat(conv); 
-            }} 
-            className="flex items-center justify-between bg-white/5 border border-white/10 p-3.5 rounded-2xl cursor-pointer hover:bg-white/10 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center font-bold text-base">
-                {conv?.user ? conv.user.charAt(1).toUpperCase() : "U"}
+            {/* Exemples de profils dynamiques ou statiques */}
+            {(chatConversations || []).map((conv) => (
+              <div key={`story-${conv.id}`} onClick={() => { playSound('click'); setActiveChat(conv); }} className="flex flex-col items-center flex-shrink-0 cursor-pointer">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 p-[2px]">
+                  <div className="w-full h-full rounded-full bg-[#07040f] flex items-center justify-center font-bold text-sm">
+                    {conv.user ? conv.user.charAt(1).toUpperCase() : "U"}
+                  </div>
+                </div>
+                <span className="text-xs text-gray-300 mt-1 truncate w-14 text-center">{conv.user}</span>
               </div>
-              <div>
-                <h4 className="text-sm font-bold">{conv?.user}</h4>
-                <p className="text-xs text-gray-300 truncate max-w-[180px] mt-0.5">{conv?.lastMsg}</p>
-              </div>
-            </div>
-            <span className="text-gray-400 text-sm">›</span>
+            ))}
           </div>
-        ))}
+
+          {/* 2. 🟢 Filtres (Principal, Demandes, Non lu) */}
+          <div className="flex gap-2 overflow-x-auto py-1">
+            <button className="px-4 py-1.5 bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 rounded-full text-xs font-bold whitespace-nowrap">Principal</button>
+            <button className="px-4 py-1.5 bg-white/5 text-gray-300 border border-white/10 rounded-full text-xs font-semibold whitespace-nowrap">Demandes</button>
+            <button className="px-4 py-1.5 bg-white/5 text-gray-300 border border-white/10 rounded-full text-xs font-semibold whitespace-nowrap">Non lu</button>
+          </div>
+
+          {/* 3. 🟢 Liste des conversations */}
+          <div className="space-y-2 pt-2">
+            {(chatConversations || []).map((conv) => (
+              <div 
+                key={conv.id} 
+                onClick={() => { playSound('click'); setActiveChat(conv); }} 
+                className="flex items-center justify-between bg-white/5 border border-white/10 p-3.5 rounded-2xl cursor-pointer hover:bg-white/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center font-bold text-base">
+                      {conv.user ? conv.user.charAt(1).toUpperCase() : "U"}
+                    </div>
+                    {conv.unread && <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-pink-500 rounded-full border-2 border-[#07040f]"></span>}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold">{conv.user}</h4>
+                      <span className="text-[10px] text-gray-400">{conv.time}</span>
+                    </div>
+                    <p className="text-xs text-gray-300 truncate max-w-[180px] mt-0.5">{conv.lastMsg}</p>
+                  </div>
+                </div>
+                <span className="text-gray-400 text-sm">📷</span>
+              </div>
+            ))}
+          </div>
+
+        </div>
       </div>
+  )}
 
-    </div>
-  </div>
-)}
 
-        
+                  
                             {activeTab === 'profile' && (
               <div 
                 className="absolute inset-0 bg-[#07040f] overflow-y-auto p-4 pt-10 pb-24 video-swipe-area"
@@ -1282,25 +1288,31 @@ if (file) {
             </div>
           )}                    
               
+
                     {/* MODAL DISCUSSION MESSAGERIE */}
           {activeChat && (
-            <div 
-              onTouchStart={(e) => {
-                window._chatTouchStartX = e.touches[0].clientX;
-              }}
-              onTouchEnd={(e) => {
-                const touchEndX = e.changedTouches[0].clientX;
-                // Swipe vers la droite pour revenir à la liste des messages
-                if (touchEndX - window._chatTouchStartX > 40) {
-                  setActiveChat(null);
-                }
-              }}
-              style={{ touchAction: 'pan-y' }}
-              className="absolute inset-0 z-50 bg-[#07040f] flex flex-col text-white"
-            >
+            <div className="absolute inset-0 z-50 bg-[#07040f] flex flex-col">
               
-              {/* En-tête de chat propre */}
-              <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#0d081b]">
+              {/* 🚀 En-tête de chat avec swipe vers le bas ultra-sensible (seuil à 15px) */}
+              <div 
+                onTouchStart={(e) => {
+                  window._chatTouchStartY = e.touches[0].clientY;
+                }}
+                onTouchEnd={(e) => {
+                  const touchEndY = e.changedTouches[0].clientY;
+                  if (touchEndY - window._chatTouchStartY > 15) {
+                    // Ferme le chat ET retourne directement à l'accueil d'un seul swipe
+                    setActiveChat(null);
+                    setActiveTab('accueil');
+                  }
+                }}
+                className="p-4 border-b border-white/10 flex flex-col bg-[#0d081b] cursor-grab active:cursor-grabbing touch-none"
+              >
+                {/* Petite barre grise de swipe */}
+                <div className="w-full flex justify-center pb-2">
+                  <div className="w-16 h-1.5 bg-neutral-600 rounded-full"></div>
+                </div>
+
                 <div className="flex items-center gap-3">
                   <button 
                     onClick={() => setActiveChat(null)} 
@@ -1309,20 +1321,14 @@ if (file) {
                     ‹
                   </button>
                   <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center font-bold text-xs">
-                    {activeChat.user ? activeChat.user.charAt(1).toUpperCase() : "U"}
+                    {activeChat.user.charAt(1).toUpperCase()}
                   </div>
                   <h3 className="text-sm font-extrabold">{activeChat.user}</h3>
                 </div>
-                <button 
-                  onClick={() => setActiveChat(null)}
-                  className="text-gray-400 text-xs font-bold px-2.5 py-1 bg-white/10 rounded-full"
-                >
-                  Retour
-                </button>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {(activeChat.messages || []).map((m, idx) => (
+                {activeChat.messages.map((m, idx) => (
                   <div key={idx} className={`flex ${m.sender === userTag ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-xs ${m.sender === userTag ? 'bg-pink-500 text-white rounded-br-none' : 'bg-white/10 text-white rounded-bl-none'}`}>
                       {m.text}
@@ -1345,101 +1351,6 @@ if (file) {
               </form>
             </div>
           )}
-{showCreateModal && (
-  <div className="absolute inset-0 z-50 bg-[#07040f] flex flex-col text-white animate-fadeIn">
-    
-    {/* En-tête de la modale */}
-    <div className="w-full pt-4 pb-3 px-4 flex items-center justify-between border-b border-white/10 bg-[#07040f]">
-      <button 
-        type="button"
-        onClick={() => setShowCreateModal(false)}
-        className="text-white text-xl font-bold p-1 cursor-pointer"
-      >
-        ✕
-      </button>
-      <h2 className="text-base font-extrabold">Ajouter à la Story</h2>
-      <div className="w-6"></div>
-    </div>
-
-    {/* Corps de la page style bibliothèque / galerie */}
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-      
-      {/* Options du haut (Texte, Story Mystère, Brouillons) */}
-      <div className="grid grid-cols-3 gap-3">
-        <div 
-          onClick={() => alert("Mode Texte sélectionné")}
-          className="bg-white/10 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white/15 transition-colors"
-        >
-          <span className="text-lg font-bold">Aa</span>
-          <span className="text-xs text-gray-300">Texte</span>
-        </div>
-        <div 
-          onClick={() => alert("Mode Story Mystère sélectionné")}
-          className="bg-white/10 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white/15 transition-colors"
-        >
-          <span className="text-lg">✨</span>
-          <span className="text-xs text-gray-300">Story Mystère</span>
-        </div>
-        <div 
-          onClick={() => alert("Ouverture des brouillons")}
-          className="bg-white/10 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white/15 transition-colors"
-        >
-          <span className="text-lg">📁</span>
-          <span className="text-xs text-gray-300">Brouillons</span>
-        </div>
-      </div>
-
-      {/* Barre de sélection / Filtres */}
-      <div className="flex items-center justify-between pt-2">
-        <div className="flex items-center gap-1 text-sm font-bold text-white cursor-pointer">
-          <span>Récentes</span>
-          <span className="text-xs">▼</span>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-gray-400">
-          <input type="checkbox" id="multi" className="rounded bg-white/10 border-white/20" />
-          <label htmlFor="multi" className="cursor-pointer">Sélection multiple</label>
-        </div>
-      </div>
-
-      {/* Filtres par catégories */}
-      <div className="flex gap-2 overflow-x-auto py-1 scrollbar-none">
-        <button type="button" className="px-4 py-1.5 bg-white text-black rounded-full text-xs font-bold whitespace-nowrap">Tous</button>
-        <button type="button" className="px-4 py-1.5 bg-white/5 text-gray-300 border border-white/10 rounded-full text-xs font-semibold whitespace-nowrap">Favoris</button>
-        <button type="button" className="px-4 py-1.5 bg-white/5 text-gray-300 border border-white/10 rounded-full text-xs font-semibold whitespace-nowrap">Photos</button>
-        <button type="button" className="px-4 py-1.5 bg-white/5 text-gray-300 border border-white/10 rounded-full text-xs font-semibold whitespace-nowrap">Vidéos</button>
-      </div>
-
-      {/* Grille de publications / bibliothèque */}
-      <div className="grid grid-cols-3 gap-2 pt-2">
-        <div 
-          onClick={() => alert("Ouverture de la caméra")}
-          className="aspect-[3/4] bg-white/10 border border-white/20 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/20 transition-colors"
-        >
-          <span className="text-2xl">📷</span>
-        </div>
-
-        {[1, 2, 3, 4, 5].map((item) => (
-          <div 
-            key={item}
-            onClick={() => {
-              if (typeof playSound === 'function') playSound('click');
-              alert(`Publication #${item} sélectionnée pour remise à neuf !`);
-              setShowCreateModal(false);
-            }}
-            className="aspect-[3/4] bg-gradient-to-tr from-purple-900/60 to-pink-900/60 border border-white/10 rounded-xl p-2 flex flex-col justify-between cursor-pointer hover:border-pink-500 transition-all relative overflow-hidden group"
-          >
-            <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
-            <div className="text-[10px] text-gray-300 font-bold z-10">MONARQ</div>
-            <div className="text-[9px] text-white/80 z-10 truncate">Remettre au goût du jour...</div>
-          </div>
-        ))}
-      </div>
-
-    </div>
-  </div>
-)}
-
-               
         </div>
       );
     }
