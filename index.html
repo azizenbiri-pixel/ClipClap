@@ -777,17 +777,16 @@ useEffect(() => {
             <p className="text-xs text-gray-300 mb-2">Instru active : <span className="text-pink-400 font-semibold">{selectedInstru}</span></p>
             <p className="text-xs text-gray-400 mb-4">L'instru se lancera dans ton casque pendant que tu te filmeras.</p>
             
-            <button 
+                  <button 
               onClick={() => {
                 if (typeof playSound === 'function') playSound('click');
-                // Ici, on pourra lancer la caméra ou ouvrir l'interface d'enregistrement
-                alert(`Lancement du freestyle avec la prod : ${selectedInstru} 🎙️🔥`);
+                setShowCreateModal(true);
               }}
               className="w-full bg-white text-black font-bold py-3 rounded-xl hover:bg-gray-200 transition shadow-lg cursor-pointer"
             >
               Lancer l'enregistrement
             </button>
-          </div>
+
 
 
           {/* Section Bloc-notes / Paroles */}
