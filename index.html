@@ -711,27 +711,64 @@ useEffect(() => {
             Choisis ton instrumental, prépare tes rimes et lance ton freestyle pour le prochain cypher !
           </p>
 
-          {/* Section Choix de l'Instru */}
+                   {/* Section Choix de l'Instru */}
           <div>
             <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">1. Choisis ton Instrumental</h3>
             <div className="space-y-3">
-              <div className="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-between hover:border-pink-500 cursor-pointer transition">
+              
+              {/* Instru 1 */}
+              <div 
+                onClick={() => {
+                  if (typeof playSound === 'function') playSound('click');
+                  setSelectedInstru('Trap Bangers Vol. 1');
+                }}
+                className={`border p-3 rounded-2xl flex items-center justify-between cursor-pointer transition ${
+                  selectedInstru === 'Trap Bangers Vol. 1' 
+                    ? 'bg-pink-600/10 border-pink-500 shadow-md shadow-pink-500/20' 
+                    : 'bg-white/5 border-white/10 hover:border-gray-500'
+                }`}
+              >
                 <div>
                   <p className="font-bold text-sm">🔥 Trap Bangers Vol. 1</p>
                   <p className="text-xs text-gray-400">Prod by ClipBeat • 140 BPM</p>
                 </div>
-                <button className="bg-pink-600 text-xs px-3 py-1.5 rounded-full font-medium shadow-md shadow-pink-600/30">Sélectionner</button>
+                <button className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${
+                  selectedInstru === 'Trap Bangers Vol. 1'
+                    ? 'bg-pink-600 text-white font-bold shadow'
+                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                }`}>
+                  {selectedInstru === 'Trap Bangers Vol. 1' ? 'Sélectionné ✅' : 'Sélectionner'}
+                </button>
               </div>
 
-              <div className="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-between hover:border-pink-500 cursor-pointer transition">
+              {/* Instru 2 */}
+              <div 
+                onClick={() => {
+                  if (typeof playSound === 'function') playSound('click');
+                  setSelectedInstru('Boom Bap New York');
+                }}
+                className={`border p-3 rounded-2xl flex items-center justify-between cursor-pointer transition ${
+                  selectedInstru === 'Boom Bap New York' 
+                    ? 'bg-pink-600/10 border-pink-500 shadow-md shadow-pink-500/20' 
+                    : 'bg-white/5 border-white/10 hover:border-gray-500'
+                }`}
+              >
                 <div>
                   <p className="font-bold text-sm">🎧 Boom Bap New York</p>
                   <p className="text-xs text-gray-400">Prod by RetroVibes • 90 BPM</p>
                 </div>
-                <button className="bg-pink-600 text-xs px-3 py-1.5 rounded-full font-medium shadow-md shadow-pink-600/30">Sélectionner</button>
+                <button className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${
+                  selectedInstru === 'Boom Bap New York'
+                    ? 'bg-pink-600 text-white font-bold shadow'
+                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                }`}>
+                  {selectedInstru === 'Boom Bap New York' ? 'Sélectionné ✅' : 'Sélectionner'}
+                </button>
               </div>
+
             </div>
           </div>
+
 
           {/* Section Lancement Caméra / Enregistrement */}
           <div className="bg-gradient-to-r from-purple-900/40 to-pink-900/40 border border-pink-500/30 p-5 rounded-2xl text-center">
