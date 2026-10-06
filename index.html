@@ -768,25 +768,27 @@ useEffect(() => {
 
             </div>
           </div>
-
-
           {/* Section Lancement Caméra / Enregistrement */}
           <div className="bg-gradient-to-r from-purple-900/40 to-pink-900/40 border border-pink-500/30 p-5 rounded-2xl text-center">
             <div className="w-16 h-16 bg-pink-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg shadow-pink-600/40 animate-pulse">
               <span className="text-2xl">🎥</span>
             </div>
             <h3 className="font-bold text-base mb-1">Prêt à clipper ton freestyle ?</h3>
-            <p className="text-xs text-gray-300 mb-4">L'instru se lancera dans ton casque pendant que tu te filmeras.</p>
+            <p className="text-xs text-gray-300 mb-2">Instru active : <span className="text-pink-400 font-semibold">{selectedInstru}</span></p>
+            <p className="text-xs text-gray-400 mb-4">L'instru se lancera dans ton casque pendant que tu te filmeras.</p>
+            
             <button 
               onClick={() => {
                 if (typeof playSound === 'function') playSound('click');
-                alert("Lancement de la caméra et de l'instru...");
+                // Ici, on pourra lancer la caméra ou ouvrir l'interface d'enregistrement
+                alert(`Lancement du freestyle avec la prod : ${selectedInstru} 🎙️🔥`);
               }}
-              className="w-full bg-white text-black font-bold py-3 rounded-xl hover:bg-gray-200 transition shadow-lg"
+              className="w-full bg-white text-black font-bold py-3 rounded-xl hover:bg-gray-200 transition shadow-lg cursor-pointer"
             >
               Lancer l'enregistrement
             </button>
           </div>
+
 
           {/* Section Bloc-notes / Paroles */}
           <div>
