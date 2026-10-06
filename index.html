@@ -711,7 +711,7 @@ useEffect(() => {
             Choisis ton instrumental, prépare tes rimes et lance ton freestyle pour le prochain cypher !
           </p>
 
-                   {/* Section Choix de l'Instru */}
+          {/* Section Choix de l'Instru */}
           <div>
             <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">1. Choisis ton Instrumental</h3>
             <div className="space-y-3">
@@ -768,6 +768,7 @@ useEffect(() => {
 
             </div>
           </div>
+
           {/* Section Lancement Caméra / Enregistrement */}
           <div className="bg-gradient-to-r from-purple-900/40 to-pink-900/40 border border-pink-500/30 p-5 rounded-2xl text-center">
             <div className="w-16 h-16 bg-pink-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg shadow-pink-600/40 animate-pulse">
@@ -777,7 +778,7 @@ useEffect(() => {
             <p className="text-xs text-gray-300 mb-2">Instru active : <span className="text-pink-400 font-semibold">{selectedInstru}</span></p>
             <p className="text-xs text-gray-400 mb-4">L'instru se lancera dans ton casque pendant que tu te filmeras.</p>
             
-                  <button 
+            <button 
               onClick={() => {
                 if (typeof playSound === 'function') playSound('click');
                 setShowCreateModal(true);
@@ -786,8 +787,7 @@ useEffect(() => {
             >
               Lancer l'enregistrement
             </button>
-
-
+          </div>
 
           {/* Section Bloc-notes / Paroles */}
           <div>
@@ -801,6 +801,7 @@ useEffect(() => {
         </div>
       </div>
     )}
+
 
 
         
