@@ -945,10 +945,11 @@ useEffect(() => {
               +
             </button>
 
-            <button onClick={() => { playSound('click'); setActiveTab('inbox'); setViewingCreator(null); }} className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'inbox' ? 'text-pink-500 font-bold' : 'text-gray-400 hover:text-white'}`}>
-              <span className="text-xl">💬</span>
-              <span className="text-[10px]">Boîte de rép.</span>
-            </button>
+            <button onClick={() => { playSound('click'); setActiveTab('studio'); setViewingCreator(null); }} className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'studio' ? 'text-pink-500 font-bold' : 'text-gray-400 hover:text-white'}`}>
+  <span className="text-xl">🎙️</span>
+  <span className="text-[10px]">Studio</span>
+</button>
+
 
             <button onClick={() => { playSound('click'); setActiveTab('profile'); setViewingCreator(null); }} className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'profile' ? 'text-pink-500 font-bold' : 'text-gray-400 hover:text-white'}`}>
               <span className="text-xl">👤</span>
