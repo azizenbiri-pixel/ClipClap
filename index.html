@@ -1456,8 +1456,7 @@ if (file) {
           </div>
         ))}
       </div>
-
-            {/* ========================================== */}
+        {/* ========================================== */}
         {/* VUE CAMÉRA & TÉLÉPROMPTEUR (PLEIN ÉCRAN) */}
         {/* ========================================== */}
         {isRecordingMode && (
@@ -1516,10 +1515,10 @@ if (file) {
               )}
             </div>
 
-            {/* Contrôles du bas : Bouton Start / Stop */}
+            {/* Contrôles du bas : Bouton Start / Stop (Séparé de l'ouverture de la caméra) */}
             <div className="relative z-10 p-6 pb-10 flex items-center justify-center bg-gradient-to-t from-black/90 via-black/50 to-transparent">
               {!isCapturing ? (
-                /* Bouton pour DÉMARRER l'enregistrement */
+                /* Bouton pour DÉMARRER l'enregistrement explicitement */
                 <button 
                   onClick={() => {
                     if (typeof playSound === 'function') playSound('click');
@@ -1548,11 +1547,6 @@ if (file) {
           </div>
         )}
 
-
-               
-        </div>
-      );
-    }
 
 
     ReactDOM.render(<ClipClapApp />, document.getElementById('root'));
