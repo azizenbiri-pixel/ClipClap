@@ -1469,23 +1469,13 @@ if (file) {
         <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
         <span className="text-xs font-bold uppercase tracking-wider">Mode Studio Actif</span>
       </div>
-                    <button 
-                onClick={() => {
-                  const videoElement = document.querySelector('video');
-                  if (videoElement && videoElement.srcObject) {
-                    const stream = videoElement.srcObject;
-                    const tracks = stream.getTracks();
-                    tracks.forEach(track => track.stop());
-                    videoElement.srcObject = null;
-                  }
-                  setIsCapturing(false);
-                  setIsRecordingMode(false);
-                }}
-                className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center backdrop-blur-md transition cursor-pointer"
-              >
-                ✕
-              </button>
-
+      <button 
+        onClick={() => setIsRecordingMode(false)}
+        className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center backdrop-blur-md transition cursor-pointer"
+      >
+        ✕
+      </button>
+    </div>
 
     {/* Simulation / Flux Caméra (Arrière-plan) */}
     <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center">
