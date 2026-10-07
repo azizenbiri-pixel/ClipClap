@@ -1522,12 +1522,23 @@ if (file) {
       )}
     </div>
 
-    {/* Contrôles du bas (Bouton d'enregistrement / stop) */}
+        {/* Contrôles du bas (Bouton d'enregistrement / stop) */}
     <div className="relative z-10 p-6 pb-10 flex items-center justify-center bg-gradient-to-t from-black/90 via-black/50 to-transparent">
       <button 
         onClick={() => {
+          // 1. On coupe proprement la caméra et le micro
+          const videoElement = document.querySelector('video');
+          if (videoElement && videoElement.srcObject) {
+            const stream = videoElement.srcObject;
+            const tracks = stream.getTracks();
+            tracks.forEach(track => track.stop()); // Parenthèse ajoutée ici
+            videoElement.srcObject = null;
+          }
+          
+          // 2. On affiche ton message et on change l'état
           alert("Enregistrement du freestyle terminé ! Sauvegarde en cours...");
           setIsRecordingMode(false);
+          setIsCapturing(false);
         }}
         className="group relative flex items-center justify-center w-20 h-20 rounded-full border-4 border-white cursor-pointer bg-red-600 hover:bg-red-500 transition shadow-2xl"
       >
@@ -1537,6 +1548,7 @@ if (file) {
 
   </div>
 )}
+
 
                
         </div>
