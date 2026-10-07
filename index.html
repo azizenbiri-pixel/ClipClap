@@ -1456,76 +1456,99 @@ if (file) {
         ))}
       </div>
 
-    </div>
-  </div>
-)}
-{/* Vue Caméra & Téléprompteur Plein Écran */}
-{isRecordingMode && (
-  <div className="fixed inset-0 bg-black z-50 flex flex-col justify-between text-white overflow-hidden">
-    
-    {/* En-tête du mode enregistrement */}
-    <div className="absolute top-0 inset-x-0 p-4 z-20 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent">
-      <div className="flex items-center gap-2 bg-pink-600/80 px-3 py-1.5 rounded-full backdrop-blur-md">
-        <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
-        <span className="text-xs font-bold uppercase tracking-wider">Mode Studio Actif</span>
+    {/* Vue Caméra & Téléprompteur Plein Écran */}
+{isRecordingMode && (() => {
+  // Petit état interne pour savoir si l'enregistrement est lancé ou en pause de préparation
+  const [isCapturing, setIsCapturing] = React.useState(false);
+
+  return (
+    <div className="fixed inset-0 bg-black z-50 flex flex-col justify-between text-white overflow-hidden">
+      
+      {/* En-tête du mode enregistrement */}
+      <div className="absolute top-0 inset-x-0 p-4 z-20 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent">
+        <div className="flex items-center gap-2 bg-pink-600/80 px-3 py-1.5 rounded-full backdrop-blur-md">
+          <span className={`w-2.5 h-2.5 rounded-full bg-white ${isCapturing ? 'animate-ping' : ''}`}></span>
+          <span className="text-xs font-bold uppercase tracking-wider">
+            {isCapturing ? '🔴 Enregistrement en cours...' : '🟡 Prêt à enregistrer'}
+          </span>
+        </div>
+        <button 
+          onClick={() => {
+            setIsCapturing(false);
+            setIsRecordingMode(false);
+          }}
+          className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center backdrop-blur-md transition cursor-pointer"
+        >
+          ✕
+        </button>
       </div>
-      <button 
-        onClick={() => setIsRecordingMode(false)}
-        className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center backdrop-blur-md transition cursor-pointer"
-      >
-        ✕
-      </button>
-    </div>
 
-    {/* Simulation / Flux Caméra (Arrière-plan) */}
-    <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center">
-      {/* Élément vidéo natif pour activer la caméra frontale du téléphone */}
-      <video 
-        autoPlay 
-        playsInline 
-        muted 
-        ref={(node) => {
-          if (node && !node.srcObject) {
-            navigator.mediaDevices?.getUserMedia({ video: { facingMode: "user" }, audio: true })
-              .then(stream => { node.srcObject = stream; })
-              .catch(err => console.log("Caméra non accessible : ", err));
-          }
-        }}
-        className="w-full h-full object-cover transform scale-x-[-1]"
-      ></video>
-      {/* Petit rappel de l'instru en bas de la vidéo */}
-      <div className="absolute bottom-28 inset-x-4 text-center z-10 pointer-events-none">
-        <span className="bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full text-xs text-pink-400 font-medium border border-pink-500/30">
-          🎵 Instru : {selectedInstru}
-        </span>
+      {/* Flux Caméra (Arrière-plan) */}
+      <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center">
+        <video 
+          autoPlay 
+          playsInline 
+          muted 
+          ref={(node) => {
+            if (node && !node.srcObject) {
+              navigator.mediaDevices?.getUserMedia({ video: { facingMode: "user" }, audio: true })
+                .then(stream => { node.srcObject = stream; })
+                .catch(err => console.log("Caméra non accessible : ", err));
+            }
+          }}
+          className="w-full h-full object-cover transform scale-x-[-1]"
+        ></video>
+        
+        {/* Rappel de l'instru en bas de la vidéo */}
+        <div className="absolute bottom-28 inset-x-4 text-center z-10 pointer-events-none">
+          <span className="bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full text-xs text-pink-400 font-medium border border-pink-500/30">
+            🎵 Instru : {selectedInstru}
+          </span>
+        </div>
       </div>
-    </div>
 
-    {/* Téléprompteur de paroles (Par-dessus la caméra) */}
-    <div className="relative z-10 mt-20 mx-4 max-h-48 overflow-y-auto bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 text-center pointer-events-auto">
-      <p className="text-xs uppercase tracking-widest text-pink-400 font-bold mb-2">Téléprompteur 📜</p>
-      {lyricsText ? (
-        <p className="text-lg font-medium leading-relaxed whitespace-pre-wrap text-white">{lyricsText}</p>
-      ) : (
-        <p className="text-sm text-gray-400 italic">Aucune parole écrite dans le bloc-notes... Écris tes rimes avant de lancer !</p>
-      )}
-    </div>
+      {/* Téléprompteur de paroles */}
+      <div className="relative z-10 mt-20 mx-4 max-h-48 overflow-y-auto bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 text-center pointer-events-auto">
+        <p className="text-xs uppercase tracking-widest text-pink-400 font-bold mb-2">Téléprompteur 📜</p>
+        {lyricsText ? (
+          <p className="text-lg font-medium leading-relaxed whitespace-pre-wrap text-white">{lyricsText}</p>
+        ) : (
+          <p className="text-sm text-gray-400 italic">Aucune parole écrite dans le bloc-notes... Écris tes rimes avant de lancer !</p>
+        )}
+      </div>
 
-    {/* Contrôles du bas (Bouton d'enregistrement / stop) */}
-    <div className="relative z-10 p-6 pb-10 flex items-center justify-center bg-gradient-to-t from-black/90 via-black/50 to-transparent">
-      <button 
-        onClick={() => {
-          alert("Enregistrement du freestyle terminé ! Sauvegarde en cours...");
-          setIsRecordingMode(false);
-        }}
-        className="group relative flex items-center justify-center w-20 h-20 rounded-full border-4 border-white cursor-pointer bg-red-600 hover:bg-red-500 transition shadow-2xl"
-      >
-        <div className="w-8 h-8 rounded-md bg-white transition group-hover:scale-90"></div>
-      </button>
-    </div>
+      {/* Contrôles du bas : Bouton Start / Stop */}
+      <div className="relative z-10 p-6 pb-10 flex items-center justify-center bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+        {!isCapturing ? (
+          /* Bouton pour DÉMARRER l'enregistrement */
+          <button 
+            onClick={() => {
+              if (typeof playSound === 'function') playSound('click');
+              setIsCapturing(true);
+            }}
+            className="group relative flex items-center justify-center w-20 h-20 rounded-full border-4 border-white cursor-pointer bg-red-600 hover:bg-red-500 transition shadow-2xl animate-pulse"
+          >
+            <div className="w-6 h-6 rounded-full bg-white"></div>
+          </button>
+        ) : (
+          /* Bouton pour ARRÊTER l'enregistrement */
+          <button 
+            onClick={() => {
+              if (typeof playSound === 'function') playSound('click');
+              alert("Freestyle enregistré avec succès ! Enregistrement sauvegardé.");
+              setIsCapturing(false);
+              setIsRecordingMode(false);
+            }}
+            className="group relative flex items-center justify-center w-20 h-20 rounded-full border-4 border-white cursor-pointer bg-zinc-800 hover:bg-zinc-700 transition shadow-2xl"
+          >
+            <div className="w-8 h-8 rounded-md bg-red-600 transition group-hover:scale-90"></div>
+          </button>
+        )}
+      </div>
 
-  </div>
-)}
+    </div>
+  )}
+
 
                
         </div>
