@@ -1496,21 +1496,21 @@ if (file) {
             Recommencer 🔄
           </button>
 
-             <button 
+                   <button 
             onClick={() => {
-              // 1. Créer un nouvel objet post pour le freestyle
+              // 1. Créer le nouvel objet post pour le freestyle
               const newPost = {
                 id: Date.now(),
                 author: "Toi (Artiste)",
-                videoUrl: previewUrl,
+                video: previewUrl,
                 instrumental: selectedInstru || "Instru par défaut",
                 timestamp: "À l'instant",
                 likes: 0,
                 comments: []
               };
 
-              // 2. Ajouter le post dans la liste existante (userPosts)
-              setUserPosts(prevPosts => [newPost, ...prevPosts]);
+              // 2. Ajouter le post tout en haut de la liste principale (posts)
+              setPosts(prevPosts => [newPost, ...prevPosts]);
 
               // 3. Nettoyer et fermer les écrans de studio/preview
               setPreviewUrl(null);
@@ -1526,6 +1526,7 @@ if (file) {
         </div>
       </div>
     )}
+
 
 
     {/* Vue Caméra & Téléprompteur Plein Écran (Ton code actuel commence ici à la ligne 1469) */}
