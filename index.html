@@ -1464,9 +1464,55 @@ if (file) {
 
     </div>
   </div>
-)}
-{/* Vue Caméra & Téléprompteur Plein Écran */}
-{isRecordingMode && (
+    )}
+    
+    {/* --- AJOUTE L'ÉCRAN DE PRÉVISUALISATION ICI --- */}
+    {previewUrl && (
+      <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-between p-6">
+        <div className="w-full text-center pt-4">
+          <h2 className="text-white text-xl font-bold">Aperçu de ton Freestyle 🎤</h2>
+          <p className="text-gray-400 text-sm">Vérifie le rendu avant de valider</p>
+        </div>
+
+        <div className="w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl bg-black border border-gray-800">
+          <video 
+            src={previewUrl} 
+            controls 
+            autoPlay 
+            playsInline 
+            className="w-full h-auto max-h-[60vh] object-contain"
+          />
+        </div>
+
+        <div className="w-full max-w-sm flex gap-4 pb-6">
+          <button 
+            onClick={() => {
+              setPreviewUrl(null);
+              setVideoBlob(null);
+              setIsRecordingMode(true);
+            }}
+            className="flex-1 py-3 px-4 rounded-xl bg-gray-800 text-white font-semibold hover:bg-gray-700 transition"
+          >
+            Recommencer 🔄
+          </button>
+
+          <button 
+            onClick={() => {
+              alert("Freestyle validé ! Prêt pour la publication.");
+              setPreviewUrl(null);
+              setIsRecordingMode(false);
+            }}
+            className="flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-500 transition shadow-lg shadow-red-600/30"
+          >
+            Publier 🚀
+          </button>
+        </div>
+      </div>
+    )}
+
+    {/* Vue Caméra & Téléprompteur Plein Écran (Ton code actuel commence ici à la ligne 1469) */}
+    {isRecordingMode && (
+
   <div className="fixed inset-0 bg-black z-50 flex flex-col justify-between text-white overflow-hidden">
     
     {/* En-tête du mode enregistrement */}
