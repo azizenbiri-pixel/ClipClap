@@ -1496,11 +1496,28 @@ if (file) {
             Recommencer 🔄
           </button>
 
-          <button 
+             <button 
             onClick={() => {
-              alert("Freestyle validé ! Prêt pour la publication.");
+              // 1. Créer un nouvel objet post pour le freestyle
+              const newPost = {
+                id: Date.now(),
+                author: "Toi (Artiste)",
+                videoUrl: previewUrl,
+                instrumental: selectedInstru || "Instru par défaut",
+                timestamp: "À l'instant",
+                likes: 0,
+                comments: []
+              };
+
+              // 2. Ajouter le post dans la liste existante (userPosts)
+              setUserPosts(prevPosts => [newPost, ...prevPosts]);
+
+              // 3. Nettoyer et fermer les écrans de studio/preview
               setPreviewUrl(null);
+              setVideoBlob(null);
               setIsRecordingMode(false);
+
+              alert("Ton freestyle a été publié avec succès dans le fil d'actualité ! 🚀");
             }}
             className="flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-500 transition shadow-lg shadow-red-600/30"
           >
@@ -1509,6 +1526,7 @@ if (file) {
         </div>
       </div>
     )}
+
 
     {/* Vue Caméra & Téléprompteur Plein Écran (Ton code actuel commence ici à la ligne 1469) */}
     {isRecordingMode && (
