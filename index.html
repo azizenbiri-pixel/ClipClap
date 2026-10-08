@@ -1527,16 +1527,50 @@ if (file) {
         <p className="text-sm text-gray-400 italic">Aucune parole écrite dans le bloc-notes... Écris tes rimes avant de lancer !</p>
       )}
     </div>
-    {/* Contrôles du bas (Bouton d'enregistrement / stop unifié) */}
+       {/* Contrôles du bas (Bouton d'enregistrement / stop unifié) */}
     <div className="relative z-10 p-6 pb-10 flex items-center justify-center bg-gradient-to-t from-black/90 via-black/50 to-transparent">
       <button 
         onClick={() => {
           if (!isRecording) {
-            // --- ACTION 1 : DÉMARRER ---
-            setIsRecording(true);
-            // (Si tu as une fonction qui lance MediaRecorder, tu pourras la placer ici)
+            // --- ACTION 1 : DÉMARRER L'ENREGISTREMENT ---
+            audioChunksRef.current = [];
+            
+            const videoElement = document.querySelector('video');
+            if (videoElement && videoElement.srcObject) {
+              const stream = videoElement.srcObject;
+              
+              try {
+                const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+                mediaRecorderRef.current = mediaRecorder;
+                
+                mediaRecorder.ondataavailable = (event) => {
+                  if (event.data && event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                  }
+                };
+                
+                mediaRecorder.onstop = () => {
+                  const blob = new Blob(audioChunksRef.current, { type: 'video/webm' });
+                  setVideoBlob(blob);
+                  const url = URL.createObjectURL(blob);
+                  setPreviewUrl(url);
+                };
+                
+                mediaRecorder.start();
+                setIsRecording(true);
+              } catch (err) {
+                console.error("Erreur MediaRecorder :", err);
+                alert("Impossible de démarrer l'enregistrement vidéo.");
+              }
+            } else {
+              alert("Erreur : Active la caméra d'abord !");
+            }
           } else {
-            // --- ACTION 2 : ARRÊTER (Le code d'hier) ---
+            // --- ACTION 2 : ARRÊTER L'ENREGISTREMENT ---
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+              mediaRecorderRef.current.stop();
+            }
+
             const videoElement = document.querySelector('video');
             if (videoElement && videoElement.srcObject) {
               const stream = videoElement.srcObject;
@@ -1545,7 +1579,6 @@ if (file) {
               videoElement.srcObject = null;
             }
             
-            alert("Enregistrement du freestyle terminé ! Sauvegarde en cours...");
             setIsRecording(false);
             setIsRecordingMode(false);
             setIsCapturing(false);
@@ -1563,6 +1596,7 @@ if (file) {
 
   </div>
 )}
+
              
         </div>
       );
