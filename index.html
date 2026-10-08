@@ -131,6 +131,8 @@ function ClipClapApp() {
 const [selectedInstru, setSelectedInstru] = React.useState('Trap Bangers Vol. 1');
 const [isRecordingMode, setIsRecordingMode] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [videoBlob, setVideoBlob] = useState(null);
+const [previewUrl, setPreviewUrl] = useState(null);
 const [lyricsText, setLyricsText] = useState("");
 
           // 1. Chargement sécurisé des vidéos de votre profil
