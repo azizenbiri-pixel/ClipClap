@@ -134,6 +134,9 @@ const [isRecordingMode, setIsRecordingMode] = useState(false);
   const [videoBlob, setVideoBlob] = useState(null);
 const [previewUrl, setPreviewUrl] = useState(null);
 const [lyricsText, setLyricsText] = useState("");
+// En haut de ton composant, avec tes autres const/useState :
+const mediaRecorderRef = React.useRef(null);
+const audioChunksRef = React.useRef([]);
 
           // 1. Chargement sécurisé des vidéos de votre profil
       const [userPosts, setUserPosts] = React.useState(() => {
