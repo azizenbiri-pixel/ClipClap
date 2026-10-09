@@ -128,18 +128,17 @@ function ClipClapApp() {
       const [feedTab, setFeedTab] = useState('foryou');
       const [searchQuery, setSearchQuery] = useState("");
       const [replyingTo, setReplyingTo] = useState(null);
-      const [selectedInstru, setSelectedInstru] = React.useState('Trap Bangers Vol. 1');
-      const [isRecordingMode, setIsRecordingMode] = useState(false);
-      const [isRecording, setIsRecording] = useState(false);
-      const [videoBlob, setVideoBlob] = useState(null);
-      const [previewUrl, setPreviewUrl] = useState(null);
-      const [lyricsText, setLyricsText] = useState("");
-      
-      // En haut de ton composant, avec tes autres const/useState :
-      const mediaRecorderRef = React.useRef(null);
-      const audioChunksRef = React.useRef([]);
+const [selectedInstru, setSelectedInstru] = React.useState('Trap Bangers Vol. 1');
+const [isRecordingMode, setIsRecordingMode] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [videoBlob, setVideoBlob] = useState(null);
+const [previewUrl, setPreviewUrl] = useState(null);
+const [lyricsText, setLyricsText] = useState("");
+// En haut de ton composant, avec tes autres const/useState :
+const mediaRecorderRef = React.useRef(null);
+const audioChunksRef = React.useRef([]);
 
-      // 1. Chargement sécurisé des vidéos de votre profil
+          // 1. Chargement sécurisé des vidéos de votre profil
       const [userPosts, setUserPosts] = React.useState(() => {
         try {
           const saved = localStorage.getItem('clipclap_user_posts');
@@ -159,6 +158,17 @@ function ClipClapApp() {
         }
       });
 
+  
+    
+    
+  
+    
+
+
+
+  
+
+
       const [currentIndex, setCurrentIndex] = useState(0);
       const [likedPosts, setLikedPosts] = useState({});
       const [savedPosts, setSavedPosts] = useState({});
@@ -173,7 +183,7 @@ function ClipClapApp() {
       const [creatorFollowers, setCreatorFollowers] = useState(() =>
         posts.reduce((acc, post) => ({ ...acc, [post.authorId || post.user]: post.followers }), {})
       );
-      const [showCreateModal, setShowCreateModal] = React.useState(false);
+const [showCreateModal, setShowCreateModal] = React.useState(false);
       const [toastMessage, setToastMessage] = useState("");
       const [showUploadModal, setShowUploadModal] = useState(false);
       const [newCaption, setNewCaption] = useState("");
@@ -181,48 +191,25 @@ function ClipClapApp() {
       const [viewingCreator, setViewingCreator] = useState(null);
       const [showCommentsModal, setShowCommentsModal] = useState(false);
       const [newCommentText, setNewCommentText] = useState("");
-      const [showProfilePhotoModal, setShowProfilePhotoModal] = React.useState(false);
+const [showProfilePhotoModal, setShowProfilePhotoModal] = React.useState(false);
 
-           // Profil totalement vierge et neutre pour chaque nouvel utilisateur
-      const [userName, setUserName] = useState(() => {
-        return localStorage.getItem('clipclap_user_name') || "Nouveau créateur";
-      });
-      const [userTag, setUserTag] = useState(() => {
-        return localStorage.getItem('clipclap_user_tag') || "@nouveau";
-      });
-      const [userBio, setUserBio] = useState(() => {
-        return localStorage.getItem('clipclap_user_bio') || "Modifie ton profil pour commencer !";
-      });
-      const [userAvatar, setUserAvatar] = useState(() => {
-        return localStorage.getItem('clipclap_user_avatar') || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop"; 
-      });
+      const [userName, setUserName] = useState("Aziz Enbiri");
+      const [userTag, setUserTag] = useState("@azizenbiri");
+      const [userBio, setUserBio] = useState("Créateur de contenu néon ⚡");
+      const [userAvatar, setUserAvatar] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop");
+useEffect(() => {
+  const savedAvatar = localStorage.getItem('clipclap_user_avatar');
+  if (savedAvatar) {
+    setUserAvatar(savedAvatar);
+  }
+}, []);
 
-      // Compteurs initialisés strictement à 0 pour un profil vierge
-      const [userFollowersCount, setUserFollowersCount] = useState(() => {
-        const saved = localStorage.getItem('clipclap_user_followers');
-        return saved ? parseInt(saved, 10) : 0;
-      });
-      const [userFollowingCount, setUserFollowingCount] = useState(() => {
-        const saved = localStorage.getItem('clipclap_user_following');
-        return saved ? parseInt(saved, 10) : 0;
-      });
-      const [userLikesCount, setUserLikesCount] = useState(() => {
-        const saved = localStorage.getItem('clipclap_user_likes');
-        return saved ? parseInt(saved, 10) : 0;
-      });
-
-      // Sauvegarde automatique dans le localStorage
-      useEffect(() => {
-        localStorage.setItem('clipclap_user_name', userName);
-        localStorage.setItem('clipclap_user_tag', userTag);
-        localStorage.setItem('clipclap_user_bio', userBio);
-        localStorage.setItem('clipclap_user_avatar', userAvatar);
-        localStorage.setItem('clipclap_user_followers', userFollowersCount);
-        localStorage.setItem('clipclap_user_following', userFollowingCount);
-        localStorage.setItem('clipclap_user_likes', userLikesCount);
-      }, [userName, userTag, userBio, userAvatar, userFollowersCount, userFollowingCount, userLikesCount]);
-
-
+        
+          
+        
+          
+        
+      
       const [isEditingProfile, setIsEditingProfile] = useState(false);
 
       const [userFollowersCount, setUserFollowersCount] = useState(1280);
@@ -238,13 +225,11 @@ function ClipClapApp() {
       const touchStartX = useRef(0);
       const touchStartY = useRef(0);
       const videoRef = useRef(null);
-
       useEffect(() => {
         try {
           localStorage.setItem('clipclap_posts', JSON.stringify(posts));
         } catch(e) {}
       }, [posts]);
-
 
       useEffect(() => {
   const savedAvatar = localStorage.getItem('clipclap_user_avatar');
@@ -845,6 +830,31 @@ function ClipClapApp() {
                   }
                 }}                                                                                                  
               >
+
+          
+      
+                  
+                  
+                  
+                
+              
+            
+              
+
+              
+                   
+        
+      
+      
+    
+        
+            
+      
+          
+        
+      
+
+              
     
               >
                 <div className="flex flex-col items-center mt-4">
