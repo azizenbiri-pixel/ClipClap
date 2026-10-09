@@ -182,44 +182,46 @@ function ClipClapApp() {
       const [newCommentText, setNewCommentText] = useState("");
       const [showProfilePhotoModal, setShowProfilePhotoModal] = React.useState(false);
 
-      // 3. Profil totalement vierge et neutre pour chaque nouvel utilisateur
+         // Profil totalement vierge avec de nouvelles clés pour repartir à zéro pour tout le monde
       const [userName, setUserName] = useState(() => {
-        return localStorage.getItem('clipclap_user_name') || "Nouveau créateur";
+        return localStorage.getItem('clipclap_v2_name') || "Nouveau créateur";
       });
       const [userTag, setUserTag] = useState(() => {
-        return localStorage.getItem('clipclap_user_tag') || "@nouveau";
+        return localStorage.getItem('clipclap_v2_tag') || "@nouveau";
       });
       const [userBio, setUserBio] = useState(() => {
-        return localStorage.getItem('clipclap_user_bio') || "Modifie ton profil pour commencer !";
+        return localStorage.getItem('clipclap_v2_bio') || "Modifie ton profil pour commencer !";
       });
       const [userAvatar, setUserAvatar] = useState(() => {
-        return localStorage.getItem('clipclap_user_avatar') || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop"; 
+        // Image neutre par défaut (plus ta photo personnelle)
+        return localStorage.getItem('clipclap_v2_avatar') || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop"; 
       });
 
-      // 4. Compteurs initialisés strictement à 0 (sans doublon)
+      // Compteurs initialisés strictement à 0
       const [userFollowersCount, setUserFollowersCount] = useState(() => {
-        const saved = localStorage.getItem('clipclap_user_followers');
+        const saved = localStorage.getItem('clipclap_v2_followers');
         return saved ? parseInt(saved, 10) : 0;
       });
       const [userFollowingCount, setUserFollowingCount] = useState(() => {
-        const saved = localStorage.getItem('clipclap_user_following');
+        const saved = localStorage.getItem('clipclap_v2_following');
         return saved ? parseInt(saved, 10) : 0;
       });
       const [userLikesCount, setUserLikesCount] = useState(() => {
-        const saved = localStorage.getItem('clipclap_user_likes');
+        const saved = localStorage.getItem('clipclap_v2_likes');
         return saved ? parseInt(saved, 10) : 0;
       });
 
-      // Sauvegarde automatique dans le localStorage
+      // Sauvegarde automatique sur les clés v2
       useEffect(() => {
-        localStorage.setItem('clipclap_user_name', userName);
-        localStorage.setItem('clipclap_user_tag', userTag);
-        localStorage.setItem('clipclap_user_bio', userBio);
-        localStorage.setItem('clipclap_user_avatar', userAvatar);
-        localStorage.setItem('clipclap_user_followers', userFollowersCount);
-        localStorage.setItem('clipclap_user_following', userFollowingCount);
-        localStorage.setItem('clipclap_user_likes', userLikesCount);
+        localStorage.setItem('clipclap_v2_name', userName);
+        localStorage.setItem('clipclap_v2_tag', userTag);
+        localStorage.setItem('clipclap_v2_bio', userBio);
+        localStorage.setItem('clipclap_v2_avatar', userAvatar);
+        localStorage.setItem('clipclap_v2_followers', userFollowersCount);
+        localStorage.setItem('clipclap_v2_following', userFollowingCount);
+        localStorage.setItem('clipclap_v2_likes', userLikesCount);
       }, [userName, userTag, userBio, userAvatar, userFollowersCount, userFollowingCount, userLikesCount]);
+
 
       const [isEditingProfile, setIsEditingProfile] = useState(false);
 
