@@ -182,46 +182,44 @@ function ClipClapApp() {
       const [newCommentText, setNewCommentText] = useState("");
       const [showProfilePhotoModal, setShowProfilePhotoModal] = React.useState(false);
 
-         // Profil totalement vierge avec de nouvelles clés pour repartir à zéro pour tout le monde
+      // 3. Profil totalement vierge et neutre pour chaque nouvel utilisateur
       const [userName, setUserName] = useState(() => {
-        return localStorage.getItem('clipclap_v2_name') || "Nouveau créateur";
+        return localStorage.getItem('clipclap_user_name') || "Nouveau créateur";
       });
       const [userTag, setUserTag] = useState(() => {
-        return localStorage.getItem('clipclap_v2_tag') || "@nouveau";
+        return localStorage.getItem('clipclap_user_tag') || "@nouveau";
       });
       const [userBio, setUserBio] = useState(() => {
-        return localStorage.getItem('clipclap_v2_bio') || "Modifie ton profil pour commencer !";
+        return localStorage.getItem('clipclap_user_bio') || "Modifie ton profil pour commencer !";
       });
       const [userAvatar, setUserAvatar] = useState(() => {
-        // Image neutre par défaut (plus ta photo personnelle)
-        return localStorage.getItem('clipclap_v2_avatar') || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop"; 
+        return localStorage.getItem('clipclap_user_avatar') || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop"; 
       });
 
-      // Compteurs initialisés strictement à 0
+      // 4. Compteurs initialisés strictement à 0 (sans doublon)
       const [userFollowersCount, setUserFollowersCount] = useState(() => {
-        const saved = localStorage.getItem('clipclap_v2_followers');
+        const saved = localStorage.getItem('clipclap_user_followers');
         return saved ? parseInt(saved, 10) : 0;
       });
       const [userFollowingCount, setUserFollowingCount] = useState(() => {
-        const saved = localStorage.getItem('clipclap_v2_following');
+        const saved = localStorage.getItem('clipclap_user_following');
         return saved ? parseInt(saved, 10) : 0;
       });
       const [userLikesCount, setUserLikesCount] = useState(() => {
-        const saved = localStorage.getItem('clipclap_v2_likes');
+        const saved = localStorage.getItem('clipclap_user_likes');
         return saved ? parseInt(saved, 10) : 0;
       });
 
-      // Sauvegarde automatique sur les clés v2
+      // Sauvegarde automatique dans le localStorage
       useEffect(() => {
-        localStorage.setItem('clipclap_v2_name', userName);
-        localStorage.setItem('clipclap_v2_tag', userTag);
-        localStorage.setItem('clipclap_v2_bio', userBio);
-        localStorage.setItem('clipclap_v2_avatar', userAvatar);
-        localStorage.setItem('clipclap_v2_followers', userFollowersCount);
-        localStorage.setItem('clipclap_v2_following', userFollowingCount);
-        localStorage.setItem('clipclap_v2_likes', userLikesCount);
+        localStorage.setItem('clipclap_user_name', userName);
+        localStorage.setItem('clipclap_user_tag', userTag);
+        localStorage.setItem('clipclap_user_bio', userBio);
+        localStorage.setItem('clipclap_user_avatar', userAvatar);
+        localStorage.setItem('clipclap_user_followers', userFollowersCount);
+        localStorage.setItem('clipclap_user_following', userFollowingCount);
+        localStorage.setItem('clipclap_user_likes', userLikesCount);
       }, [userName, userTag, userBio, userAvatar, userFollowersCount, userFollowingCount, userLikesCount]);
-
 
       const [isEditingProfile, setIsEditingProfile] = useState(false);
 
@@ -409,30 +407,22 @@ function ClipClapApp() {
         setNewMessageText("");
       };
 
-            const handlePublish = (e) => {
+      const handlePublish = (e) => {
         e.preventDefault();
         playSound('click');
         const createAndSavePost = (videoSrc) => {
-          const myNewPostItem = {
-            id: Date.now(),
-            authorId: userTag,
-            user: userTag,
-            avatar: userAvatar,
-            desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
-            music: `Son original - ${userName} 🎵`,
-            likes: 0, 
-            comments: 0, 
-            bookmarks: 0, 
-            shares: 0,
-            viewsCount: 0, 
-            views: "0", 
-            followers: userFollowersCount,      // Remplacé par l'état (0)
-            followingCount: userFollowingCount, // Remplacé par l'état (0)
-            totalLikes: userLikesCount,         // Remplacé par l'état (0)
-            video: videoSrc, 
-            commentsList: []
-          };
-
+        const myNewPostItem = {
+          id: Date.now(),
+          authorId: userTag,
+          user: userTag,
+          avatar: userAvatar,
+          desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
+          music: `Son original - ${userName} 🎵`,
+          likes: 0, comments: 0, bookmarks: 0, shares: 0,
+          viewsCount: 0, views: "0", followers: 1280, followingCount: 245, totalLikes: 9420,
+          video: videoSrc, 
+          commentsList: [] // NETTOYÉ : On supprime le sous-bloc userPosts inutile ici
+        };
 
           const updatedPosts = [myNewPostItem, ...posts];
           setPosts(updatedPosts);
@@ -1215,7 +1205,7 @@ function ClipClapApp() {
             </div>
           )}
 
-                 {/* MODAL MODIFIER PROFIL (SYNCHRONISE L'AVATAR SUR LES VIDÉOS) */}
+          {/* MODAL MODIFIER PROFIL (SYNCHRONISE L'AVATAR SUR LES VIDÉOS) */}
           {isEditingProfile && (
             <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
               <div className="w-full max-w-sm bg-[#120c24] border border-white/10 rounded-3xl p-6 shadow-2xl">
@@ -1245,39 +1235,43 @@ function ClipClapApp() {
                       type="file" 
                       accept="image/*"
                       onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            const img = new Image();
-                            img.src = reader.result;
-                            img.onload = () => {
-                              const canvas = document.createElement('canvas');
-                              const MAX_WIDTH = 150;
-                              const scaleSize = MAX_WIDTH / img.width;
-                              canvas.width = MAX_WIDTH;
-                              canvas.height = img.height * scaleSize;
+                    const file = e.target.files[0];
+if (file) {
+  const reader = new FileReader();
+  reader.onloadend = () => {
+    const img = new Image();
+    img.src = reader.result;
+    img.onload = () => {
+      // On crée un canvas pour redimensionner l'image en petit format (avatar)
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 150; // Largeur parfaite pour un avatar de profil
+      const scaleSize = MAX_WIDTH / img.width;
+      canvas.width = MAX_WIDTH;
+      canvas.height = img.height * scaleSize;
 
-                              const ctx = canvas.getContext('2d');
-                              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                              const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                              
-                              // On met juste à jour l'état temporairement sans enregistrer tout de suite
-                              setUserAvatar(compressedBase64);
-                            };
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
+      // On récupère l'image compressée (très légère !)
+      const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+      // 1. On affiche l'image légère sur le profil
+      setUserAvatar(compressedBase64);
+      
+      // 2. On la sauvegarde dans la mémoire sans aucun blocage
+      localStorage.setItem('clipclap_user_avatar', compressedBase64);
+    };
+  };
+  reader.readAsDataURL(file);
+}
+}}
                       className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-pink-500 file:text-white hover:file:bg-pink-600 cursor-pointer"
                     />
                   </div>
                   <button 
                     onClick={() => { 
                       playSound('click'); 
-                      
-                      // Met à jour l'avatar sur tous les posts créés par l'utilisateur
+   // Met à jour l'avatar et propage le changement sur tous les posts créés par l'utilisateur
                       setPosts(prevPosts => prevPosts.map(p => {
                         if (p.authorId === userTag || p.user === userTag) {
                           return { ...p, avatar: userAvatar };
@@ -1285,7 +1279,7 @@ function ClipClapApp() {
                         return p;
                       }));
 
-                      // C'est ici, au clic sur Enregistrer, qu'on valide tout proprement
+                      // LA SÉCURITÉ ANTI-PERTE : On sauvegarde de manière permanente dans le navigateur
                       localStorage.setItem('clipclap_user_avatar', userAvatar);
 
                       setIsEditingProfile(false); 
@@ -1298,8 +1292,7 @@ function ClipClapApp() {
                 </div>
               </div>
             </div>
-          )}
-                
+          )}                    
               
                     {/* MODAL DISCUSSION MESSAGERIE */}
           {activeChat && (
