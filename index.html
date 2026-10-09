@@ -183,27 +183,45 @@ function ClipClapApp() {
       const [newCommentText, setNewCommentText] = useState("");
       const [showProfilePhotoModal, setShowProfilePhotoModal] = React.useState(false);
 
-      // 3. Gestion dynamique et persistante du profil actif
+           // Profil totalement vierge et neutre pour chaque nouvel utilisateur
       const [userName, setUserName] = useState(() => {
-        return localStorage.getItem('clipclap_user_name') || "Mon Pseudo";
+        return localStorage.getItem('clipclap_user_name') || "Nouveau créateur";
       });
       const [userTag, setUserTag] = useState(() => {
-        return localStorage.getItem('clipclap_user_tag') || "@monpseudo";
+        return localStorage.getItem('clipclap_user_tag') || "@nouveau";
       });
       const [userBio, setUserBio] = useState(() => {
-        return localStorage.getItem('clipclap_user_bio') || "Bienvenue sur mon profil ClipClap ! 🎤";
+        return localStorage.getItem('clipclap_user_bio') || "Modifie ton profil pour commencer !";
       });
       const [userAvatar, setUserAvatar] = useState(() => {
-        return localStorage.getItem('clipclap_user_avatar') || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop";
+        return localStorage.getItem('clipclap_user_avatar') || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop"; 
       });
 
-      // Sauvegarde automatique du profil dans le localStorage dès qu'il est modifié
+      // Compteurs initialisés strictement à 0 pour un profil vierge
+      const [userFollowersCount, setUserFollowersCount] = useState(() => {
+        const saved = localStorage.getItem('clipclap_user_followers');
+        return saved ? parseInt(saved, 10) : 0;
+      });
+      const [userFollowingCount, setUserFollowingCount] = useState(() => {
+        const saved = localStorage.getItem('clipclap_user_following');
+        return saved ? parseInt(saved, 10) : 0;
+      });
+      const [userLikesCount, setUserLikesCount] = useState(() => {
+        const saved = localStorage.getItem('clipclap_user_likes');
+        return saved ? parseInt(saved, 10) : 0;
+      });
+
+      // Sauvegarde automatique dans le localStorage
       useEffect(() => {
         localStorage.setItem('clipclap_user_name', userName);
         localStorage.setItem('clipclap_user_tag', userTag);
         localStorage.setItem('clipclap_user_bio', userBio);
         localStorage.setItem('clipclap_user_avatar', userAvatar);
-      }, [userName, userTag, userBio, userAvatar]);
+        localStorage.setItem('clipclap_user_followers', userFollowersCount);
+        localStorage.setItem('clipclap_user_following', userFollowingCount);
+        localStorage.setItem('clipclap_user_likes', userLikesCount);
+      }, [userName, userTag, userBio, userAvatar, userFollowersCount, userFollowingCount, userLikesCount]);
+
 
       const [isEditingProfile, setIsEditingProfile] = useState(false);
 
