@@ -135,6 +135,7 @@ function ClipClapApp() {
       const [previewUrl, setPreviewUrl] = useState(null);
       const [lyricsText, setLyricsText] = useState("");
       
+      // En haut de ton composant, avec tes autres const/useState :
       const mediaRecorderRef = React.useRef(null);
       const audioChunksRef = React.useRef([]);
 
@@ -182,7 +183,7 @@ function ClipClapApp() {
       const [newCommentText, setNewCommentText] = useState("");
       const [showProfilePhotoModal, setShowProfilePhotoModal] = React.useState(false);
 
-      // 3. Profil totalement vierge et neutre pour chaque nouvel utilisateur
+           // Profil totalement vierge et neutre pour chaque nouvel utilisateur
       const [userName, setUserName] = useState(() => {
         return localStorage.getItem('clipclap_user_name') || "Nouveau créateur";
       });
@@ -196,7 +197,7 @@ function ClipClapApp() {
         return localStorage.getItem('clipclap_user_avatar') || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop"; 
       });
 
-      // 4. Compteurs initialisés strictement à 0 (sans doublon)
+      // Compteurs initialisés strictement à 0 pour un profil vierge
       const [userFollowersCount, setUserFollowersCount] = useState(() => {
         const saved = localStorage.getItem('clipclap_user_followers');
         return saved ? parseInt(saved, 10) : 0;
@@ -221,7 +222,12 @@ function ClipClapApp() {
         localStorage.setItem('clipclap_user_likes', userLikesCount);
       }, [userName, userTag, userBio, userAvatar, userFollowersCount, userFollowingCount, userLikesCount]);
 
+
       const [isEditingProfile, setIsEditingProfile] = useState(false);
+
+      const [userFollowersCount, setUserFollowersCount] = useState(1280);
+      const [userFollowingCount, setUserFollowingCount] = useState(245);
+      const [userLikesCount, setUserLikesCount] = useState(9420);
 
       const [chatConversations, setChatConversations] = useState([
         { id: 1, user: "@neon_vibes", lastMsg: "Salut super tes vidéos !", time: "Il y a 10m", unread: true, messages: [{ sender: "@neon_vibes", text: "Salut super tes vidéos !" }] }
@@ -238,7 +244,6 @@ function ClipClapApp() {
           localStorage.setItem('clipclap_posts', JSON.stringify(posts));
         } catch(e) {}
       }, [posts]);
-
 
 
       useEffect(() => {
