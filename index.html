@@ -409,22 +409,30 @@ function ClipClapApp() {
         setNewMessageText("");
       };
 
-      const handlePublish = (e) => {
+            const handlePublish = (e) => {
         e.preventDefault();
         playSound('click');
         const createAndSavePost = (videoSrc) => {
-        const myNewPostItem = {
-          id: Date.now(),
-          authorId: userTag,
-          user: userTag,
-          avatar: userAvatar,
-          desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
-          music: `Son original - ${userName} 🎵`,
-          likes: 0, comments: 0, bookmarks: 0, shares: 0,
-          viewsCount: 0, views: "0", followers: 1280, followingCount: 245, totalLikes: 9420,
-          video: videoSrc, 
-          commentsList: [] // NETTOYÉ : On supprime le sous-bloc userPosts inutile ici
-        };
+          const myNewPostItem = {
+            id: Date.now(),
+            authorId: userTag,
+            user: userTag,
+            avatar: userAvatar,
+            desc: newCaption || "Nouvelle vidéo ClipClap ! 🎬 #clipclap",
+            music: `Son original - ${userName} 🎵`,
+            likes: 0, 
+            comments: 0, 
+            bookmarks: 0, 
+            shares: 0,
+            viewsCount: 0, 
+            views: "0", 
+            followers: userFollowersCount,      // Remplacé par l'état (0)
+            followingCount: userFollowingCount, // Remplacé par l'état (0)
+            totalLikes: userLikesCount,         // Remplacé par l'état (0)
+            video: videoSrc, 
+            commentsList: []
+          };
+
 
           const updatedPosts = [myNewPostItem, ...posts];
           setPosts(updatedPosts);
