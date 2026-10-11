@@ -218,9 +218,21 @@ const [userAvatar, setUserAvatar] = useState(() => {
       
       const [isEditingProfile, setIsEditingProfile] = useState(false);
 
-      const [userFollowersCount, setUserFollowersCount] = useState(1280);
-      const [userFollowingCount, setUserFollowingCount] = useState(245);
-      const [userLikesCount, setUserLikesCount] = useState(9420);
+const [userFollowingCount, setUserFollowingCount] = useState(() => {
+  const saved = localStorage.getItem('clipclap_user_following');
+  return saved !== null ? parseInt(saved, 10) : 0;
+});
+
+const [userFollowersCount, setUserFollowersCount] = useState(() => {
+  const saved = localStorage.getItem('clipclap_user_followers');
+  return saved !== null ? parseInt(saved, 10) : 0;
+});
+
+const [userLikesCount, setUserLikesCount] = useState(() => {
+  const saved = localStorage.getItem('clipclap_user_likes');
+  return saved !== null ? parseInt(saved, 10) : 0;
+});
+
 
       const [chatConversations, setChatConversations] = useState([
         { id: 1, user: "@neon_vibes", lastMsg: "Salut super tes vidéos !", time: "Il y a 10m", unread: true, messages: [{ sender: "@neon_vibes", text: "Salut super tes vidéos !" }] }
