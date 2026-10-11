@@ -217,11 +217,11 @@ const [userAvatar, setUserAvatar] = useState(() => {
         
       
       const [isEditingProfile, setIsEditingProfile] = useState(false);
-
 const [userFollowingCount, setUserFollowingCount] = useState(() => {
-  const saved = localStorage.getItem('clipclap_user_following');
+  const saved = localStorage.getItem('clipclap_user_following_v2'); // <-- On a rajouté _v2 ici
   return saved !== null ? parseInt(saved, 10) : 0;
 });
+
 
 const [userFollowersCount, setUserFollowersCount] = useState(() => {
   const saved = localStorage.getItem('clipclap_user_followers');
