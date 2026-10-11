@@ -193,16 +193,22 @@ const [showCreateModal, setShowCreateModal] = React.useState(false);
       const [newCommentText, setNewCommentText] = useState("");
 const [showProfilePhotoModal, setShowProfilePhotoModal] = React.useState(false);
 
-      const [userName, setUserName] = useState("Aziz Enbiri");
-      const [userTag, setUserTag] = useState("@azizenbiri");
-      const [userBio, setUserBio] = useState("Créateur de contenu néon ⚡");
-      const [userAvatar, setUserAvatar] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop");
-useEffect(() => {
-  const savedAvatar = localStorage.getItem('clipclap_user_avatar');
-  if (savedAvatar) {
-    setUserAvatar(savedAvatar);
-  }
-}, []);
+    const [userName, setUserName] = useState(() => {
+  return localStorage.getItem('clipclap_user_name') || "Aziz Enbiri";
+});
+
+const [userTag, setUserTag] = useState(() => {
+  return localStorage.getItem('clipclap_user_tag') || "@azizenbiri";
+});
+
+const [userBio, setUserBio] = useState(() => {
+  return localStorage.getItem('clipclap_user_bio') || "Créateur de contenu néon ⚡";
+});
+
+const [userAvatar, setUserAvatar] = useState(() => {
+  return localStorage.getItem('clipclap_user_avatar') || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=250&auto=format&fit=crop";
+});
+
 
         
           
