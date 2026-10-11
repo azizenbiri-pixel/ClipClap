@@ -31,11 +31,15 @@ export default function ClipClapApp() {
   const [showComments, setShowComments] = useState(false);
   const [newCommentText, setNewCommentText] = useState("");
   const [userProfile, setUserProfile] = useState({
-    name: "AlexCreations", username: "AlexCreations",
-    bio: "Storyteller & Filmmaker. Let's create ripples. 🎬✨",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop",
-    followers: "50.1k", likes: "1.2M", following: "300"
-  });
+  name: "Mon Pseudo",
+  username: "monpseudo",
+  bio: "Bienvenue sur mon profil ClipClap ! 🎤",
+  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop",
+  followers: "0",
+  likes: "0",
+  following: "0"
+});
+
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // --- 1. CHARGER LES VIDEOS DEPUIS SUPABASE ---
