@@ -15,7 +15,8 @@ const INITIAL_VIDEOS = [
 
 
     description: "Storyteller & Filmmaker. Let's create ripples. ✨🎬",
-    song: "Son original - AlexCreations",
+    song: "Son original - ClipClap",
+
     likes: 1200000,
     isLiked: false,
     saves: 1200,
@@ -59,7 +60,8 @@ export default function ClipClapApp() {
       const mapped = data.map(c => ({
         id: c.id,
         url: c.video_url || c.url,
-        user: c.user_name || c.user || "AlexCreations",
+        user: c.user_name || c.user || "Utilisateur",
+
         avatar: c.avatar_url || c.avatar || userProfile.avatar,
         description: c.description || "",
         song: c.song || "Son original",
