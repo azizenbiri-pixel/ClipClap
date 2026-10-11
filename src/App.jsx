@@ -10,7 +10,8 @@ const INITIAL_VIDEOS = [
     id: 1,
     url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     user: "AlexCreations",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop",
+    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop",
+
     description: "Storyteller & Filmmaker. Let's create ripples. ✨🎬",
     song: "Son original - AlexCreations",
     likes: 1200000,
@@ -34,7 +35,8 @@ export default function ClipClapApp() {
   name: "Mon Pseudo",
   username: "monpseudo",
   bio: "Bienvenue sur mon profil ClipClap ! 🎤",
-  avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop",
+  avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop",
+
   followers: "0",
   likes: "0",
   following: "0"
