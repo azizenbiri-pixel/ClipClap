@@ -1222,9 +1222,10 @@ totalLikes: userLikesCount,
                 <p className="text-xs text-gray-400 mb-3">{viewingCreator.authorId || "@createur"}</p>
                 <div className="flex items-center gap-6 mb-4 text-center">
                   <div>
-                    <span className="block font-bold text-sm">140</span>
-                    <span className="text-[10px] text-gray-400">Abonnements</span>
-                  </div>
+                  <span className="block font-bold text-sm">{userFollowingCount}</span>
+<span className="text-[10px] text-gray-400">Abonnements</span>
+</div>
+
                   <div className="w-[1px] h-5 bg-white/15"></div>
                   <div>
                     <span className="block font-bold text-sm">{creatorFollowers[viewingCreator.authorId || viewingCreator.user] || 1200}</span>
