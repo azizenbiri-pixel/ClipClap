@@ -9,8 +9,10 @@ const INITIAL_VIDEOS = [
   {
     id: 1,
     url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    user: "AlexCreations",
+    user: "ClipClapUser",
+
     avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop",
+
 
     description: "Storyteller & Filmmaker. Let's create ripples. ✨🎬",
     song: "Son original - AlexCreations",
