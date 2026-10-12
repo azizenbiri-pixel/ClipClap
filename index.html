@@ -1681,7 +1681,10 @@ if (file) {
 
 
     ReactDOM.render(<ClipClapApp />, document.getElementById('root'));
-  <script>
+<script>
+  ReactDOM.render(<ClipClapApp />, document.getElementById('root'));
+</script>
+<script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(registrations) {
       for(let registration of registrations) {
@@ -1690,6 +1693,7 @@ if (file) {
     });
   }
 </script>
+
 
 </body>
 </html>
