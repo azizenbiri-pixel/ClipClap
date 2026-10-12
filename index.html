@@ -215,9 +215,8 @@ const [userLikesCount, setUserLikesCount] = useState(() => {
 });
 
 
-      const [chatConversations, setChatConversations] = useState([
-        { id: 1, user: "@neon_vibes", lastMsg: "Salut super tes vidéos !", time: "Il y a 10m", unread: true, messages: [{ sender: "@neon_vibes", text: "Salut super tes vidéos !" }] }
-      ]);
+      const [chatConversations, setChatConversations] = useState([]);
+
       const [activeChat, setActiveChat] = useState(null);
       const [newMessageText, setNewMessageText] = useState("");
 
