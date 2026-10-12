@@ -1674,24 +1674,28 @@ if (file) {
 )}
 
 
-             
-        </div>
-      );
-    }
+       </div>
+    );
+  }
 
-
-   <script>
+  // Le rendu React DOIT rester à l'intérieur du bloc script principal
   ReactDOM.render(<ClipClapApp />, document.getElementById('root'));
 </script>
+
+<!-- Script anti-Service Worker (dans son propre bloc) -->
 <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(function(registrations) {
-      for(let registration of registrations) {
+      for (let registration of registrations) {
         registration.unregister();
       }
     });
   }
 </script>
+
+</body>
+</html>
+
 
 
 
