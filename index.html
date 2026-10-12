@@ -61,32 +61,9 @@
       } catch(e) {}
     };
 
-    const INITIAL_POSTS = [
-      {
-        id: 1,
-        authorId: "@neon_vibes",
-        user: "@neon_vibes",
-        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop",
-
-
-        desc: "Lumières de la ville 🌌 #neon #city #vibes #fyp",
-        music: "Son original - Neon Vibes 🎵",
-        likes: 12400,
-        comments: 842,
-        bookmarks: 320,
-        shares: 156,
-        viewsCount: 145200,
-        views: "145.2K",
-        followers: 45200,
-        followingCount: 120,
-        totalLikes: 210000,
-        video: "https://assets.mixkit.co/videos/preview/mixkit-vertical-shot-of-a-neon-sign-41561-large.mp4",
-        commentsList: [
-          { id: 1, user: "@lucas_92", text: "Incroyable cette vidéo ! 🔥", time: "Il y a 2h" },
-          { id: 2, user: "@sarah_gfx", text: "Le rendu des néons est top 🌌", time: "Il y a 5h" }
-        ] // NETTOYÉ : Le sous-bloc userPosts en doublon a été supprimé ici
-      }
-    ];
+    const INITIAL_POSTS = [];
+     
+    
 function TempsEcoule({ dateCreation }) {
   if (typeof dateCreation === 'string') {
     return <span className="text-xs text-gray-500">{dateCreation}</span>;
