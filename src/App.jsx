@@ -11,7 +11,8 @@ const INITIAL_VIDEOS = [
     url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     user: "ClipClapUser",
 
-    avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop",
+    avatar: "",
+
 
 
     description: "Storyteller & Filmmaker. Let's create ripples. ✨🎬",
@@ -37,8 +38,9 @@ export default function ClipClapApp() {
   const [userProfile, setUserProfile] = useState({
   name: "Mon Pseudo",
   username: "monpseudo",
-  bio: "Bienvenue sur mon profil ClipClap ! 🎤",
-  avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop",
+  bio: "",
+avatar: "",
+
 
   followers: "0",
   likes: "0",
