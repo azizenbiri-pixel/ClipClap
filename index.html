@@ -179,16 +179,16 @@ const [showProfilePhotoModal, setShowProfilePhotoModal] = React.useState(false);
 const [userTag, setUserTag] = useState(() => {
   return localStorage.getItem('clipclap_user_tag') || "@azizenbiri";
 });
-
 const [userBio, setUserBio] = useState(() => {
-  return localStorage.getItem('clipclap_user_bio_v2') || "Bienvenue sur mon profil ClipClap ! 🎬";
+  return localStorage.getItem('clipclap_user_bio_v2') || "";
 });
 
 const [userAvatar, setUserAvatar] = useState(() => {
-  return localStorage.getItem('clipclap_user_avatar') || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop"
-
-
+  return localStorage.getItem('clipclap_user_avatar') || ""
 });
+
+
+
 
 
         
@@ -586,10 +586,11 @@ totalLikes: userLikesCount,
                           className="w-11 h-11 rounded-full border-2 border-pink-500 overflow-hidden bg-purple-900 cursor-pointer shadow-lg"
                         >
                           <img 
-    src={currentPost.authorId === userTag ? userAvatar : (currentPost.avatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop")} 
+    src={currentPost.authorId === userTag ? userAvatar : (currentPost.avatar || "")} 
     alt="avatar" 
     className="w-full h-full object-cover"
 />
+
 
                         </div>
                         {currentPost.authorId !== userTag && !(following[currentPost.authorId || currentPost.user]) && (
