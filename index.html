@@ -676,36 +676,41 @@ totalLikes: userLikesCount,
                   <span className="absolute left-3.5 top-3.5 text-sm">🔍</span>
                 </div>
 
-                              {/* Section Battle de la Semaine */}
-              <div className="space-y-4">
-                <div className="p-5 bg-gradient-to-br from-purple-900/40 via-red-900/30 to-black border border-amber-500/40 rounded-2xl shadow-xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider animate-pulse">
-                      🏆 Concours Officiel
-                    </span>
-                    <span className="text-xs text-amber-400 font-semibold">Termine dans 6 jours ⏰</span>
-                  </div>
-                  
-                  <h3 className="text-lg font-bold text-white mb-1">Beat de la Semaine #1</h3>
-                  <p className="text-gray-300 text-sm mb-4">Pose ton meilleur freestyle sur cette instru, récolte un max de votes et remporte la victoire !</p>
+              {activeTab === 'battle' && (
+  <div className="absolute inset-0 bg-[#07040f] overflow-y-auto p-4 pt-12 pb-24">
+    <h2 className="text-xl font-extrabold mb-4">🔥 Battle de la Semaine</h2>
 
-                  {/* Bouton pour sélectionner l'instru de la battle */}
-                  <button
-                    onClick={() => {
-                      setSelectedInstru("Battle de la Semaine #1");
-                      setAudioSrc("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
-                    }}
-                    className="w-full bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-600 hover:to-red-700 text-white font-extrabold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
-                  >
-                    🎤 Poser sur l'Instru de la Battle
-                  </button>
-                </div>
+    {/* Section Battle / Freestyle */}
+    <div className="space-y-4">
+      <div className="p-5 bg-gradient-to-br from-purple-900/40 via-red-900/30 to-black border border-amber-500/40 rounded-2xl shadow-xl">
+        <div className="flex items-center justify-between mb-3">
+          <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider animate-pulse">
+            🏆 Concours Officiel
+          </span>
+          <span className="text-xs text-amber-400 font-semibold">Termine dans 6 jours ⏰</span>
+        </div>
+        
+        <h3 className="text-lg font-bold text-white mb-1">Beat de la Semaine #1</h3>
+        <p className="text-gray-300 text-sm mb-4">Pose ton meilleur freestyle sur cette instru, récolte un max de votes et remporte la victoire !</p>
 
-                <div className="text-center text-xs text-gray-400 mt-6">
-                  💡 Chaque semaine, un nouveau beat exclusif est posté ici. Restez connectés !
-                              </div>
-            </div>
-          )}
+        <button
+          onClick={() => {
+            setSelectedInstru("Battle de la Semaine #1");
+            setAudioSrc("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+          }}
+          className="w-full bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-600 hover:to-red-700 text-white font-extrabold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+        >
+          🎤 Poser sur l'Instru de la Battle
+        </button>
+      </div>
+
+      <div className="text-center text-xs text-gray-400 mt-6">
+        💡 Chaque semaine, un nouveau beat exclusif est posté ici. Restez connectés !
+      </div>
+    </div>
+  </div>
+)}
+
 
             
             
