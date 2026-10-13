@@ -676,40 +676,37 @@ totalLikes: userLikesCount,
                   <span className="absolute left-3.5 top-3.5 text-sm">🔍</span>
                 </div>
 
-                <div className="mb-6">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Tendances du moment</h3>
-                  <div className="flex flex-wrap gap-2">
-
-                    {['#musique', '#danse', '#tendance', '#culture', '#art'].map((tag, idx) => (
-
-                      <button key={idx} onClick={() => { playSound('click'); setSearchQuery(tag); }} className="bg-white/5 hover:bg-white/10 border border-white/10 px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-200 transition-colors">
-                        {tag}
-                      </button>
-                    ))}
+                              {/* Section Battle de la Semaine */}
+              <div className="space-y-4">
+                <div className="p-5 bg-gradient-to-br from-purple-900/40 via-red-900/30 to-black border border-amber-500/40 rounded-2xl shadow-xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider animate-pulse">
+                      🏆 Concours Officiel
+                    </span>
+                    <span className="text-xs text-amber-400 font-semibold">Termine dans 6 jours ⏰</span>
                   </div>
+                  
+                  <h3 className="text-lg font-bold text-white mb-1">Beat de la Semaine #1</h3>
+                  <p className="text-gray-300 text-sm mb-4">Pose ton meilleur freestyle sur cette instru, récolte un max de votes et remporte la victoire !</p>
+
+                  {/* Bouton pour sélectionner l'instru de la battle */}
+                  <button
+                    onClick={() => {
+                      setSelectedInstru("Battle de la Semaine #1");
+                      setAudioSrc("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+                    }}
+                    className="w-full bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-600 hover:to-red-700 text-white font-extrabold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+                  >
+                    🎤 Poser sur l'Instru de la Battle
+                  </button>
                 </div>
 
-                <div>
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Créateurs suggérés</h3>
-                  <div className="space-y-3">
-                    {posts.map((p, idx) => (
-                      <div key={idx} className="flex items-center justify-between bg-white/5 border border-white/10 p-3 rounded-2xl">
-                        <div className="flex items-center gap-3">
-                          <img src={p.authorId === userTag ? userAvatar : p.avatar} alt="avatar" className="w-10 h-10 rounded-full object-cover border border-pink-500" />
-                          <div>
-                            <h4 className="text-sm font-bold">{p.user}</h4>
-                            <p className="text-xs text-gray-400">{creatorFollowers[p.authorId || p.user] || 1000} abonnés</p>
-                          </div>
-                        </div>
-                        <button onClick={(e) => handleFollow(p.authorId || p.user, e)} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${following[p.authorId || p.user] ? 'bg-white/20 text-white' : 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md'}`}>
-                          {following[p.authorId || p.user] ? 'Abonné' : 'Suivre'}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                <div className="text-center text-xs text-gray-400 mt-6">
+                  💡 Chaque semaine, un nouveau beat exclusif est posté ici. Restez connectés !
                 </div>
               </div>
             )}
+
  {activeTab === 'studio' && (
       <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 flex flex-col text-white pb-24">
         
