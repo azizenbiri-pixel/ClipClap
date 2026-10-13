@@ -726,10 +726,29 @@ totalLikes: userLikesCount,
             Choisis ton instrumental, prépare tes rimes et lance ton freestyle pour le prochain cypher !
           </p>
 
-          {/* Section Choix de l'Instru */}
+                    {/* Section Choix de l'Instru */}
           <div>
             <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">1. Choisis ton Instrumental</h3>
             <div className="space-y-3">
+              
+              {/* Bouton d'importation de fichier MP3/WAV */}
+              <label className="cursor-pointer bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-xl block text-center shadow-lg transition-all">
+                📁 Importer ton propre MP3 / WAV
+                <input 
+                  type="file" 
+                  accept="audio/*" 
+                  className="hidden" 
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const audioUrl = URL.createObjectURL(file);
+                      setSelectedInstru(file.name.replace(/\.[^/.]+$/, ""));
+                      setAudioSrc(audioUrl);
+                    }
+                  }}
+                />
+              </label>
+
               
               {/* Instru 1 */}
               <div 
