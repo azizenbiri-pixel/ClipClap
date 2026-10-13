@@ -679,15 +679,17 @@ totalLikes: userLikesCount,
               <p className="text-gray-300 text-sm mb-4">Pose ton meilleur freestyle sur cette instru, récolte un max de votes et remporte la victoire !</p>
 
               {/* Bouton pour sélectionner l'instru de la battle */}
-              <button
-                onClick={() => {
-                  setSelectedInstru("Battle de la Semaine #1");
-                  setAudioSrc("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
-                }}
-                className="w-full bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-600 hover:to-red-700 text-white font-extrabold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
-              >
-                🎤 Poser sur l'Instru de la Battle
-              </button>
+                 <button
+      onClick={() => {
+        setSelectedInstru("Battle de la Semaine");
+        setAudioSrc("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+        setActiveTab('studio');
+      }}
+      className="w-full bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-600 hover:to-red-700 text-white font-extrabold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+    >
+      🎤 Poser sur l'Instru de la Battle
+    </button>
+
             </div>
 
             <div className="text-center text-xs text-gray-400 mt-6">
