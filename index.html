@@ -108,6 +108,11 @@ function ClipClapApp() {
       const [searchQuery, setSearchQuery] = useState("");
       const [replyingTo, setReplyingTo] = useState(null);
 const [selectedInstru, setSelectedInstru] = useState(null);
+React.useEffect(() => {
+  if (activeTab !== 'studio') {
+    setSelectedInstru(null);
+  }
+}, [activeTab]);
 
 const [isRecordingMode, setIsRecordingMode] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
