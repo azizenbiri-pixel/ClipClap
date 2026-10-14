@@ -1534,21 +1534,25 @@ if (file) {
         <span className="text-xs font-bold uppercase tracking-wider">Mode Studio Actif</span>
       </div>
 <button
-  onClick={() => {
-    // 1. Arrêt propre du flux vidéo
-    const videoElement = document.querySelector('video');
-    if (videoElement && videoElement.srcObject) {
-      const stream = videoElement.srcObject;
-      stream.getTracks().forEach(track => track.stop());
-      videoElement.srcObject = null;
-    }
-    
-    // 2. Réinitialisation complète de tous les états du mode Studio
-    if (typeof setIsCapturing === 'function') setIsCapturing(false);
-    if (typeof setIsRecording === 'function') setIsRecording(false);
-    if (typeof setIsRecordingMode === 'function') setIsRecordingMode(false);
-    if (typeof setShowStudio === 'function') setShowStudio(false);
-  }}
+ onClick={() => {
+  // 1. Arrêt propre du flux vidéo
+  const videoElement = document.querySelector('video');
+  if (videoElement && videoElement.srcObject) {
+    const stream = videoElement.srcObject;
+    stream.getTracks().forEach(track => track.stop());
+    videoElement.srcObject = null;
+  }
+
+  // 2. Réinitialisation complète de l'instrument pour l'effacer de la mémoire
+  setSelectedInstru(null); // <--- Ajoute cette ligne ici !
+
+  // 3. Réinitialisation des autres états
+  if (typeof setIsCapturing === 'function') setIsCapturing(false);
+  if (typeof setIsRecording === 'function') setIsRecording(false);
+  if (typeof setIsRecordingMode === 'function') setIsRecordingMode(false);
+  if (typeof setShowStudio === 'function') setShowStudio(false);
+}}
+
   className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white cursor-pointer relative z-50"
 >
   ✕
