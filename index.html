@@ -113,8 +113,6 @@ const [isRecordingMode, setIsRecordingMode] = useState(false);
   const [videoBlob, setVideoBlob] = useState(null);
 const [previewUrl, setPreviewUrl] = useState(null);
 const [lyricsText, setLyricsText] = useState("");
-  const [touchStartY, setTouchStartY] = React.useState(0);
-
 // En haut de ton composant, avec tes autres const/useState :
 const mediaRecorderRef = React.useRef(null);
 const audioChunksRef = React.useRef([]);
