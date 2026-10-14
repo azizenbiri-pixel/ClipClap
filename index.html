@@ -1531,16 +1531,10 @@ if (file) {
       </div>
 <button
   onClick={() => {
-    const videoElement = document.querySelector('video');
-    if (videoElement && videoElement.srcObject) {
-      const stream = videoElement.srcObject;
-      stream.getTracks().forEach(track => track.stop());
-      videoElement.srcObject = null;
-    }
     setIsCapturing(false);
     setIsRecordingMode(false);
   }}
-  className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white cursor-pointer"
+  className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white cursor-pointer relative z-50"
 >
   ✕
 </button>
