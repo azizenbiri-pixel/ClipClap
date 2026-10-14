@@ -1522,7 +1522,25 @@ if (file) {
     {/* Vue Caméra & Téléprompteur Plein Écran (Ton code actuel commence ici à la ligne 1469) */}
     {isRecordingMode && (
 
-  <div className="fixed inset-0 bg-black z-50 flex flex-col justify-between text-white overflow-hidden">
+  <div 
+  onTouchStart={(e) => setTouchStartY(e.touches[0].clientY)}
+  onTouchEnd={(e) => {
+    const touchEndY = e.changedTouches[0].clientY;
+    if (touchEndY - touchStartY > 100) {
+      // Arrêter la caméra proprement et fermer la vue
+      const videoElement = document.querySelector('video');
+      if (videoElement && videoElement.srcObject) {
+        const stream = videoElement.srcObject;
+        stream.getTracks().forEach(track => track.stop());
+        videoElement.srcObject = null;
+      }
+      setIsCapturing(false);
+      setIsRecordingMode(false);
+    }
+  }}
+  className="fixed inset-0 bg-black z-50 flex flex-col justify-between text-white overflow-hidden"
+>
+
     
     {/* En-tête du mode enregistrement */}
     <div className="absolute top-0 inset-x-0 p-4 z-20 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent">
