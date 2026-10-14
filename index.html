@@ -1519,53 +1519,52 @@ if (file) {
 
 
 
-    {/* Vue Caméra & Téléprompteur Plein Écran (Ton code actuel commence ici à la ligne 1469) */}
-    {isRecordingMode && (
-
+   {/* Vue Caméra & Téléprompteur Plein Écran */}
+{isRecordingMode && (
   <div 
-  onTouchStart={(e) => setTouchStartY(e.touches[0].clientY)}
-  onTouchEnd={(e) => {
-    const touchEndY = e.changedTouches[0].clientY;
-    if (touchEndY - touchStartY > 100) {
-      // Arrêter la caméra proprement et fermer la vue
-      const videoElement = document.querySelector('video');
-      if (videoElement && videoElement.srcObject) {
-        const stream = videoElement.srcObject;
-        stream.getTracks().forEach(track => track.stop());
-        videoElement.srcObject = null;
+    onTouchStart={(e) => setTouchStartY(e.touches[0].clientY)}
+    onTouchEnd={(e) => {
+      const touchEndY = e.changedTouches[0].clientY;
+      if (touchEndY - touchStartY > 100) {
+        // Arrêter la caméra proprement et fermer la vue
+        const videoElement = document.querySelector('video');
+        if (videoElement && videoElement.srcObject) {
+          const stream = videoElement.srcObject;
+          stream.getTracks().forEach(track => track.stop());
+          videoElement.srcObject = null;
+        }
+        setIsCapturing(false);
+        setIsRecordingMode(false);
       }
-      setIsCapturing(false);
-      setIsRecordingMode(false);
-    }
-  }}
-  className="fixed inset-0 bg-black..."
->
-
+    }}
+    className="fixed inset-0 bg-black z-50 flex flex-col justify-between"
+  >
     
     {/* En-tête du mode enregistrement */}
     <div className="absolute top-0 inset-x-0 p-4 z-20 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent">
-      <div className="flex items-center gap-2 bg-pink-600/80 px-3 py-1.5 rounded-full backdrop-blur-md">
+      <div className="flex items-center gap-2 bg-pink-600/80 px-3 py-1.5 rounded-full backdrop-blur-md text-white">
         <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
         <span className="text-xs font-bold uppercase tracking-wider">Mode Studio Actif</span>
       </div>
+      
       <button 
-  onClick={() => {
-    const videoElement = document.querySelector('video');
-    if (videoElement && videoElement.srcObject) {
-      const stream = videoElement.srcObject;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop());
-      videoElement.srcObject = null;
-    }
-    setIsCapturing(false);
-    setIsRecordingMode(false);
-  }}
-  className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center backdrop-blur-md transition cursor-pointer"
->
-  ✕
-</button>
-
+        onClick={() => {
+          const videoElement = document.querySelector('video');
+          if (videoElement && videoElement.srcObject) {
+            const stream = videoElement.srcObject;
+            const tracks = stream.getTracks();
+            tracks.forEach(track => track.stop());
+            videoElement.srcObject = null;
+          }
+          setIsCapturing(false);
+          setIsRecordingMode(false);
+        }}
+        className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center backdrop-blur-md transition cursor-pointer text-white"
+      >
+        ✕
+      </button>
     </div>
+
 
     {/* Simulation / Flux Caméra (Arrière-plan) */}
     <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center">
