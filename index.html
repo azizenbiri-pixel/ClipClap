@@ -108,6 +108,9 @@ function ClipClapApp() {
       const [searchQuery, setSearchQuery] = useState("");
       const [replyingTo, setReplyingTo] = useState(null);
 const [selectedInstru, setSelectedInstru] = useState(null);
+  const [showVotingModal, setShowVotingModal] = React.useState(false);
+const [userVotedId, setUserVotedId] = React.useState(null);
+
 React.useEffect(() => {
   if (activeTab !== 'studio') {
     setSelectedInstru(null);
