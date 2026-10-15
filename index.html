@@ -1700,8 +1700,8 @@ if (file) {
 
           {/* Liste dynamique des vrais posts */}
           <div className="space-y-4 pb-12">
-            {userPosts && userPosts.length > 0 ? (
-              userPosts.map((post, index) => {
+            {videos && videos.length > 0 ? (
+              videos.map((post, index) => {
                 const isVoted = userVotedId === post.id;
                 return (
                   <div 
