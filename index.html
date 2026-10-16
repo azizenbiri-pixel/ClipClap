@@ -1952,7 +1952,13 @@ if (file) {
 )}
     
 
-{showCompetitionPage && <CompetitionPage onClose={() => setShowCompetitionPage(false)} />}
+{showCompetitionPage && (
+  <CompetitionPage 
+    posts={posts} 
+    onClose={() => setShowCompetitionPage(false)} 
+  />
+)}
+
 
        </div>
     );
