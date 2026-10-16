@@ -152,6 +152,28 @@ avatar: "",
       {currentPage === 'feed' && currentVideo && (
         <div className="relative h-full w-full bg-black">
           <video key={currentVideo.id} className="w-full h-full object-cover" src={currentVideo.url} autoPlay loop muted playsInline />
+   {/* 1. Badge en haut à gauche */}
+{currentVideo.isBattle && (
+  <div className="absolute top-4 left-4 z-20 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] font-extrabold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg border border-white/20">
+    <span>🏆</span> BATTLE DE LA SEMAINE
+  </div>
+)}
+
+{/* 2. Bouton Voter à droite superposé */}
+{currentVideo.isBattle && (
+  <div className="absolute bottom-28 right-4 z-20 flex flex-col items-center">
+    <button 
+      onClick={() => handleVote(currentVideo.author)}
+      className="flex flex-col items-center text-white font-bold text-xs active:scale-95 transition"
+    >
+      <div className="w-11 h-11 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-lg shadow-lg border border-white/30">
+        🗳️
+      </div>
+      <span className="text-[10px] mt-1 drop-shadow-md">Voter</span>
+    </button>
+  </div>
+)}
+
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/70 pointer-events-none" />
           <div className="absolute right-3 bottom-20 flex flex-col items-center gap-5 z-20">
             <div className="relative mb-2"><img src={currentVideo.avatar} alt="Avatar" className="w-12 h-12 rounded-full border-2 border-pink-500" />{!currentVideo.isFollowing && (<button onClick={toggleFollow} className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-pink-500 rounded-full p-0.5"><Plus size={14} /></button>)}</div>
