@@ -129,16 +129,19 @@ function CompetitionPage({ onClose, posts = [] }) {
       </div>
 
       <div className="p-4 flex-1 max-w-md mx-auto w-full space-y-6">
-        {/* BANNIÈRE STATUT */}
-        <div className="bg-purple-900/30 border border-purple-500/30 rounded-2xl p-3 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            <span className="animate-pulse text-red-400">🔴</span>
-            <span className="font-semibold text-gray-200">Phase Finale en direct</span>
-          </div>
-          <span className="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-lg text-[10px] font-bold">
-            Vote unique
-          </span>
-        </div>
+        {/* BANNIÈRE STATUT (affichée uniquement si la vidéo participe à la Battle) */}
+{currentVideo?.isBattle && (
+  <div className="bg-purple-900/80 ...">
+    {/* Tout le contenu de ta bannière actuelle (lignes 134 à 140) */}
+    <div className="flex items-center ...">
+      <span className="animate-...">...</span>
+    </div>
+    <span className="bg-purple-...">
+      Vote unique
+    </span>
+  </div>
+)}
+
 
         {/* AFFICHAGE DU TOP 2 */}
         {topCandidates.length > 0 ? (
