@@ -31,274 +31,190 @@
 
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
-function CompetitionPage({ onClose, posts = [] }) {
-  // 1. Charger ou initialiser les votes depuis le LocalStorage
-  const [votesData, setVotesData] = React.useState(() => {
-    const saved = localStorage.getItem('clipclap_battle_votes');
-    return saved ? JSON.parse(saved) : {};
-  });
+function CompetitionPage({ onClose }) {
+  const [candidates, setCandidates] = React.useState([
+    { id: '1', name: '@AlexMelody', role: 'Chanteur / Auteur', views: '45.2k', votes: 1420, avatar: '🎤', topRank: 1 },
+    { id: '2', name: '@DJ_Kruger', role: 'Beatmaker', views: '42.1k', votes: 1280, avatar: '🎧', topRank: 2 },
+    { id: '3', name: '@SoraBeat', role: 'Producteur', views: '38.9k', votes: 910, avatar: '🔥', topRank: 3 },
+    { id: '4', name: '@LinaVoice', role: 'Vocaliste', views: '31.4k', votes: 740, avatar: '✨', topRank: 4 },
+    { id: '5', name: '@FlowMaster', role: 'Rappeur', views: '28.0k', votes: 530, avatar: '⚡', topRank: 5 },
+  ]);
 
-  const [hasVoted, setHasVoted] = React.useState(() => {
-    return localStorage.getItem('clipclap_user_voted_id') || null;
-  });
+  const [hasVoted, setHasVoted] = React.useState(null);
 
-  // 2. Extraire et agréger dynamiquement les artistes réels à partir des posts de l'application
-  const candidates = React.useMemo(() => {
-    if (!posts || posts.length === 0) return [];
-
-    const artistMap = {};
-
-        posts.forEach((post) => {
-      // Ignore les posts de test ou de démo pour garantir une application 100% propre
-      const rawAuthor = post.author || post.username || post.userHandle || '';
-      if (!rawAuthor || rawAuthor.includes('Toi (Artiste)') || rawAuthor === '@Anonyme') {
-        return; 
-      }
-
-      const author = rawAuthor;
-      const views = Number(post.views || post.viewsCount || 0);
-      const avatar = post.avatar || post.userAvatar || '🎤';
-      const role = post.category || post.musicTitle || 'Créateur';
-
-
-      if (!artistMap[author]) {
-        artistMap[author] = {
-          id: author,
-          name: author,
-          role: role,
-          viewsCount: views,
-          avatar: avatar,
-        };
-      } else {
-        artistMap[author].viewsCount += views;
-      }
-    });
-
-    // Tri dynamique par le nombre de vues cumulées (ordre décroissant)
-    return Object.values(artistMap)
-      .sort((a, b) => b.viewsCount - a.viewsCount)
-      .map((artist, index) => ({
-        ...artist,
-        topRank: index + 1,
-        votes: votesData[artist.id] || 0,
-        viewsFormatted: artist.viewsCount >= 1000 
-          ? (artist.viewsCount / 1000).toFixed(1) + 'k' 
-          : artist.viewsCount.toString(),
-      }));
-  }, [posts, votesData]);
-
-  // Séparation dynamique entre le Top 2 (Main Event) et les Challengers
   const topCandidates = candidates.filter((c) => c.topRank <= 2);
   const challengers = candidates.filter((c) => c.topRank > 2);
   const totalTopVotes = topCandidates.reduce((acc, curr) => acc + curr.votes, 0);
 
-  // 3. Gestion du vote avec persistance dans LocalStorage
-  const handleVote = (artistId) => {
+  const handleVote = (id) => {
     if (hasVoted) return;
-
-    const updatedVotes = {
-      ...votesData,
-      [artistId]: (votesData[artistId] || 0) + 1,
-    };
-
-    setVotesData(updatedVotes);
-    setHasVoted(artistId);
-
-    // Sauvegarde immédiate dans le navigateur
-    localStorage.setItem('clipclap_battle_votes', JSON.stringify(updatedVotes));
-    localStorage.setItem('clipclap_user_voted_id', artistId);
+    setHasVoted(id);
+    setCandidates((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, votes: c.votes + 1 } : c))
+    );
   };
 
   return (
-    
-            {/* HEADER : s'affiche UNIQUEMENT si la vidéo est une Battle */}
-      {currentVideo?.isBattle && (
-        <div className="sticky top-0 z-10 bg-slate-900/90 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center justify-between">
-          <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-lg active:scale-95 transition"
-          >
-            ✕
-          </button>
-          <div className="text-center">
-            <h1 className="font-bold text-base">
-              BATTLE DE LA SEMAINE 🏆
-            </h1>
-            <p className="text-[10px] text-gray-400">Classement en direct selon vos vues & votes</p>
-          </div>
-          <div className="w-9" />
+    <div className="fixed inset-0 z-50 bg-slate-950 text-white overflow-y-auto flex flex-col">
+      {/* HEADER */}
+      <div className="sticky top-0 z-10 bg-slate-900/90 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center justify-between">
+        <button
+          onClick={onClose}
+          className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-lg active:scale-95 transition"
+        >
+          ✕
+        </button>
+        <div className="text-center">
+          <h1 className="font-bold text-base bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            BATTLE DE LA SEMAINE 🏆
+          </h1>
+          <p className="text-[10px] text-gray-400">Qualifications automatique par Vues/Likes</p>
         </div>
-      
-
+        <div className="w-9" />
+      </div>
 
       <div className="p-4 flex-1 max-w-md mx-auto w-full space-y-6">
-        
-        {/* AFFICHAGE DU TOP 2 */}
-        {topCandidates.length > 0 ? (
-          <div className="bg-slate-900/90 rounded-3xl p-4 border border-purple-500/30 shadow-xl space-y-4">
-            <div className="text-center space-y-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-pink-400">
-                Affiche Principale
-              </span>
-              <h2 className="font-bold text-sm">Main Event • Top Créateurs</h2>
+        {/* BANNIÈRE PHASES */}
+        <div className="bg-purple-900/30 border border-purple-500/30 rounded-2xl p-3 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <span className="animate-pulse text-red-400">🔴</span>
+            <span className="font-semibold text-gray-200">Phase Finale (Top 2)</span>
+          </div>
+          <span className="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-lg text-[10px] font-bold">
+            Fin dans 24h
+          </span>
+        </div>
+
+        {/* SECTION FACE-À-FACE (TOP 2 QUALIFIÉS) */}
+        <div className="bg-slate-900/90 rounded-3xl p-4 border border-purple-500/30 shadow-xl space-y-4">
+          <div className="text-center space-y-0.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-pink-400">
+              Affiche Principale
+            </span>
+            <h2 className="font-bold text-sm">Main Event • Duel au sommet</h2>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 relative">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-xs px-2.5 py-1 rounded-full border-2 border-slate-950 shadow-lg">
+              VS
             </div>
 
-            <div className={`grid ${topCandidates.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-3 relative`}>
-              {topCandidates.length > 1 && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-xs px-2.5 py-1 rounded-full border-2 border-slate-950 shadow-lg">
-                  VS
-                </div>
-              )}
+            {topCandidates.map((artist) => (
+              <div
+                key={artist.id}
+                className="bg-slate-800/60 rounded-2xl p-3 border border-white/5 flex flex-col items-center text-center space-y-2 relative overflow-hidden"
+              >
+                <span className="absolute top-2 left-2 bg-purple-500/20 text-purple-300 text-[9px] font-bold px-1.5 py-0.5 rounded-md border border-purple-500/30">
+                  👁️ {artist.views}
+                </span>
 
-              {topCandidates.map((artist) => {
-                const isVotedThis = hasVoted === artist.id;
-                return (
-                  <div
-                    key={artist.id}
-                    className="bg-slate-800/60 rounded-2xl p-3 border border-white/5 flex flex-col items-center text-center space-y-2 relative overflow-hidden"
-                  >
-                    <span className="absolute top-2 left-2 bg-purple-500/20 text-purple-300 text-[9px] font-bold px-1.5 py-0.5 rounded-md border border-purple-500/30">
-                      👁️ {artist.viewsFormatted}
-                    </span>
-
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 p-0.5 mt-3">
-                      <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center text-2xl overflow-hidden">
-                        {typeof artist.avatar === 'string' && artist.avatar.startsWith('http') ? (
-                          <img src={artist.avatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          artist.avatar
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="font-bold text-xs truncate w-28">{artist.name}</p>
-                      <p className="text-[9px] text-gray-400">{artist.role}</p>
-                    </div>
-
-                    <button
-                      onClick={() => handleVote(artist.id)}
-                      disabled={hasVoted !== null}
-                      className={`w-full py-2 rounded-xl text-xs font-bold transition transform active:scale-95 ${
-                        isVotedThis
-                          ? 'bg-emerald-500 text-white'
-                          : hasVoted !== null
-                          ? 'bg-gray-800 text-gray-500'
-                          : 'bg-purple-600 hover:bg-purple-500 text-white'
-                      }`}
-                    >
-                      {isVotedThis ? 'Voté ! ✓' : 'Voter'}
-                    </button>
+                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 p-0.5 mt-3">
+                  <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center text-2xl">
+                    {artist.avatar}
                   </div>
-                );
-              })}
-            </div>
-
-            {/* BARRE DE POURCENTAGE DES VOTES (UNIQUEMENT S'IL Y A AU MOINS 2 PARTICIPANTS) */}
-            {topCandidates.length > 1 && (
-              <div className="space-y-1.5 pt-2">
-                <div className="flex justify-between text-xs font-bold">
-                  <span className="text-purple-400">
-                    {totalTopVotes > 0
-                      ? Math.round(((topCandidates[0]?.votes || 0) / totalTopVotes) * 100)
-                      : 0}%
-                  </span>
-                  <span className="text-gray-400 text-[10px]">Total: {totalTopVotes} votes</span>
-                  <span className="text-pink-400">
-                    {totalTopVotes > 0 && topCandidates[1]
-                      ? Math.round(((topCandidates[1]?.votes || 0) / totalTopVotes) * 100)
-                      : 0}%
-                  </span>
                 </div>
-                <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden flex border border-white/5">
-                  <div
-                    className="h-full bg-purple-500 transition-all duration-500"
-                    style={{
-                      width: `${
-                        totalTopVotes > 0
-                          ? ((topCandidates[0]?.votes || 0) / totalTopVotes) * 100
-                          : 50
-                      }%`,
-                    }}
-                  />
-                  <div
-                    className="h-full bg-pink-500 transition-all duration-500"
-                    style={{
-                      width: `${
-                        totalTopVotes > 0 && topCandidates[1]
-                          ? ((topCandidates[1]?.votes || 0) / totalTopVotes) * 100
-                          : 50
-                      }%`,
-                    }}
-                  />
+
+                <div>
+                  <p className="font-bold text-xs truncate w-28">{artist.name}</p>
+                  <p className="text-[9px] text-gray-400">{artist.role}</p>
+                </div>
+
+                <button
+                  onClick={() => handleVote(artist.id)}
+                  disabled={hasVoted !== null}
+                  className={`w-full py-2 rounded-xl text-xs font-bold transition transform active:scale-95 ${
+                    hasVoted === artist.id
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-purple-600 hover:bg-purple-500 text-white'
+                  }`}
+                >
+                  {hasVoted === artist.id ? 'Voté ! ✓' : 'Voter'}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* BARRE DE VOTES */}
+          <div className="space-y-1.5 pt-2">
+            <div className="flex justify-between text-xs font-bold">
+              <span className="text-purple-400">
+                {Math.round((topCandidates[0]?.votes / totalTopVotes) * 100 || 50)}%
+              </span>
+              <span className="text-gray-400 text-[10px]">Total: {totalTopVotes} votes</span>
+              <span className="text-pink-400">
+                {Math.round((topCandidates[1]?.votes / totalTopVotes) * 100 || 50)}%
+              </span>
+            </div>
+            <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden flex border border-white/5">
+              <div
+                className="h-full bg-purple-500 transition-all duration-500"
+                style={{
+                  width: `${(topCandidates[0]?.votes / totalTopVotes) * 100 || 50}%`,
+                }}
+              />
+              <div
+                className="h-full bg-pink-500 transition-all duration-500"
+                style={{
+                  width: `${(topCandidates[1]?.votes / totalTopVotes) * 100 || 50}%`,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* PRÉTENDANTS */}
+        <div className="space-y-3">
+          <div className="flex justify-between items-end">
+            <div>
+              <h3 className="font-bold text-sm text-gray-200">Prétendants au Top 2 🚀</h3>
+              <p className="text-[10px] text-gray-400">Classés selon le nombre de vues</p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {challengers.map((challenger) => (
+              <div
+                key={challenger.id}
+                className="bg-slate-900/60 border border-white/5 rounded-2xl p-3 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-gray-400 w-4 text-center">
+                    #{challenger.topRank}
+                  </span>
+                  <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-base border border-white/10">
+                    {challenger.avatar}
+                  </div>
+                  <div>
+                    <p className="font-bold text-xs">{challenger.name}</p>
+                    <p className="text-[10px] text-gray-400">{challenger.role}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <p className="text-xs font-bold text-purple-300">👁️ {challenger.views}</p>
+                    <p className="text-[9px] text-gray-500">{challenger.votes} votes</p>
+                  </div>
+                  <button
+                    onClick={() => handleVote(challenger.id)}
+                    disabled={hasVoted !== null}
+                    className={`text-xs px-3 py-1.5 rounded-xl font-medium transition active:scale-95 ${
+                      hasVoted === challenger.id
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        : 'bg-white/10 hover:bg-white/20 text-white'
+                    }`}
+                  >
+                    {hasVoted === challenger.id ? 'Voté ✓' : 'Soutenir'}
+                  </button>
                 </div>
               </div>
-            )}
+            ))}
           </div>
-        ) : (
-          <div className="bg-slate-900/60 rounded-2xl p-6 text-center border border-white/5">
-            <p className="text-sm text-gray-400">Aucun créateur n'est encore inscrit à la Battle.</p>
-          </div>
-        )}
-
-        {/* LISTE DES CHALLENGERS (#3 ET PLUS) */}
-        {challengers.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="font-bold text-sm text-gray-200">Prétendants au Top 2 🚀</h3>
-
-            <div className="space-y-2">
-              {challengers.map((challenger) => (
-                <div
-                  key={challenger.id}
-                  className="bg-slate-900/60 border border-white/5 rounded-2xl p-3 flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold text-gray-400 w-4 text-center">
-                      #{challenger.topRank}
-                    </span>
-                    <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-base border border-white/10 overflow-hidden">
-                      {typeof challenger.avatar === 'string' && challenger.avatar.startsWith('http') ? (
-                        <img src={challenger.avatar} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        challenger.avatar
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-bold text-xs">{challenger.name}</p>
-                      <p className="text-[10px] text-gray-400">{challenger.role}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <p className="text-xs font-bold text-purple-300">👁️ {challenger.viewsFormatted}</p>
-                      <p className="text-[9px] text-gray-500">{challenger.votes} votes</p>
-                    </div>
-                    <button
-                      onClick={() => handleVote(challenger.id)}
-                      disabled={hasVoted !== null}
-                      className={`text-xs px-3 py-1.5 rounded-xl font-medium transition active:scale-95 ${
-                        hasVoted === challenger.id
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                          : hasVoted !== null
-                          ? 'bg-white/5 text-gray-600'
-                          : 'bg-white/10 hover:bg-white/20 text-white'
-                      }`}
-                    >
-                      {hasVoted === challenger.id ? 'Voté ✓' : 'Soutenir'}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
 }
-
-
 
     const playSound = (type = 'click') => {
       try {
@@ -405,15 +321,26 @@ const audioChunksRef = React.useRef([]);
         }
       });
 
-      // 2. Chargement propre des vidéos (vide par défaut si pas de publication)
-  const [posts, setPosts] = React.useState(() => {
-    try {
-      const saved = localStorage.getItem('clipclap_posts');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      return [];
-    }
-  });
+      // 2. Chargement sécurisé des vidéos globales
+      const [posts, setPosts] = React.useState(() => {
+        try {
+          const saved = localStorage.getItem('clipclap_posts');
+          return saved ? JSON.parse(saved) : (typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : []);
+        } catch(e) {
+          return typeof INITIAL_POSTS !== 'undefined' ? INITIAL_POSTS : [];
+        }
+      });
+
+  
+    
+    
+  
+    
+
+
+
+  
+
 
       const [currentIndex, setCurrentIndex] = useState(0);
       const [likedPosts, setLikedPosts] = useState({});
@@ -1776,19 +1703,16 @@ if (file) {
 
                    <button 
             onClick={() => {
-             // 1. Créer le nouvel objet post pour le freestyle
-const newPost = {
-  id: Date.now(),
-  author: username || userPseudo || '@Membre', // Utilise le vrai pseudo de son profil s'il existe
-  video: previewUrl,
-  instrumental: selectedInstru || "Instru par défaut",
-  timestamp: "À l'instant",
-  views: 0, // Commence à 0 vues réelles, sans chiffre factice
-  avatar: userAvatar || '🎤', // Utilise sa vraie photo de profil ou l'icône par défaut
-  isBattle: typeof isBattleSelected !== 'undefined' ? isBattleSelected : false // true si engagé en Battle, false pour publication normale
-};
-
-
+              // 1. Créer le nouvel objet post pour le freestyle
+              const newPost = {
+                id: Date.now(),
+                author: "Toi (Artiste)",
+                video: previewUrl,
+                instrumental: selectedInstru || "Instru par défaut",
+                timestamp: "À l'instant",
+                likes: 0,
+                comments: []
+              };
 
               // 2. Ajouter le post tout en haut de la liste principale (posts)
               setPosts(prevPosts => [newPost, ...prevPosts]);
@@ -1956,13 +1880,6 @@ const newPost = {
 )}
     
 
-{showCompetitionPage && (
-  <CompetitionPage 
-    posts={posts} 
-    onClose={() => setShowCompetitionPage(false)} 
-  />
-)}
-
 
        </div>
     );
@@ -1985,6 +1902,5 @@ const newPost = {
 
 </body>
 </html>
-
 
 
