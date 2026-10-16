@@ -119,12 +119,15 @@ function CompetitionPage({ onClose, posts = [] }) {
         >
           ✕
         </button>
-        <div className="text-center">
-          <h1 className="font-bold text-base bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            BATTLE DE LA SEMAINE 🏆
-          </h1>
-          <p className="text-[10px] text-gray-400">Classement en direct selon vos vues & votes</p>
-        </div>
+                {currentVideo?.isBattle && (
+          <div className="text-center">
+            <h1 className="font-bold text-base">
+              BATTLE DE LA SEMAINE 🏆
+            </h1>
+            <p className="text-[10px] text-gray-400">Classement en direct selon vos vues & votes</p>
+          </div>
+        )}
+
         <div className="w-9" />
       </div>
 
