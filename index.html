@@ -1777,15 +1777,16 @@ if (file) {
                    <button 
             onClick={() => {
               // 1. Créer le nouvel objet post pour le freestyle
-              const newPost = {
-                id: Date.now(),
-                author: "Toi (Artiste)",
-                video: previewUrl,
-                instrumental: selectedInstru || "Instru par défaut",
-                timestamp: "À l'instant",
-                likes: 0,
-                comments: []
-              };
+const newPost = {
+  id: Date.now(),
+  author: username || userPseudo || '@Membre', // Utilise le vrai pseudo de son profil s'il existe
+  video: previewUrl,
+  instrumental: selectedInstru || "Instru par défaut",
+  timestamp: "À l'instant",
+  views: 0, // Commence à 0 vues réelles, sans chiffre factice
+  avatar: userAvatar || '🎤' // Utilise sa vraie photo de profil ou l'icône par défaut
+};
+
 
               // 2. Ajouter le post tout en haut de la liste principale (posts)
               setPosts(prevPosts => [newPost, ...prevPosts]);
