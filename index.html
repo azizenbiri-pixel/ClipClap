@@ -108,7 +108,8 @@ function ClipClapApp() {
       const [searchQuery, setSearchQuery] = useState("");
       const [replyingTo, setReplyingTo] = useState(null);
 const [selectedInstru, setSelectedInstru] = useState(null);
-  
+  const [showCompetitionPage, setShowCompetitionPage] = React.useState(false);
+
 const [userVotedId, setUserVotedId] = React.useState(null);
 
 React.useEffect(() => {
