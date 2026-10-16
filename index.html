@@ -48,11 +48,18 @@ function CompetitionPage({ onClose, posts = [] }) {
 
     const artistMap = {};
 
-    posts.forEach((post) => {
-      const author = post.author || post.username || post.userHandle || '@Anonyme';
+        posts.forEach((post) => {
+      // Ignore les posts de test ou de démo pour garantir une application 100% propre
+      const rawAuthor = post.author || post.username || post.userHandle || '';
+      if (!rawAuthor || rawAuthor.includes('Toi (Artiste)') || rawAuthor === '@Anonyme') {
+        return; 
+      }
+
+      const author = rawAuthor;
       const views = Number(post.views || post.viewsCount || 0);
       const avatar = post.avatar || post.userAvatar || '🎤';
       const role = post.category || post.musicTitle || 'Créateur';
+
 
       if (!artistMap[author]) {
         artistMap[author] = {
