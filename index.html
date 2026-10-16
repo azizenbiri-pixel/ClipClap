@@ -44,16 +44,15 @@ function CompetitionPage({ onClose, posts = [] }) {
 
   // 2. Extraire et agréger dynamiquement les artistes réels à partir des posts de l'application
   const candidates = React.useMemo(() => {
-    // Si aucun post n'est encore disponible, on initialise une liste vide propre
     if (!posts || posts.length === 0) return [];
 
     const artistMap = {};
 
     posts.forEach((post) => {
-      const author = post.author || post.username || '@Anonyme';
+      const author = post.author || post.username || post.userHandle || '@Anonyme';
       const views = Number(post.views || post.viewsCount || 0);
-      const avatar = post.avatar || '🎤';
-      const role = post.category || 'Créateur';
+      const avatar = post.avatar || post.userAvatar || '🎤';
+      const role = post.category || post.musicTitle || 'Créateur';
 
       if (!artistMap[author]) {
         artistMap[author] = {
@@ -144,10 +143,12 @@ function CompetitionPage({ onClose, posts = [] }) {
               <h2 className="font-bold text-sm">Main Event • Top Créateurs</h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 relative">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-xs px-2.5 py-1 rounded-full border-2 border-slate-950 shadow-lg">
-                VS
-              </div>
+            <div className={`grid ${topCandidates.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-3 relative`}>
+              {topCandidates.length > 1 && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black text-xs px-2.5 py-1 rounded-full border-2 border-slate-950 shadow-lg">
+                  VS
+                </div>
+              )}
 
               {topCandidates.map((artist) => {
                 const isVotedThis = hasVoted === artist.id;
@@ -161,8 +162,12 @@ function CompetitionPage({ onClose, posts = [] }) {
                     </span>
 
                     <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 p-0.5 mt-3">
-                      <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center text-2xl">
-                        {artist.avatar}
+                      <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center text-2xl overflow-hidden">
+                        {typeof artist.avatar === 'string' && artist.avatar.startsWith('http') ? (
+                          <img src={artist.avatar} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          artist.avatar
+                        )}
                       </div>
                     </div>
 
@@ -189,44 +194,46 @@ function CompetitionPage({ onClose, posts = [] }) {
               })}
             </div>
 
-            {/* BARRE DE POURCENTAGE DES VOTES */}
-            <div className="space-y-1.5 pt-2">
-              <div className="flex justify-between text-xs font-bold">
-                <span className="text-purple-400">
-                  {totalTopVotes > 0
-                    ? Math.round(((topCandidates[0]?.votes || 0) / totalTopVotes) * 100)
-                    : 0}%
-                </span>
-                <span className="text-gray-400 text-[10px]">Total: {totalTopVotes} votes</span>
-                <span className="text-pink-400">
-                  {totalTopVotes > 0 && topCandidates[1]
-                    ? Math.round(((topCandidates[1]?.votes || 0) / totalTopVotes) * 100)
-                    : 0}%
-                </span>
+            {/* BARRE DE POURCENTAGE DES VOTES (UNIQUEMENT S'IL Y A AU MOINS 2 PARTICIPANTS) */}
+            {topCandidates.length > 1 && (
+              <div className="space-y-1.5 pt-2">
+                <div className="flex justify-between text-xs font-bold">
+                  <span className="text-purple-400">
+                    {totalTopVotes > 0
+                      ? Math.round(((topCandidates[0]?.votes || 0) / totalTopVotes) * 100)
+                      : 0}%
+                  </span>
+                  <span className="text-gray-400 text-[10px]">Total: {totalTopVotes} votes</span>
+                  <span className="text-pink-400">
+                    {totalTopVotes > 0 && topCandidates[1]
+                      ? Math.round(((topCandidates[1]?.votes || 0) / totalTopVotes) * 100)
+                      : 0}%
+                  </span>
+                </div>
+                <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden flex border border-white/5">
+                  <div
+                    className="h-full bg-purple-500 transition-all duration-500"
+                    style={{
+                      width: `${
+                        totalTopVotes > 0
+                          ? ((topCandidates[0]?.votes || 0) / totalTopVotes) * 100
+                          : 50
+                      }%`,
+                    }}
+                  />
+                  <div
+                    className="h-full bg-pink-500 transition-all duration-500"
+                    style={{
+                      width: `${
+                        totalTopVotes > 0 && topCandidates[1]
+                          ? ((topCandidates[1]?.votes || 0) / totalTopVotes) * 100
+                          : 50
+                      }%`,
+                    }}
+                  />
+                </div>
               </div>
-              <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden flex border border-white/5">
-                <div
-                  className="h-full bg-purple-500 transition-all duration-500"
-                  style={{
-                    width: `${
-                      totalTopVotes > 0
-                        ? ((topCandidates[0]?.votes || 0) / totalTopVotes) * 100
-                        : 50
-                    }%`,
-                  }}
-                />
-                <div
-                  className="h-full bg-pink-500 transition-all duration-500"
-                  style={{
-                    width: `${
-                      totalTopVotes > 0 && topCandidates[1]
-                        ? ((topCandidates[1]?.votes || 0) / totalTopVotes) * 100
-                        : 50
-                    }%`,
-                  }}
-                />
-              </div>
-            </div>
+            )}
           </div>
         ) : (
           <div className="bg-slate-900/60 rounded-2xl p-6 text-center border border-white/5">
@@ -249,8 +256,12 @@ function CompetitionPage({ onClose, posts = [] }) {
                     <span className="text-xs font-bold text-gray-400 w-4 text-center">
                       #{challenger.topRank}
                     </span>
-                    <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-base border border-white/10">
-                      {challenger.avatar}
+                    <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-base border border-white/10 overflow-hidden">
+                      {typeof challenger.avatar === 'string' && challenger.avatar.startsWith('http') ? (
+                        <img src={challenger.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        challenger.avatar
+                      )}
                     </div>
                     <div>
                       <p className="font-bold text-xs">{challenger.name}</p>
@@ -286,6 +297,7 @@ function CompetitionPage({ onClose, posts = [] }) {
     </div>
   );
 }
+
 
 
     const playSound = (type = 'click') => {
