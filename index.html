@@ -537,23 +537,24 @@ totalLikes: userLikesCount,
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
               >
-                            {/* BANNIÈRE COMPÉTITION / BATTLE */}
-                <div className="absolute top-20 left-0 right-0 px-6 z-20 flex justify-center pointer-events-auto">
+                        {/* BANNIÈRE COMPÉTITION / BATTLE */}
+                <div className="absolute top-14 left-4 right-16 z-20 flex justify-center pointer-events-auto">
                   <button
                     onClick={() => setShowCompetitionPage(true)}
-                    className="w-full max-w-xs bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-600 hover:to-pink-600 backdrop-blur-md text-white text-xs font-bold py-2 px-3 rounded-2xl shadow-lg border border-white/20 flex items-center justify-between transition transform active:scale-95"
+                    className="w-full max-w-xs bg-purple-950/60 hover:bg-purple-900/80 backdrop-blur-md text-white text-xs font-semibold py-1.5 px-3 rounded-full shadow-lg border border-pink-500/50 flex items-center justify-between transition transform active:scale-95 shadow-pink-500/20"
                   >
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <span className="text-base flex-shrink-0">🏆</span>
-                      <span className="tracking-wide truncate text-[11px]">
+                    <div className="flex items-center gap-1.5 overflow-hidden">
+                      <span className="text-sm flex-shrink-0">🏆</span>
+                      <span className="tracking-wide truncate text-[11px] font-bold">
                         BATTLE DE LA SEMAINE
                       </span>
                     </div>
-                    <span className="bg-white/20 px-2 py-1 rounded-xl text-[9px] uppercase tracking-wider flex-shrink-0 ml-1">
+                    <span className="bg-pink-500/30 text-pink-200 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex-shrink-0 border border-pink-400/30">
                       Voter ➔
                     </span>
                   </button>
                 </div>
+          
 
 
                 {displayedPosts.length > 0 && currentPost ? (
