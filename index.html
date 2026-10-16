@@ -111,25 +111,25 @@ function CompetitionPage({ onClose, posts = [] }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950 text-white overflow-y-auto flex flex-col">
-      {/* HEADER */}
-      <div className="sticky top-0 z-10 bg-slate-900/90 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center justify-between">
-        <button
-          onClick={onClose}
-          className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-lg active:scale-95 transition"
-        >
-          ✕
-        </button>
-                {currentVideo?.isBattle && (
+            {/* HEADER : s'affiche UNIQUEMENT si la vidéo est une Battle */}
+      {currentVideo?.isBattle && (
+        <div className="sticky top-0 z-10 bg-slate-900/90 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center justify-between">
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-lg active:scale-95 transition"
+          >
+            ✕
+          </button>
           <div className="text-center">
             <h1 className="font-bold text-base">
               BATTLE DE LA SEMAINE 🏆
             </h1>
             <p className="text-[10px] text-gray-400">Classement en direct selon vos vues & votes</p>
           </div>
-        )}
+          <div className="w-9" />
+        </div>
+      )}
 
-        <div className="w-9" />
-      </div>
 
       <div className="p-4 flex-1 max-w-md mx-auto w-full space-y-6">
         
