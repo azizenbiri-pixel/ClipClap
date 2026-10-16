@@ -537,21 +537,24 @@ totalLikes: userLikesCount,
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
               >
-                {/* BANNIÈRE COMPÉTITION / BATTLE */}
-                <div className="absolute top-16 left-0 right-0 px-4 z-20 flex justify-center pointer-events-auto">
+                            {/* BANNIÈRE COMPÉTITION / BATTLE */}
+                <div className="absolute top-20 left-0 right-0 px-6 z-20 flex justify-center pointer-events-auto">
                   <button
                     onClick={() => setShowCompetitionPage(true)}
-                    className="w-full max-w-md bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-600 hover:to-pink-600 backdrop-blur-md text-white text-xs font-bold py-2.5 px-4 rounded-2xl shadow-lg border border-white/20 flex items-center justify-between transition transform active:scale-95"
+                    className="w-full max-w-xs bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-600 hover:to-pink-600 backdrop-blur-md text-white text-xs font-bold py-2 px-3 rounded-2xl shadow-lg border border-white/20 flex items-center justify-between transition transform active:scale-95"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-base">🏆</span>
-                      <span className="tracking-wide">BATTLE DE LA SEMAINE • Vote pour ton artiste</span>
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <span className="text-base flex-shrink-0">🏆</span>
+                      <span className="tracking-wide truncate text-[11px]">
+                        BATTLE DE LA SEMAINE
+                      </span>
                     </div>
-                    <span className="bg-white/20 px-2.5 py-1 rounded-xl text-[10px] uppercase tracking-wider">
+                    <span className="bg-white/20 px-2 py-1 rounded-xl text-[9px] uppercase tracking-wider flex-shrink-0 ml-1">
                       Voter ➔
                     </span>
                   </button>
                 </div>
+
 
                 {displayedPosts.length > 0 && currentPost ? (
                   <div className="relative h-full w-full bg-black flex items-center justify-center">
