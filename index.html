@@ -129,20 +129,7 @@ function CompetitionPage({ onClose, posts = [] }) {
       </div>
 
       <div className="p-4 flex-1 max-w-md mx-auto w-full space-y-6">
-        {/* BANNIÈRE STATUT (affichée uniquement si la vidéo participe à la Battle) */}
-{currentVideo?.isBattle && (
-  <div className="bg-purple-900/80 ...">
-    {/* Tout le contenu de ta bannière actuelle (lignes 134 à 140) */}
-    <div className="flex items-center ...">
-      <span className="animate-...">...</span>
-    </div>
-    <span className="bg-purple-...">
-      Vote unique
-    </span>
-  </div>
-)}
-
-
+        
         {/* AFFICHAGE DU TOP 2 */}
         {topCandidates.length > 0 ? (
           <div className="bg-slate-900/90 rounded-3xl p-4 border border-purple-500/30 shadow-xl space-y-4">
