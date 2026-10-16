@@ -1783,7 +1783,7 @@ if (file) {
 
                    <button 
             onClick={() => {
-              // 1. Créer le nouvel objet post pour le freestyle
+             // 1. Créer le nouvel objet post pour le freestyle
 const newPost = {
   id: Date.now(),
   author: username || userPseudo || '@Membre', // Utilise le vrai pseudo de son profil s'il existe
@@ -1791,8 +1791,10 @@ const newPost = {
   instrumental: selectedInstru || "Instru par défaut",
   timestamp: "À l'instant",
   views: 0, // Commence à 0 vues réelles, sans chiffre factice
-  avatar: userAvatar || '🎤' // Utilise sa vraie photo de profil ou l'icône par défaut
+  avatar: userAvatar || '🎤', // Utilise sa vraie photo de profil ou l'icône par défaut
+  isBattle: typeof isBattleSelected !== 'undefined' ? isBattleSelected : false // true si engagé en Battle, false pour publication normale
 };
+
 
 
               // 2. Ajouter le post tout en haut de la liste principale (posts)
