@@ -49,40 +49,42 @@ avatar: "",
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
-    // --- 1. CHARGER LES VIDEOS DEPUIS SUPABASE ---
-  useEffect(() => {
-    const timer = setTimeout(() => setShowSplash(false), 2500);
-    fetchClips();
-    return () => clearTimeout(timer);
-  }, []);
+   // --- 1. CHARGER LES VIDEOS DEPUIS SUPABASE ---
+useEffect(() => {
+  const timer = setTimeout(() => setShowSplash(false), 2500);
+  fetchClips();
+  return () => clearTimeout(timer);
+}, []);
 
-  const fetchClips = async () => {
-    const { data, error } = await supabase.from('clips').select('*').order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error("Erreur fetchClips:", error);
-      return;
-    }
+const fetchClips = async () => {
+  alert("Chargement en cours..."); // Test d'alerte pour vérifier le déclenchement
+  const { data, error } = await supabase.from('clips').select('*').order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error("Erreur fetchClips:", error);
+    return;
+  }
 
-    if (data) {
-      const mapped = data.map(c => ({
-        id: c.id,
-        url: c.video_url || c.url,
-        user: c.user_name || c.user || "Utilisateur",
-        avatar: c.avatar_url || c.avatar || userProfile.avatar,
-        description: c.description || "",
-        song: c.song || "Son original",
-        likes: c.likes || 0,
-        isLiked: false,
-        saves: c.saves || 0,
-        isSaved: false,
-        isFollowing: false,
-        isBattle: c.is_battle || false,
-        comments: []
-      }));
-      setVideos(mapped);
-    }
-  };
+  if (data) {
+    const mapped = data.map(c => ({
+      id: c.id,
+      url: c.video_url || c.url,
+      user: c.user_name || c.user || "Utilisateur",
+      avatar: c.avatar_url || c.avatar || userProfile.avatar,
+      description: c.description || "",
+      song: c.song || "Son original",
+      likes: c.likes || 0,
+      isLiked: false,
+      saves: c.saves || 0,
+      isSaved: false,
+      isFollowing: false,
+      isBattle: c.is_battle || false,
+      comments: []
+    }));
+    setVideos(mapped);
+  }
+};
+
 
 
   // --- 2. AJOUTER UNE VIDEO DANS SUPABASE ---
