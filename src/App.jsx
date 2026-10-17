@@ -48,44 +48,43 @@ avatar: "",
 });
 
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  // --- 1. CHARGER LES VIDEOS DEPUIS SUPABASE AU LANCEMENT ---
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 2500);
+    fetchClips();
+    return () => clearTimeout(timer);
+  }, []);
 
-   // --- 1. CHARGER LES VIDEOS DEPUIS SUPABASE ---
-useEffect(() => {
-  const timer = setTimeout(() => setShowSplash(false), 2500);
-  fetchClips();
-  return () => clearTimeout(timer);
-}, []);
+  const fetchClips = async () => {
+    const { data, error } = await supabase
+      .from('clips')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error("Erreur fetchClips:", error);
+      return;
+    }
 
-const fetchClips = async () => {
-  alert("Chargement en cours..."); // Test d'alerte pour vérifier le déclenchement
-  const { data, error } = await supabase.from('clips').select('*').order('created_at', { ascending: false });
-  
-  if (error) {
-    console.error("Erreur fetchClips:", error);
-    return;
-  }
-
-  if (data) {
-    const mapped = data.map(c => ({
-      id: c.id,
-      url: c.video_url || c.url,
-      user: c.user_name || c.user || "Utilisateur",
-      avatar: c.avatar_url || c.avatar || userProfile.avatar,
-      description: c.description || "",
-      song: c.song || "Son original",
-      likes: c.likes || 0,
-      isLiked: false,
-      saves: c.saves || 0,
-      isSaved: false,
-      isFollowing: false,
-      isBattle: c.is_battle || false,
-      comments: []
-    }));
-    setVideos(mapped);
-  }
-};
-
-
+    if (data) {
+      const mapped = data.map(c => ({
+        id: c.id,
+        url: c.video_url || c.url,
+        user: c.user_name || c.user || "Utilisateur",
+        avatar: c.avatar_url || c.avatar || userProfile.avatar,
+        description: c.description || "",
+        song: c.song || "Son original",
+        likes: c.likes || 0,
+        isLiked: false,
+        saves: c.saves || 0,
+        isSaved: false,
+        isFollowing: false,
+        isBattle: c.is_battle || false,
+        comments: []
+      }));
+      setVideos(mapped); // Indispensable pour stocker les vidéos et les afficher après rafraîchissement
+    }
+  };
 
   // --- 2. AJOUTER UNE VIDEO DANS SUPABASE ---
   const handleCreateClip = async () => {
@@ -93,24 +92,28 @@ const fetchClips = async () => {
     if (!url) return;
     const desc = prompt("Description?") || "Ma nouvelle vidéo #clipclap";
 
+    // Vrai si on est sur l'onglet battle, faux si on est dans le studio
+    const isBattleMode = activeTab === 'battle';
+
     const { data, error } = await supabase.from('clips').insert([{
       video_url: url,
       user_name: userProfile.username || "Utilisateur",
       avatar_url: userProfile.avatar || "",
       description: desc,
-      song: "Son original",
-      is_battle: activeTab === 'battle',
+      song: "Son original – " + (userProfile.username || "Utilisateur"),
+      is_battle: isBattleMode,
     }]).select();
 
     if (error) {
-      alert("ERREUR SUPABASE EXACTE : " + error.message);
+      alert("Erreur Supabase : " + error.message);
       console.error(error);
     } else {
-      alert("Succès ! Vidéo bien enregistrée.");
-      fetchClips();
+      alert("Vidéo enregistrée avec succès !");
+      fetchClips(); // Recharge la liste immédiatement
       setCurrentPage('feed');
     }
   };
+
 
   
 
