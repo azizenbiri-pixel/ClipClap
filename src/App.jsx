@@ -78,31 +78,60 @@ avatar: "",
 
     }
   };
- // --- 2. AJOUTER UNE VIDEO DANS SUPABASE ---
+// --- 1. CHARGER LES VIDEOS DEPUIS SUPABASE ---
+  useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 2500);
+    fetchClips();
+    return () => clearTimeout(timer);
+  }, []);
+
+  const fetchClips = async () => {
+    const { data, error } = await supabase.from('clips').select('*').order('created_at', { ascending: false });
+    if (!error && data && data.length > 0) {
+      const mapped = data.map(c => ({
+        id: c.id,
+        url: c.video_url || c.url,
+        user: c.user_name || c.user || "Utilisateur",
+        avatar: c.avatar_url || c.avatar || userProfile.avatar,
+        description: c.description || "",
+        song: c.song || "Son original",
+        likes: c.likes || 0,
+        isLiked: false,
+        saves: c.saves || 0,
+        isSaved: false,
+        isFollowing: false,
+        isBattle: c.is_battle || false,
+        comments: []
+      }));
+      setVideos(mapped); // <-- C'est ça qui manquait pour afficher les vidéos !
+    }
+  };
+
+  // --- 2. AJOUTER UNE VIDEO DANS SUPABASE ---
   const handleCreateClip = async () => {
     const url = prompt("Colle l'URL de ta vidéo MP4 :");
     if (!url) return;
     const desc = prompt("Description?") || "Ma nouvelle vidéo #clipclap";
 
-            const { data, error } = await 
-          video_url: url,
-          user_name: userProfile.usern
-          avatar_url: userProfile.avat
-          description: desc,
-          song: "Son original – " + us,
-          is_battle: true,
-        }]).select();
-
+    const { data, error } = await supabase.from('clips').insert([{
+      video_url: url,
+      user_name: userProfile.username || "Utilisateur",
+      avatar_url: userProfile.avatar || "",
+      description: desc,
+      song: "Son original – " + (userProfile.username || "Utilisateur"),
+      is_battle: true,
+    }]).select();
 
     if (error) {
       alert("Erreur Supabase : " + error.message);
       console.log(error);
     } else {
-      alert("Vidéo enregistrée dans Supabase!");
+      alert("Vidéo enregistrée dans Supabase !");
       fetchClips();
       setCurrentPage('feed');
     }
   };
+
 
   const touchStartY = useRef(0);
   const touchStartX = useRef(0);
