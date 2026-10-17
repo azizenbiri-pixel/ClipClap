@@ -85,9 +85,15 @@ avatar: "",
     return () => clearTimeout(timer);
   }, []);
 
-  const fetchClips = async () => {
+   const fetchClips = async () => {
     const { data, error } = await supabase.from('clips').select('*').order('created_at', { ascending: false });
-    if (!error && data && data.length > 0) {
+    
+    if (error) {
+      console.error("Erreur fetchClips:", error);
+      return;
+    }
+
+    if (data) {
       const mapped = data.map(c => ({
         id: c.id,
         url: c.video_url || c.url,
@@ -103,9 +109,10 @@ avatar: "",
         isBattle: c.is_battle || false,
         comments: []
       }));
-      setVideos(mapped); // <-- C'est ça qui manquait pour afficher les vidéos !
+      setVideos(mapped);
     }
   };
+
 
    // --- 2. AJOUTER UNE VIDEO DANS SUPABASE ---
   const handleCreateClip = async () => {
