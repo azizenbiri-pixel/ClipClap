@@ -87,32 +87,34 @@ avatar: "",
   };
 
   // --- 2. AJOUTER UNE VIDEO DANS SUPABASE ---
-  const handleCreateClip = async () => {
-    const url = prompt("Colle l'URL de ta vidéo MP4 :");
-    if (!url) return;
-    const desc = prompt("Description?") || "Ma nouvelle vidéo #clipclap";
+const handleCreateClip = async () => {
+  const url = prompt("Colle l'URL de ta vidéo MP4 :");
+  if (!url) return;
+  
+  const desc = prompt("Description ?") || "Ma nouvelle vidéo #clipclap";
+  const isBattleMode = activeTab === 'battle';
 
-    // Vrai si on est sur l'onglet battle, faux si on est dans le studio
-    const isBattleMode = activeTab === 'battle';
+  console.log("Tentative d'enregistrement avec l'URL :", url);
 
-    const { data, error } = await supabase.from('clips').insert([{
-      video_url: url,
-      user_name: userProfile.username || "Utilisateur",
-      avatar_url: userProfile.avatar || "",
-      description: desc,
-      song: "Son original – " + (userProfile.username || "Utilisateur"),
-      is_battle: isBattleMode,
-    }]).select();
+  const { data, error } = await supabase.from('clips').insert([{
+    video_url: url,
+    user_name: userProfile.username || "Utilisateur",
+    avatar_url: userProfile.avatar || "",
+    description: desc,
+    song: "Son original",
+    is_battle: isBattleMode,
+  }]).select();
 
-    if (error) {
-      alert("Erreur Supabase : " + error.message);
-      console.error(error);
-    } else {
-      alert("Vidéo enregistrée avec succès !");
-      fetchClips(); // Recharge la liste immédiatement
-      setCurrentPage('feed');
-    }
-  };
+  if (error) {
+    alert("Erreur d'enregistrement Supabase : " + error.message);
+    console.error("Détail de l'erreur :", error);
+  } else {
+    alert("Vidéo enregistrée avec succès dans Supabase !");
+    console.log("Données insérées :", data);
+    fetchClips(); // Recharge les vidéos immédiatement
+  }
+};
+
 
 
   
