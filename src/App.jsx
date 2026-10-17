@@ -83,13 +83,15 @@ avatar: "",
     if (!url) return;
     const desc = prompt("Description?") || "Ma nouvelle vidéo #clipclap";
 
-    const { data, error } = await supabase.from('clips').insert([{
-      video_url: url,
-      user_name: userProfile.username,
-      avatar_url: userProfile.avatar,
-      description: desc,
-      song: "Son original - " + userProfile.username
-    }]).select();
+            const { data, error } = await 
+          video_url: url,
+          user_name: userProfile.usern
+          avatar_url: userProfile.avat
+          description: desc,
+          song: "Son original – " + us,
+          is_battle: true,
+        }]).select();
+
 
     if (error) {
       alert("Erreur Supabase : " + error.message);
