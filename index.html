@@ -1512,12 +1512,35 @@ if (file) {
               // 2. Ajouter le post tout en haut de la liste principale (posts)
               setPosts(prevPosts => [newPost, ...prevPosts]);
 
-              // 3. Nettoyer et fermer les écrans de studio/preview
+                     <button
+            onClick={async () => {
+              // 1. Envoyer d'abord la vidéo dans Supabase
+              const { error } = await supabase.from('clips').insert([{
+                video_url: previewUrl,
+                user_name: userProfile.username || "Utilisateur",
+                avatar_url: userProfile.avatar || "",
+                description: lyricsText || "Mon freestyle #clipclap",
+                song: selectedInstru || "Son original",
+                is_battle: activeTab === 'battle',
+              }]).select();
+
+              if (error) {
+                alert("Erreur lors de la publication : " + error.message);
+                console.error("Erreur Supabase:", error);
+                return;
+              }
+
+              // 2. Nettoyer et fermer les écrans seulement après le succès de l'envoi
               setPreviewUrl(null);
               setVideoBlob(null);
               setIsRecordingMode(false);
 
               alert("Ton freestyle a été publié avec succès dans le fil d'actualité ! 🚀");
+
+              // 3. Recharger la liste des clips dans l'application
+              if (typeof fetchClips === 'function') {
+                fetchClips();
+              }
             }}
             className="flex-1 py-3 px-4 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-500 transition shadow-lg shadow-red-600/30"
           >
@@ -1526,6 +1549,7 @@ if (file) {
         </div>
       </div>
     )}
+
 
 
 
