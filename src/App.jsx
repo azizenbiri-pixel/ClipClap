@@ -113,8 +113,7 @@ avatar: "",
     }
   };
 
-
-   // --- 2. AJOUTER UNE VIDEO DANS SUPABASE ---
+  // --- 2. AJOUTER UNE VIDEO DANS SUPABASE ---
   const handleCreateClip = async () => {
     const url = prompt("Colle l'URL de ta vidéo MP4 :");
     if (!url) return;
@@ -125,19 +124,21 @@ avatar: "",
       user_name: userProfile.username || "Utilisateur",
       avatar_url: userProfile.avatar || "",
       description: desc,
-      song: "Son original – " + (userProfile.username || "Utilisateur"),
-      is_battle: activeTab === 'battle', // <--- C'EST ICI : true seulement si on est dans la Battle !
+      song: "Son original",
+      is_battle: activeTab === 'battle',
     }]).select();
 
     if (error) {
-      alert("Erreur Supabase : " + error.message);
-      console.log(error);
+      alert("ERREUR SUPABASE EXACTE : " + error.message);
+      console.error(error);
     } else {
-      alert("Vidéo enregistrée dans Supabase !");
+      alert("Succès ! Vidéo bien enregistrée.");
       fetchClips();
       setCurrentPage('feed');
     }
   };
+
+  
 
 
 
