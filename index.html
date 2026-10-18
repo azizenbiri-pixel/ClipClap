@@ -116,7 +116,7 @@ function ClipClapApp() {
   const [toast, setToast] = useState('');
 
   const [showUpload, setShowUpload] = useState(false); const [file, setFile] = useState(null); const [caption, setCaption] = useState(''); const [uploading, setUploading] = useState(false);
-  const [comments, setComments] = useState([]); const [showComments, setShowComments] = useState(false); const [cText, setCText] = useState('');
+  const [comments, setComments] = useState([]); const [showComments, setShowComments] = useState(false); const [cText, setCText] = useState(''); const [replyTo, setReplyTo] = useState(null);
   const [viewing, setViewing] = useState(null);
   const [editing, setEditing] = useState(false); const [eName, setEName] = useState(''); const [eBio, setEBio] = useState(''); const [eAvatar, setEAvatar] = useState(null);
 
@@ -196,13 +196,16 @@ function ClipClapApp() {
   useEffect(() => { if (viewing) loadStats(viewing.id); }, [viewing?.id]);
 
   /* ---------- FIL ---------- */
-  const displayed = feedTab === 'following' ? videos.filter(v => following[v.user_id]) : videos;
+  const isPlayerTab = tab === 'feed' || tab === 'clips';
+  // Accueil = freestyles (Studio + Battle) ; page Clip = clips uniquement
+  const pool = videos.filter(v => tab === 'clips' ? v.kind === 'clip' : v.kind !== 'clip');
+  const displayed = feedTab === 'following' ? pool.filter(v => following[v.user_id]) : pool;
   const cur = displayed.find(v => v.id === currentId) || displayed[0];
   const overlay = viewing || showUpload || showComments || recMode || previewUrl || editing;
 
   // Vues réelles : +1 par vidéo et par session
   useEffect(() => {
-    if (!cur || tab !== 'feed' || overlay || viewedRef.current.has(cur.id)) return;
+    if (!cur || !isPlayerTab || overlay || viewedRef.current.has(cur.id)) return;
     viewedRef.current.add(cur.id);
     patch(cur.id, v => ({ views_count: v.views_count + 1 }));
     sb.rpc('increment_views', { vid: cur.id });
@@ -210,7 +213,7 @@ function ClipClapApp() {
 
   useEffect(() => {
     const el = videoRef.current; if (!el || !cur) return;
-    if (tab !== 'feed' || overlay) el.pause();
+    if (!isPlayerTab || overlay) el.pause();
     else { el.muted = muted; el.currentTime = 0; const p = el.play(); if (p) p.catch(() => {}); }
   }, [cur?.id, muted, tab, !!overlay, feedTab]);
 
@@ -259,15 +262,15 @@ function ClipClapApp() {
   };
 
   const openComments = async () => {
-    click(); setShowComments(true); setComments([]);
-    const { data } = await sb.from('comments').select('id,text,created_at,user_id,profiles(username)').eq('video_id', cur.id).order('created_at', { ascending: false });
+    click(); setShowComments(true); setComments([]); setReplyTo(null); setCText('');
+    const { data } = await sb.from('comments').select('id,text,created_at,user_id,parent_id,profiles(username)').eq('video_id', cur.id).order('created_at', { ascending: false });
     setComments(data || []);
   };
   const addComment = async (e) => {
     e.preventDefault(); const t = cText.trim(); if (!t) return; click();
-    const { data, error } = await sb.from('comments').insert({ video_id: cur.id, user_id: uid, text: t }).select('id,text,created_at,user_id,profiles(username)').single();
+    const { data, error } = await sb.from('comments').insert({ video_id: cur.id, user_id: uid, text: t, parent_id: replyTo ? (replyTo.parent_id || replyTo.id) : null }).select('id,text,created_at,user_id,parent_id,profiles(username)').single();
     if (error) return say('Commentaire non envoyé');
-    setComments(c => [data, ...c]); patch(cur.id, x => ({ comments_count: x.comments_count + 1 })); setCText('');
+    setComments(c => [data, ...c]); patch(cur.id, x => ({ comments_count: x.comments_count + 1 })); setCText(''); setReplyTo(null);
   };
 
   const vote = async (candidateId) => {
@@ -295,7 +298,7 @@ function ClipClapApp() {
     setShowBattleForm(false); setBTitle(''); setBFile(null); await loadBattle(); say('Nouvelle battle lancée ! 🏆');
   };
 
-  const upload = async (f, cap, music, battleId = null) => {
+  const upload = async (f, cap, music, battleId = null, kind = 'freestyle') => {
     if (f.size > 52428800) { say('Vidéo trop lourde (50 Mo max)'); return false; }
     if (battleId && battle && new Date(battle.ends_at) <= new Date()) { say('La battle est terminée'); return false; }
     setUploading(true);
@@ -304,15 +307,15 @@ function ClipClapApp() {
     const up = await sb.storage.from('videos').upload(path, f, { contentType: f.type || 'video/mp4' });
     if (up.error) { setUploading(false); say('Envoi impossible : ' + up.error.message); return false; }
     const url = sb.storage.from('videos').getPublicUrl(path).data.publicUrl;
-    const { error } = await sb.from('videos').insert({ user_id: uid, video_url: url, storage_path: path, caption: cap, music, battle_id: battleId });
+    const { error } = await sb.from('videos').insert({ user_id: uid, video_url: url, storage_path: path, caption: cap, music, battle_id: battleId, kind });
     setUploading(false);
     if (error) { say('Erreur : ' + error.message); return false; }
-    await loadVideos(); setFeedTab('foryou'); setCurrentId(null); setTab('feed'); say('Vidéo publiée ! 🚀'); return true;
+    await loadVideos(); setFeedTab('foryou'); setCurrentId(null); setTab(kind === 'clip' ? 'clips' : 'feed'); say(kind === 'clip' ? 'Clip publié ! 🎬' : 'Vidéo publiée ! 🚀'); return true;
   };
 
   const publishFile = async (e) => {
     e.preventDefault(); if (!file) return say("Choisis d'abord une vidéo 🎬");
-    if (await upload(file, caption || 'Nouvelle vidéo ClipClap ! 🎬 #clipclap', `Son original - ${me.display_name || me.username} 🎵`)) { setShowUpload(false); setFile(null); setCaption(''); }
+    if (await upload(file, caption || 'Nouvelle vidéo ClipClap ! 🎬 #clipclap', `Son original - ${me.display_name || me.username} 🎵`, null, 'clip')) { setShowUpload(false); setFile(null); setCaption(''); }
   };
   const publishFreestyle = async () => {
     if (await upload(blob, battleMode ? `🏆 Battle : ${battle.title} #battle` : `Freestyle sur ${instru || 'une instru'} 🎤 #clipclap`, `Son original - ${me.display_name || me.username} 🎵`, battleMode ? battle.id : null)) { setPreviewUrl(null); setBlob(null); setInstru(null); setInstruUrl(null); setBattleMode(false); }
@@ -342,7 +345,7 @@ function ClipClapApp() {
     r.readAsDataURL(f);
   };
 
-  const openVideo = (v) => { setFeedTab('foryou'); setCurrentId(v.id); setViewing(null); setTab('feed'); };
+  const openVideo = (v) => { setFeedTab('foryou'); setCurrentId(v.id); setViewing(null); setTab(v.kind === 'clip' ? 'clips' : 'feed'); };
 
   /* ---------- STUDIO ---------- */
   const stopCam = () => { const el = camRef.current; if (el && el.srcObject) { el.srcObject.getTracks().forEach(t => t.stop()); el.srcObject = null; } };
@@ -375,7 +378,8 @@ function ClipClapApp() {
     : <div className="grid grid-cols-3 gap-1">{list.map(v => (
         <div key={v.id} onClick={() => openVideo(v)} className="relative aspect-[9/16] bg-gray-900 overflow-hidden rounded-lg cursor-pointer">
           <video src={v.video_url + '#t=0.1'} className="w-full h-full object-cover bg-gray-900" muted playsInline preload="metadata" onLoadedMetadata={e => { try { e.target.currentTime = 0.1; } catch (err) {} }} />
-          <div className="absolute bottom-1 left-1 text-[11px] font-bold bg-black/70 px-2 py-0.5 rounded">▶ {fmt(v.views_count)}</div>
+          {v.kind === 'clip' && <span className="absolute top-1 left-1 text-[9px] font-bold bg-pink-600 px-1.5 py-0.5 rounded">CLIP</span>}
+          <div className="absolute bottom-1 left-1 right-1 text-[10px] font-bold bg-black/70 px-1.5 py-0.5 rounded flex justify-between"><span>▶ {fmt(v.views_count)}</span><span>❤️ {fmt(v.likes_count)}</span><span>💬 {fmt(v.comments_count)}</span></div>
           {canDelete && <button onClick={(e) => removeVideo(v, e)} className="absolute top-1 right-1 w-6 h-6 bg-black/70 rounded-full text-[10px]">🗑️</button>}
         </div>))}</div>;
 
@@ -384,6 +388,7 @@ function ClipClapApp() {
   if (!me) return <div className="h-full flex flex-col items-center justify-center bg-[#07040f] gap-3"><span className="text-4xl">🎬</span><p className="text-xs text-gray-400">Chargement du profil...</p><button onClick={() => sb.auth.signOut()} className="text-xs underline text-gray-500">Se déconnecter</button></div>;
 
   const myVideos = videos.filter(v => v.user_id === me.id);
+  const myFree = myVideos.filter(v => v.kind !== 'clip'); const myClips = myVideos.filter(v => v.kind === 'clip');
   const savedList = videos.filter(v => saved[v.id]);
   const myStats = stats[me.id];
   const myLikes = myVideos.reduce((s, v) => s + v.likes_count, 0);
@@ -410,7 +415,7 @@ function ClipClapApp() {
 
       <div className="flex-1 relative overflow-hidden">
         {/* ===== FIL ===== */}
-        {tab === 'feed' && (
+        {isPlayerTab && (
           <div className="absolute inset-0 swipe bg-[#07040f]" onTouchStart={e => { tx.current = e.touches[0].clientX; ty.current = e.touches[0].clientY; }} onTouchEnd={onTouchEnd}>
             {cur ? (
               <div className="relative h-full w-full bg-black">
@@ -451,9 +456,12 @@ function ClipClapApp() {
                 <span className="text-5xl mb-3">🎬</span>
                 {feedTab === 'following'
                   ? <><p className="text-sm font-semibold text-white mb-1">Aucune vidéo de tes abonnements</p><button onClick={() => setFeedTab('foryou')} className="mt-3 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full text-xs font-bold">Voir "Pour toi"</button></>
-                  : <><p className="text-sm font-semibold text-white mb-1">Aucune vidéo pour l'instant</p><p className="text-xs mb-3">Sois le premier à publier !</p><button onClick={() => setShowUpload(true)} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full text-xs font-bold">Publier une vidéo 🚀</button></>}
+                  : <>{tab === 'clips'
+                    ? <><p className="text-sm font-semibold text-white mb-1">Aucun clip pour l'instant</p><p className="text-xs mb-3">Sois le premier à publier ton clip !</p><button onClick={() => setShowUpload(true)} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full text-xs font-bold">Publier un clip 🚀</button></>
+                    : <><p className="text-sm font-semibold text-white mb-1">Aucun freestyle pour l'instant</p><p className="text-xs mb-3">Les freestyles du Studio et de la Battle apparaissent ici.</p><button onClick={() => setTab('studio')} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full text-xs font-bold">Aller au Studio 🎙️</button></>}</>}
               </div>
             )}
+            {tab === 'clips' && cur && <button onClick={() => { click(); setShowUpload(true); }} className="absolute top-14 left-4 z-30 bg-gradient-to-r from-pink-500 to-purple-600 text-xs font-bold px-3 py-2 rounded-full shadow-lg">➕ Publier un clip</button>}
             <div className="absolute top-0 left-0 right-0 z-30 pt-3 pb-2 flex justify-center gap-6 bg-gradient-to-b from-black/90 to-transparent">
               {[['following', 'Abonnements'], ['foryou', 'Pour toi']].map(([k, l]) => (
                 <button key={k} onClick={() => { click(); setFeedTab(k); }} className={`text-sm font-bold ${feedTab === k ? 'border-b-2 border-pink-500 pb-1' : 'text-white/60'}`}>{l}</button>))}
@@ -466,7 +474,12 @@ function ClipClapApp() {
           <div className="absolute inset-0 bg-[#07040f] overflow-y-auto p-4 pt-10 pb-24">
             <h2 className="text-xl font-extrabold mb-4">🏆 Battle de la Semaine</h2>
             {isAdmin && <button onClick={() => setShowBattleForm(true)} className="w-full mb-4 bg-white/10 border border-amber-500/40 text-amber-300 font-bold py-2.5 rounded-xl text-xs">⚙️ Lancer une nouvelle battle (admin)</button>}
-            {!battle ? <p className="text-center text-sm text-gray-500 py-10">Aucune battle en cours. Reviens bientôt !</p> : <>
+            {!battle ? <div className="p-6 bg-gradient-to-br from-purple-900/40 via-red-900/30 to-black border border-amber-500/40 rounded-2xl text-center space-y-3">
+                <p className="text-4xl">🎤</p>
+                <p className="font-bold">Aucune battle en cours</p>
+                <p className="text-xs text-gray-400">Une nouvelle instru est lancée chaque semaine, avec un décompte et un classement. Reviens bientôt !</p>
+                <button onClick={() => setTab('studio')} className="w-full bg-white/10 border border-white/10 font-bold py-3 rounded-xl text-sm">🎙️ En attendant, va au Studio</button>
+              </div> : <>
               <div className="p-5 bg-gradient-to-br from-purple-900/40 via-red-900/30 to-black border border-amber-500/40 rounded-2xl space-y-3 mb-4">
                 <div className="flex items-center justify-between">
                   <span className="bg-red-600 text-xs font-bold px-3 py-1 rounded-full uppercase">🏆 Concours</span>
@@ -534,11 +547,11 @@ function ClipClapApp() {
               </div>
             </div>
             <div className="border-t border-white/10 pt-4">
-              <div className="flex justify-center gap-8 mb-4">
-                {[['mine', `Mes vidéos (${myVideos.length})`], ['saved', `Favoris (${savedList.length})`]].map(([k, l]) => (
+              <div className="flex justify-center gap-5 mb-4">
+                {[['mine', `Freestyles (${myFree.length})`], ['clip', `Clips (${myClips.length})`], ['saved', `Favoris (${savedList.length})`]].map(([k, l]) => (
                   <button key={k} onClick={() => setProfTab(k)} className={`text-xs pb-1 ${profTab === k ? 'font-bold border-b-2 border-pink-500' : 'text-gray-400'}`}>{l}</button>))}
               </div>
-              <Grid list={profTab === 'mine' ? myVideos : savedList} canDelete={profTab === 'mine'} />
+              <Grid list={profTab === 'mine' ? myFree : profTab === 'clip' ? myClips : savedList} canDelete={profTab !== 'saved'} />
             </div>
           </div>
         )}
@@ -548,7 +561,10 @@ function ClipClapApp() {
       <div className="absolute bottom-0 left-0 right-0 h-16 bg-[#090514]/95 backdrop-blur-xl border-t border-white/10 flex items-center justify-around px-2 z-40">
         {[['feed', '🏠', 'Accueil'], ['search', '🔥', 'Battle']].map(([k, i, l]) => (
           <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-pink-500 font-bold' : 'text-gray-400'}`}><span className="text-xl">{i}</span><span className="text-[10px]">{l}</span></button>))}
-        <button onClick={() => { click(); setShowUpload(true); }} className="relative -top-2 w-12 h-12 bg-gradient-to-tr from-pink-500 via-purple-600 to-cyan-400 rounded-2xl text-2xl font-bold shadow-lg shadow-pink-500/40">+</button>
+        <button onClick={() => { click(); setTab('clips'); setViewing(null); }} className="flex flex-col items-center gap-1 -mt-3">
+          <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-600 to-cyan-400 flex items-center justify-center text-2xl shadow-lg shadow-pink-500/40 ${tab === 'clips' ? 'ring-2 ring-white' : ''}`}>🎬</div>
+          <span className={`text-[10px] ${tab === 'clips' ? 'text-pink-500 font-bold' : 'text-gray-400'}`}>Clip</span>
+        </button>
         {[['studio', '🎙️', 'Studio'], ['profile', '👤', 'Profil']].map(([k, i, l]) => (
           <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-pink-500 font-bold' : 'text-gray-400'}`}><span className="text-xl">{i}</span><span className="text-[10px]">{l}</span></button>))}
       </div>
@@ -574,7 +590,7 @@ function ClipClapApp() {
       {showUpload && (
         <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center">
           <div className="w-full max-w-md bg-[#120c24] border border-white/10 rounded-t-3xl p-6">
-            <div className="flex justify-between mb-4"><h3 className="text-lg font-extrabold">Publier une vidéo</h3><button onClick={() => { setShowUpload(false); setFile(null); }} className="text-gray-400 text-xl">✕</button></div>
+            <div className="flex justify-between mb-4"><h3 className="text-lg font-extrabold">Publier un clip 🎬</h3><button onClick={() => { setShowUpload(false); setFile(null); }} className="text-gray-400 text-xl">✕</button></div>
             <form onSubmit={publishFile} className="space-y-4">
               <input type="file" accept="video/*" onChange={e => setFile(e.target.files[0])} className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-pink-500 file:text-white" />
               <textarea value={caption} onChange={e => setCaption(e.target.value)} rows="3" placeholder="Description & hashtags" className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-pink-500 resize-none"></textarea>
@@ -593,16 +609,26 @@ function ClipClapApp() {
               <button onClick={() => setShowComments(false)} className="text-gray-400 text-lg">✕</button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {comments.length ? comments.map(c => (
-                <div key={c.id} className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center font-bold text-xs flex-shrink-0">{(c.profiles?.username || '?')[0].toUpperCase()}</div>
-                  <div>
-                    <div className="flex gap-2"><span className="text-xs font-bold text-gray-300">@{c.profiles?.username}</span><span className="text-[10px] text-gray-500">{ago(c.created_at)}</span></div>
-                    <p className="text-xs mt-0.5">{c.text}</p>
-                    <button onClick={() => setCText(`@${c.profiles?.username} `)} className="text-xs text-neutral-400 mt-1">Répondre</button>
+              {(() => {
+                const tops = comments.filter(c => !c.parent_id);
+                const Row = (c, isReply) => (
+                  <div key={c.id} className={`flex gap-3 ${isReply ? 'ml-11' : ''}`}>
+                    <div className={`${isReply ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-xs'} rounded-full bg-pink-500 flex items-center justify-center font-bold flex-shrink-0`}>{(c.profiles?.username || '?')[0].toUpperCase()}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex gap-2"><span className="text-xs font-bold text-gray-300">@{c.profiles?.username}</span><span className="text-[10px] text-gray-500">{ago(c.created_at)}</span></div>
+                      <p className="text-xs mt-0.5 break-words">{c.text}</p>
+                      <button onClick={() => { setReplyTo(c); setCText(isReply ? `@${c.profiles?.username} ` : ''); }} className="text-xs text-neutral-400 mt-1">Répondre</button>
+                    </div>
                   </div>
-                </div>)) : <p className="text-center text-xs text-gray-400 pt-10">Aucun commentaire. Sois le premier !</p>}
+                );
+                return tops.length ? tops.map(c => (
+                  <div key={c.id} className="space-y-3">
+                    {Row(c, false)}
+                    {comments.filter(r => r.parent_id === c.id).sort((x, y) => new Date(x.created_at) - new Date(y.created_at)).map(r => Row(r, true))}
+                  </div>)) : <p className="text-center text-xs text-gray-400 pt-10">Aucun commentaire. Sois le premier !</p>;
+              })()}
             </div>
+            {replyTo && <div className="flex items-center justify-between px-4 py-2 bg-neutral-800 text-xs text-gray-300"><span>Réponse à @{replyTo.profiles?.username}</span><button onClick={() => { setReplyTo(null); setCText(''); }} className="text-gray-400 px-2">✕</button></div>}
             <form onSubmit={addComment} className="flex gap-2 p-3 bg-neutral-900 border-t border-neutral-800">
               <input value={cText} onChange={e => setCText(e.target.value)} placeholder="Ajouter un commentaire..." className="flex-1 min-w-0 bg-neutral-800 px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-pink-500" />
               <button className="bg-pink-500 px-4 py-2.5 rounded-full text-sm font-semibold">Envoyer</button>
