@@ -62,7 +62,30 @@ const click = (type = 'click') => {
   } catch (e) {}
 };
 const Av = ({ src, cls = 'w-full h-full object-cover', size = 'text-lg' }) =>
-  src ? <img src={src} alt="" className={cls} /> : <span className={size}>👤</span>;
+  src ? <img src={src} alt="" className={cls} /> : <Icon n="user" size="55%" className="text-white/80" />;
+
+/* ================= ICÔNES ================= */
+const ICONS = {
+  home: <><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M9 22V12h6v10" /></>,
+  flame: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z" />,
+  clap: <><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" /><path d="m6.2 5.3 3.1 3.9" /><path d="m12.4 3.4 3.1 4" /><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /></>,
+  mic: <><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><path d="M12 19v3" /></>,
+  user: <><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
+  heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />,
+  msg: <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />,
+  bookmark: <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />,
+  send: <><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></>,
+  vol: <><path d="M11 5 6 9H2v6h4l5 4V5z" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></>,
+  volx: <><path d="M11 5 6 9H2v6h4l5 4V5z" /><path d="m22 9-6 6" /><path d="m16 9 6 6" /></>,
+  play: <polygon points="6 3 20 12 6 21 6 3" />,
+  eye: <><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></>,
+  trash: <><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></>,
+  plus: <><path d="M5 12h14" /><path d="M12 5v14" /></>,
+  music: <><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></>,
+};
+const Icon = ({ n, size = 22, fill = false, className = '' }) => (
+  <svg viewBox="0 0 24 24" width={size} height={size} fill={fill ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{ICONS[n]}</svg>
+);
 
 /* ================= LOGO & SPLASH ================= */
 const Logo = ({ size = 96, id = 'lg' }) => (
@@ -127,7 +150,7 @@ function AuthScreen() {
     setBusy(false);
   };
 
-  const inp = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500";
+  const inp = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-fuchsia-500";
   return (
     <div className="h-full w-full flex flex-col items-center justify-center bg-app px-6">
       <div className="mb-3"><Logo size={84} id="lga" /></div>
@@ -141,7 +164,7 @@ function AuthScreen() {
         <input className={inp} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
         <input className={inp} type="password" placeholder="Mot de passe (6 caractères min.)" minLength={6} value={password} onChange={e => setPassword(e.target.value)} required />
         {msg && <p className="text-xs text-pink-300 text-center">{msg}</p>}
-        <button disabled={busy} className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl font-extrabold text-sm disabled:opacity-60">
+        <button disabled={busy} className="w-full py-3 bg-gradient-to-r from-fuchsia-500 to-violet-600 rounded-xl font-extrabold text-sm disabled:opacity-60">
           {busy ? '...' : mode === 'login' ? 'Se connecter' : "S'inscrire"}
         </button>
       </form>
@@ -175,6 +198,8 @@ function ClipClapApp() {
 
   const [showUpload, setShowUpload] = useState(false); const [file, setFile] = useState(null); const [caption, setCaption] = useState(''); const [uploading, setUploading] = useState(false);
   const [comments, setComments] = useState([]); const [showComments, setShowComments] = useState(false); const [cText, setCText] = useState(''); const [replyTo, setReplyTo] = useState(null);
+  const [sheetY, setSheetY] = useState(0); const [sheetDrag, setSheetDrag] = useState(false);
+  const sheetT = useRef({ y: 0, active: false }); const listRef = useRef(null);
   const [viewing, setViewing] = useState(null);
   const [editing, setEditing] = useState(false); const [eName, setEName] = useState(''); const [eBio, setEBio] = useState(''); const [eAvatar, setEAvatar] = useState(null);
 
@@ -356,7 +381,7 @@ function ClipClapApp() {
   };
 
   const openComments = async () => {
-    click(); setShowComments(true); setComments([]); setReplyTo(null); setCText('');
+    click(); setShowComments(true); setComments([]); setReplyTo(null); setCText(''); setSheetY(0);
     const { data } = await sb.from('comments').select('id,text,created_at,user_id,parent_id,profiles(username)').eq('video_id', cur.id).order('created_at', { ascending: false });
     setComments(data || []);
   };
@@ -466,6 +491,22 @@ function ClipClapApp() {
     }
   };
 
+  /* ---------- GLISSER VERS LE BAS POUR FERMER LES COMMENTAIRES ---------- */
+  const sheetStart = (e) => {
+    const inList = listRef.current && listRef.current.contains(e.target);
+    sheetT.current = { y: e.touches[0].clientY, active: !inList || listRef.current.scrollTop <= 0 };
+  };
+  const sheetMove = (e) => {
+    if (!sheetT.current.active) return;
+    const dy = e.touches[0].clientY - sheetT.current.y;
+    if (dy > 0) { setSheetDrag(true); setSheetY(dy); } else if (sheetY !== 0) setSheetY(0);
+  };
+  const sheetEnd = () => {
+    setSheetDrag(false);
+    if (sheetT.current.active && sheetY > 90) setShowComments(false);
+    setSheetY(0);
+  };
+
   /* ---------- RETOUR EN ARRIÈRE ---------- */
   const back = () => {
     if (recMode) { closeStudio(); return true; }
@@ -491,8 +532,8 @@ function ClipClapApp() {
         <div key={v.id} onClick={() => openVideo(v)} className="relative aspect-[9/16] bg-gray-900 overflow-hidden rounded-lg cursor-pointer">
           <video src={v.video_url + '#t=0.1'} className="w-full h-full object-cover bg-gray-900" muted playsInline preload="metadata" onLoadedMetadata={e => { try { e.target.currentTime = 0.1; } catch (err) {} }} />
           {v.kind === 'clip' && <span className="absolute top-1 left-1 text-[9px] font-bold bg-pink-600 px-1.5 py-0.5 rounded">CLIP</span>}
-          <div className="absolute bottom-1 left-1 right-1 text-[10px] font-bold bg-black/70 px-1.5 py-0.5 rounded flex justify-between"><span>▶ {fmt(v.views_count)}</span><span>❤️ {fmt(v.likes_count)}</span><span>💬 {fmt(v.comments_count)}</span></div>
-          {canDelete && <button onClick={(e) => removeVideo(v, e)} className="absolute top-1 right-1 w-6 h-6 bg-black/70 rounded-full text-[10px]">🗑️</button>}
+          <div className="absolute bottom-1 left-1 right-1 text-[10px] font-bold bg-black/70 px-1.5 py-0.5 rounded flex justify-between"><span className="flex items-center gap-1"><Icon n="play" size={9} fill />{fmt(v.views_count)}</span><span className="flex items-center gap-1"><Icon n="heart" size={9} fill />{fmt(v.likes_count)}</span><span className="flex items-center gap-1"><Icon n="msg" size={9} fill />{fmt(v.comments_count)}</span></div>
+          {canDelete && <button onClick={(e) => removeVideo(v, e)} className="absolute top-1 right-1 w-6 h-6 bg-black/70 rounded-full flex items-center justify-center"><Icon n="trash" size={12} /></button>}
         </div>))}</div>;
 
   if (!splashDone || !booted) return <Splash />;
@@ -504,7 +545,8 @@ function ClipClapApp() {
   const savedList = videos.filter(v => saved[v.id]);
   const myStats = stats[me.id];
   const myLikes = myVideos.reduce((s, v) => s + v.likes_count, 0);
-  const btn = "w-11 h-11 rounded-full flex items-center justify-center bg-black/40 backdrop-blur-md border border-white/10";
+  const btn = "w-11 h-11 rounded-full flex items-center justify-center bg-black/35 backdrop-blur-md border border-white/20 text-white transition-all";
+  const act = "!bg-gradient-to-tr from-fuchsia-500 to-violet-600 !border-transparent shadow-[0_0_18px_rgba(217,70,239,0.75)] scale-110";
 
   // Battle en cours
   const bEnded = battle ? new Date(battle.ends_at) <= new Date() : false;
@@ -539,24 +581,24 @@ function ClipClapApp() {
               <div className="relative h-full w-full bg-black">
                 <video ref={setVideoEl} src={cur.video_url} className="absolute inset-0 h-full w-full object-cover" loop playsInline autoPlay muted={muted} onClick={togglePlay} />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none"></div>
-                {playIcon && <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"><div className="w-16 h-16 bg-black/60 rounded-full flex items-center justify-center text-2xl animate-ping">▶️</div></div>}
-                <button onClick={() => { click(); setMuted(!muted); }} className={`absolute top-14 right-4 z-30 w-10 h-10 ${btn}`}>{muted ? '🔇' : '🔊'}</button>
+                {playIcon && <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"><div className="w-16 h-16 bg-black/60 rounded-full flex items-center justify-center text-white animate-ping"><Icon n="play" size={26} fill /></div></div>}
+                <button onClick={() => { click(); setMuted(!muted); }} className={`absolute top-14 right-4 z-30 ${btn}`}><Icon n={muted ? 'volx' : 'vol'} size={20} /></button>
 
                 <div className="absolute right-3 bottom-20 z-30 flex flex-col items-center gap-4">
                   <div className="relative mb-1">
-                    <div onClick={() => { click(); setViewing({ id: cur.user_id, username: cur.username, avatar_url: cur.avatar_url }); }} className="w-11 h-11 rounded-full border-2 border-pink-500 overflow-hidden bg-purple-900 flex items-center justify-center cursor-pointer"><Av src={cur.avatar_url} /></div>
-                    {cur.user_id !== me.id && !following[cur.user_id] && <button onClick={e => follow(cur.user_id, e)} className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-5 h-5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full text-xs font-bold">+</button>}
+                    <div onClick={() => { click(); setViewing({ id: cur.user_id, username: cur.username, avatar_url: cur.avatar_url }); }} className="w-11 h-11 rounded-full border-2 border-fuchsia-500 overflow-hidden bg-purple-900 flex items-center justify-center cursor-pointer"><Av src={cur.avatar_url} /></div>
+                    {cur.user_id !== me.id && !following[cur.user_id] && <button onClick={e => follow(cur.user_id, e)} className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-5 h-5 bg-gradient-to-r from-fuchsia-500 to-violet-600 rounded-full text-xs font-bold">+</button>}
                   </div>
-                  <button onClick={e => like(cur, e)} className="flex flex-col items-center">
-                    <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${liked[cur.id] ? 'bg-pink-500 shadow-lg shadow-pink-500/50 scale-110' : 'bg-black/40 border border-white/10'}`}>❤️</div>
-                    <span className="text-[11px] font-bold mt-1">{fmt(cur.likes_count)}</span>
-                  </button>
-                  <button onClick={openComments} className="flex flex-col items-center"><div className={btn}>💬</div><span className="text-[11px] font-bold mt-1">{fmt(cur.comments_count)}</span></button>
-                  <button onClick={e => save(cur, e)} className="flex flex-col items-center">
-                    <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${saved[cur.id] ? 'bg-amber-500 shadow-lg shadow-amber-500/50 scale-110' : 'bg-black/40 border border-white/10'}`}>📌</div>
-                    <span className="text-[11px] font-bold mt-1">{fmt(cur.saves_count)}</span>
-                  </button>
-                  <button onClick={e => share(cur, e)} className="flex flex-col items-center"><div className={btn}>↗️</div><span className="text-[11px] font-bold mt-1">{fmt(cur.shares_count)}</span></button>
+                  {[
+                    ['like', 'heart', liked[cur.id], fmt(cur.likes_count), e => like(cur, e)],
+                    ['comment', 'msg', false, fmt(cur.comments_count), () => openComments()],
+                    ['save', 'bookmark', saved[cur.id], fmt(cur.saves_count), e => save(cur, e)],
+                    ['share', 'send', false, fmt(cur.shares_count), e => share(cur, e)],
+                  ].map(([k, ic, on, count, fn]) => (
+                    <button key={k} onClick={fn} className="flex flex-col items-center gap-1">
+                      <div className={`${btn} ${on ? act : ''}`}><Icon n={ic} size={22} fill={on} /></div>
+                      <span className="text-[11px] font-bold drop-shadow">{count}</span>
+                    </button>))}
                 </div>
 
                 <div className="absolute left-4 bottom-20 right-16 z-30">
@@ -565,25 +607,25 @@ function ClipClapApp() {
                     {following[cur.user_id] && <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">Abonné</span>}
                   </div>
                   <p className="text-sm text-gray-200 mb-2 line-clamp-2">{cur.caption}</p>
-                  <p className="text-[11px] text-gray-400 mb-2">👁️ {fmt(cur.views_count)} vue{cur.views_count > 1 ? 's' : ''}</p>
-                  <div className="text-xs text-gray-300 bg-black/30 px-3 py-1.5 rounded-full w-fit border border-white/10 truncate max-w-[220px]">🎵 {cur.music}</div>
+                  <p className="text-[11px] text-gray-300 mb-2 flex items-center gap-1.5"><Icon n="eye" size={13} /> {fmt(cur.views_count)} vue{cur.views_count > 1 ? 's' : ''}</p>
+                  <div className="text-xs text-gray-200 bg-black/35 px-3 py-1.5 rounded-full w-fit border border-white/15 flex items-center gap-1.5 max-w-[240px]"><Icon n="music" size={12} /><span className="truncate">{cur.music}</span></div>
                 </div>
               </div>
             ) : (
               <div className="h-full flex flex-col items-center justify-center p-6 text-center text-gray-400">
-                <span className="text-5xl mb-3">🎬</span>
+                <Icon n="clap" size={56} className="text-fuchsia-400 mb-3" />
                 {feedTab === 'following'
-                  ? <><p className="text-sm font-semibold text-white mb-1">Aucune vidéo de tes abonnements</p><button onClick={() => setFeedTab('foryou')} className="mt-3 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full text-xs font-bold">Voir "Pour toi"</button></>
+                  ? <><p className="text-sm font-semibold text-white mb-1">Aucune vidéo de tes abonnements</p><button onClick={() => setFeedTab('foryou')} className="mt-3 px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-violet-600 text-white rounded-full text-xs font-bold">Voir "Pour toi"</button></>
                   : <>{tab === 'clips'
-                    ? <><p className="text-sm font-semibold text-white mb-1">Aucun clip pour l'instant</p><p className="text-xs mb-3">Sois le premier à publier ton clip !</p><button onClick={() => setShowUpload(true)} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full text-xs font-bold">Publier un clip 🚀</button></>
-                    : <><p className="text-sm font-semibold text-white mb-1">Aucun freestyle pour l'instant</p><p className="text-xs mb-3">Les freestyles du Studio et de la Battle apparaissent ici.</p><button onClick={() => setTab('studio')} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full text-xs font-bold">Aller au Studio 🎙️</button></>}</>}
+                    ? <><p className="text-sm font-semibold text-white mb-1">Aucun clip pour l'instant</p><p className="text-xs mb-3">Sois le premier à publier ton clip !</p><button onClick={() => setShowUpload(true)} className="px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-violet-600 text-white rounded-full text-xs font-bold">Publier un clip 🚀</button></>
+                    : <><p className="text-sm font-semibold text-white mb-1">Aucun freestyle pour l'instant</p><p className="text-xs mb-3">Les freestyles du Studio et de la Battle apparaissent ici.</p><button onClick={() => setTab('studio')} className="px-4 py-2 bg-gradient-to-r from-fuchsia-500 to-violet-600 text-white rounded-full text-xs font-bold">Aller au Studio 🎙️</button></>}</>}
               </div>
             )}
-            {tab === 'clips' && cur && <button onClick={() => { click(); setShowUpload(true); }} className="absolute top-14 left-4 z-30 bg-gradient-to-r from-pink-500 to-purple-600 text-xs font-bold px-3 py-2 rounded-full shadow-lg">➕ Publier un clip</button>}
+            {tab === 'clips' && cur && <button onClick={() => { click(); setShowUpload(true); }} className="absolute top-14 left-4 z-30 bg-gradient-to-r from-fuchsia-500 to-violet-600 text-xs font-bold px-3 py-2 rounded-full shadow-lg flex items-center gap-1.5"><Icon n="plus" size={14} /> Publier un clip</button>}
             <div className="absolute top-0 left-0 right-0 z-30 pt-3 pb-2 flex justify-center gap-6 bg-gradient-to-b from-black/90 to-transparent">
               <span className="absolute left-4 top-3 text-[13px] font-black grad-text tracking-wide pointer-events-none">ClipClap</span>
               {[['following', 'Abonnements'], ['foryou', 'Pour toi']].map(([k, l]) => (
-                <button key={k} onClick={() => { click(); setFeedTab(k); }} className={`text-sm font-bold ${feedTab === k ? 'border-b-2 border-pink-500 pb-1' : 'text-white/60'}`}>{l}</button>))}
+                <button key={k} onClick={() => { click(); setFeedTab(k); }} className={`text-sm font-bold ${feedTab === k ? 'border-b-2 border-fuchsia-500 pb-1' : 'text-white/60'}`}>{l}</button>))}
             </div>
           </div>
         )}
@@ -591,10 +633,10 @@ function ClipClapApp() {
         {/* ===== BATTLE ===== */}
         {tab === 'search' && (
           <div className="absolute inset-0 bg-app overflow-y-auto p-4 pt-10 pb-24">
-            <h2 className="text-2xl font-black mb-4 grad-text">🏆 Battle de la Semaine</h2>
-            {isAdmin && <button onClick={() => setShowBattleForm(true)} className="w-full mb-4 bg-white/10 border border-amber-500/40 text-amber-300 font-bold py-2.5 rounded-xl text-xs">⚙️ Lancer une nouvelle battle (admin)</button>}
+            <h2 className="text-2xl font-black mb-4 grad-text">Battle de la Semaine</h2>
+            {isAdmin && <button onClick={() => setShowBattleForm(true)} className="w-full mb-4 bg-white/10 border border-fuchsia-500/40 text-fuchsia-300 font-bold py-2.5 rounded-xl text-xs">⚙️ Lancer une nouvelle battle (admin)</button>}
             {!battle ? <div className="p-6 bg-gradient-to-br from-purple-900/40 via-red-900/30 to-black border border-amber-500/40 rounded-2xl text-center space-y-3">
-                <p className="text-4xl">🎤</p>
+                <Icon n="mic" size={44} className="text-fuchsia-400 mx-auto" />
                 <p className="font-bold">Aucune battle en cours</p>
                 <p className="text-xs text-gray-400">Une nouvelle instru est lancée chaque semaine, avec un décompte et un classement. Reviens bientôt !</p>
                 <button onClick={() => setTab('studio')} className="w-full bg-white/10 border border-white/10 font-bold py-3 rounded-xl text-sm">🎙️ En attendant, va au Studio</button>
@@ -608,7 +650,7 @@ function ClipClapApp() {
                 <p className="text-xs text-gray-400">Écoute l'instru imposé, puis pose ton freestyle dessus.</p>
                 <audio ref={setAudioEl} controls src={battle.instru_url} className="w-full h-10" />
                 {!bEnded
-                  ? <button onClick={() => { click(); setInstru(battle.title); setInstruUrl(battle.instru_url); setBattleMode(true); setTab('studio'); }} className="w-full bg-gradient-to-r from-amber-500 to-red-600 font-extrabold py-3 rounded-xl">🎤 Poser sur l'instru de la Battle</button>
+                  ? <button onClick={() => { click(); setInstru(battle.title); setInstruUrl(battle.instru_url); setBattleMode(true); setTab('studio'); }} className="w-full bg-gradient-to-r from-fuchsia-500 to-violet-600 font-extrabold py-3 rounded-xl">🎤 Poser sur l'instru de la Battle</button>
                   : <p className="text-center text-xs text-gray-400">Battle terminée : les votes sont fermés.</p>}
               </div>
               {winner && <div className="mb-4 p-4 rounded-2xl bg-amber-500/20 border border-amber-400/50 text-center"><p className="text-2xl">👑</p><p className="font-extrabold">Vainqueur : @{winner.name}</p><p className="text-xs text-amber-300">{winner.votes} vote{winner.votes > 1 ? 's' : ''}</p></div>}
@@ -617,15 +659,15 @@ function ClipClapApp() {
               {board.length === 0 && <p className="text-center text-xs text-gray-500 py-6">Personne n'a encore posé sur cette instru. Sois le premier !</p>}
               <div className="space-y-2">
                 {board.map(c => (
-                  <div key={c.id} className={`rounded-2xl p-3 flex items-center justify-between border ${c.rank === 1 ? 'bg-purple-900/30 border-pink-500/40' : 'bg-slate-900/60 border-white/5'}`}>
+                  <div key={c.id} className={`rounded-2xl p-3 flex items-center justify-between border ${c.rank === 1 ? 'bg-purple-900/30 border-fuchsia-500/40' : 'bg-slate-900/60 border-white/5'}`}>
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-bold text-gray-300 w-6">{bEnded && c.rank === 1 && winner ? '👑' : `#${c.rank}`}</span>
                       <div className="w-9 h-9 rounded-full bg-slate-800 overflow-hidden flex items-center justify-center"><Av src={c.avatar} /></div>
                       <div><p className="font-bold text-xs">@{c.name}</p><p className="text-[10px] text-gray-400">{c.votes} vote{c.votes > 1 ? 's' : ''} · 👁️ {fmt(c.views)}</p></div>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => openVideo(c.vid)} className="text-xs px-2.5 py-1.5 rounded-xl bg-white/10 font-bold">▶</button>
-                      <button disabled={!!myVoteId || bEnded || c.id === me.id} onClick={() => vote(c.id)} className={`text-xs px-3 py-1.5 rounded-xl font-bold ${myVoteId === c.id ? 'bg-emerald-500/30 text-emerald-300' : (myVoteId || bEnded || c.id === me.id) ? 'bg-white/5 text-gray-600' : 'bg-purple-600'}`}>{myVoteId === c.id ? 'Voté ✓' : 'Voter'}</button>
+                      <button onClick={() => openVideo(c.vid)} className="text-xs px-2.5 py-1.5 rounded-xl bg-white/10 font-bold flex items-center"><Icon n="play" size={12} fill /></button>
+                      <button disabled={!!myVoteId || bEnded || c.id === me.id} onClick={() => vote(c.id)} className={`text-xs px-3 py-1.5 rounded-xl font-bold ${myVoteId === c.id ? 'bg-emerald-500/30 text-emerald-300' : (myVoteId || bEnded || c.id === me.id) ? 'bg-white/5 text-gray-600' : 'bg-gradient-to-r from-fuchsia-500 to-violet-600'}`}>{myVoteId === c.id ? 'Voté ✓' : 'Voter'}</button>
                     </div>
                   </div>))}
               </div>
@@ -636,13 +678,13 @@ function ClipClapApp() {
         {/* ===== STUDIO ===== */}
         {tab === 'studio' && (
           <div className="absolute inset-0 bg-app overflow-y-auto z-40 p-4 pt-6 pb-24 space-y-5">
-            <h2 className="text-2xl font-black grad-text">🎙️ Studio d'enregistrement</h2>
-            {battleMode ? <div className="bg-red-600/20 border border-red-500/40 rounded-xl p-3 text-sm font-bold">🏆 Instru imposé par la Battle : {instru}</div> : <label className="cursor-pointer bg-purple-600 font-bold py-3 px-4 rounded-xl block text-center">
+            <h2 className="text-2xl font-black grad-text">Studio d'enregistrement</h2>
+            {battleMode ? <div className="bg-red-600/20 border border-red-500/40 rounded-xl p-3 text-sm font-bold">🏆 Instru imposé par la Battle : {instru}</div> : <label className="cursor-pointer bg-gradient-to-r from-fuchsia-500 to-violet-600 font-bold py-3 px-4 rounded-xl block text-center">
               📁 Importer un instrumental (MP3 / WAV)
               <input type="file" accept="audio/*" className="hidden" onChange={e => { const f = e.target.files[0]; if (f) { setInstru(f.name.replace(/\.[^/.]+$/, '')); setInstruUrl(URL.createObjectURL(f)); } }} />
             </label>}
             {instru && !battleMode && <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-3 text-sm font-bold">🔥 {instru} <span className="text-emerald-400 text-xs font-medium">Sélectionné ✓</span></div>}
-            <textarea value={lyrics} onChange={e => setLyrics(e.target.value)} placeholder="Bloc-notes : écris tes rimes ici..." className="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-3 text-sm focus:outline-none focus:border-pink-500 resize-none"></textarea>
+            <textarea value={lyrics} onChange={e => setLyrics(e.target.value)} placeholder="Bloc-notes : écris tes rimes ici..." className="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-3 text-sm focus:outline-none focus:border-fuchsia-500 resize-none"></textarea>
             <button onClick={() => { click(); setRecMode(true); }} className="w-full bg-white text-black font-bold py-3 rounded-xl">🎥 Lancer l'enregistrement</button>
           </div>
         )}
@@ -668,7 +710,7 @@ function ClipClapApp() {
             <div className="border-t border-white/10 pt-4">
               <div className="flex justify-center gap-5 mb-4">
                 {[['mine', `Freestyles (${myFree.length})`], ['clip', `Clips (${myClips.length})`], ['saved', `Favoris (${savedList.length})`]].map(([k, l]) => (
-                  <button key={k} onClick={() => setProfTab(k)} className={`text-xs pb-1 ${profTab === k ? 'font-bold border-b-2 border-pink-500' : 'text-gray-400'}`}>{l}</button>))}
+                  <button key={k} onClick={() => setProfTab(k)} className={`text-xs pb-1 ${profTab === k ? 'font-bold border-b-2 border-fuchsia-500' : 'text-gray-400'}`}>{l}</button>))}
               </div>
               <Grid list={profTab === 'mine' ? myFree : profTab === 'clip' ? myClips : savedList} canDelete={profTab !== 'saved'} />
             </div>
@@ -678,14 +720,14 @@ function ClipClapApp() {
 
       {/* ===== NAVIGATION ===== */}
       <div className="absolute bottom-0 left-0 right-0 h-16 bg-[#0d0820]/85 backdrop-blur-2xl border-t border-fuchsia-500/20 shadow-[0_-8px_30px_rgba(168,85,247,0.18)] flex items-center justify-around px-2 z-40">
-        {[['feed', '🏠', 'Accueil'], ['search', '🔥', 'Battle']].map(([k, i, l]) => (
-          <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-fuchsia-400 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 'text-gray-400'}`}><span className="text-xl">{i}</span><span className="text-[10px]">{l}</span></button>))}
+        {[['feed', 'home', 'Accueil'], ['search', 'flame', 'Battle']].map(([k, i, l]) => (
+          <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-fuchsia-400 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 'text-gray-400'}`}><Icon n={i} size={22} /><span className="text-[10px]">{l}</span></button>))}
         <button onClick={() => { click(); setTab('clips'); setViewing(null); }} className="flex flex-col items-center gap-1 -mt-3">
-          <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-600 to-cyan-400 flex items-center justify-center text-2xl clip-glow ${tab === 'clips' ? 'ring-2 ring-white' : ''}`}>🎬</div>
+          <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr from-fuchsia-500 via-violet-600 to-indigo-500 flex items-center justify-center text-2xl clip-glow ${tab === 'clips' ? 'ring-2 ring-white' : ''}`}><Icon n="clap" size={26} className="text-white" /></div>
           <span className={`text-[10px] ${tab === 'clips' ? 'text-fuchsia-400 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 'text-gray-400'}`}>Clip</span>
         </button>
-        {[['studio', '🎙️', 'Studio'], ['profile', '👤', 'Profil']].map(([k, i, l]) => (
-          <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-fuchsia-400 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 'text-gray-400'}`}><span className="text-xl">{i}</span><span className="text-[10px]">{l}</span></button>))}
+        {[['studio', 'mic', 'Studio'], ['profile', 'user', 'Profil']].map(([k, i, l]) => (
+          <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-fuchsia-400 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 'text-gray-400'}`}><Icon n={i} size={22} /><span className="text-[10px]">{l}</span></button>))}
       </div>
 
       {/* ===== NOUVELLE BATTLE (admin) ===== */}
@@ -693,13 +735,13 @@ function ClipClapApp() {
         <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <form onSubmit={createBattle} className="w-full max-w-sm bg-[#120c24] border border-white/10 rounded-3xl p-6 space-y-4">
             <h3 className="text-base font-extrabold text-center">Nouvelle battle</h3>
-            <input value={bTitle} onChange={e => setBTitle(e.target.value)} placeholder="Titre (ex : Beat de la Semaine #2)" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-pink-500" />
-            <input type="file" accept="audio/*" onChange={e => setBFile(e.target.files[0])} className="w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-pink-500 file:text-white" />
+            <input value={bTitle} onChange={e => setBTitle(e.target.value)} placeholder="Titre (ex : Beat de la Semaine #2)" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-fuchsia-500" />
+            <input type="file" accept="audio/*" onChange={e => setBFile(e.target.files[0])} className="w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-fuchsia-500 file:text-white" />
             <div className="flex items-center gap-2 text-xs text-gray-300"><span>Durée (jours)</span><input type="number" min="1" max="30" value={bDays} onChange={e => setBDays(e.target.value)} className="w-16 bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 text-center" /></div>
             <p className="text-[10px] text-gray-500">La battle précédente est remplacée. Ses votes et ses résultats restent en base.</p>
             <div className="flex gap-2">
               <button type="button" onClick={() => setShowBattleForm(false)} className="flex-1 py-3 bg-white/10 rounded-xl text-xs font-bold">Annuler</button>
-              <button disabled={uploading} className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-red-600 rounded-xl text-xs font-extrabold disabled:opacity-60">{uploading ? 'Envoi...' : 'Lancer 🏆'}</button>
+              <button disabled={uploading} className="flex-1 py-3 bg-gradient-to-r from-fuchsia-500 to-violet-600 rounded-xl text-xs font-extrabold disabled:opacity-60">{uploading ? 'Envoi...' : 'Lancer 🏆'}</button>
             </div>
           </form>
         </div>
@@ -711,9 +753,9 @@ function ClipClapApp() {
           <div className="w-full max-w-md bg-[#120c24] border border-white/10 rounded-t-3xl p-6">
             <div className="flex justify-between mb-4"><h3 className="text-lg font-extrabold">Publier un clip 🎬</h3><button onClick={() => { setShowUpload(false); setFile(null); }} className="text-gray-400 text-xl">✕</button></div>
             <form onSubmit={publishFile} className="space-y-4">
-              <input type="file" accept="video/*" onChange={e => setFile(e.target.files[0])} className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-pink-500 file:text-white" />
-              <textarea value={caption} onChange={e => setCaption(e.target.value)} rows="3" placeholder="Description & hashtags" className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-pink-500 resize-none"></textarea>
-              <button disabled={uploading} className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl font-extrabold text-sm disabled:opacity-60">{uploading ? 'Envoi en cours...' : 'Publier sur ClipClap 🚀'}</button>
+              <input type="file" accept="video/*" onChange={e => setFile(e.target.files[0])} className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-fuchsia-500 file:text-white" />
+              <textarea value={caption} onChange={e => setCaption(e.target.value)} rows="3" placeholder="Description & hashtags" className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-fuchsia-500 resize-none"></textarea>
+              <button disabled={uploading} className="w-full py-3.5 bg-gradient-to-r from-fuchsia-500 to-violet-600 rounded-xl font-extrabold text-sm disabled:opacity-60">{uploading ? 'Envoi en cours...' : 'Publier sur ClipClap 🚀'}</button>
             </form>
           </div>
         </div>
@@ -722,17 +764,21 @@ function ClipClapApp() {
       {/* ===== COMMENTAIRES ===== */}
       {showComments && cur && (
         <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center">
-          <div className="w-full max-w-md h-[65%] bg-[#120c24] rounded-t-3xl flex flex-col">
+          <div className="absolute inset-0" onClick={() => setShowComments(false)} />
+          <div className="relative w-full max-w-md h-[70%] bg-[#120c24] border-t border-white/10 rounded-t-3xl flex flex-col"
+               style={{ transform: `translateY(${sheetY}px)`, transition: sheetDrag ? 'none' : 'transform .25s ease' }}
+               onTouchStart={sheetStart} onTouchMove={sheetMove} onTouchEnd={sheetEnd}>
+            <div className="w-full flex justify-center pt-2.5 pb-1"><div className="w-12 h-1.5 bg-white/25 rounded-full"></div></div>
             <div className="flex items-center justify-between p-4 border-b border-white/10">
               <h3 className="text-sm font-extrabold">{comments.length} commentaire{comments.length > 1 ? 's' : ''}</h3>
               <button onClick={() => setShowComments(false)} className="text-gray-400 text-lg">✕</button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div ref={listRef} className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4">
               {(() => {
                 const tops = comments.filter(c => !c.parent_id);
                 const Row = (c, isReply) => (
                   <div key={c.id} className={`flex gap-3 ${isReply ? 'ml-11' : ''}`}>
-                    <div className={`${isReply ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-xs'} rounded-full bg-pink-500 flex items-center justify-center font-bold flex-shrink-0`}>{(c.profiles?.username || '?')[0].toUpperCase()}</div>
+                    <div className={`${isReply ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-xs'} rounded-full bg-fuchsia-500 flex items-center justify-center font-bold flex-shrink-0`}>{(c.profiles?.username || '?')[0].toUpperCase()}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex gap-2"><span className="text-xs font-bold text-gray-300">@{c.profiles?.username}</span><span className="text-[10px] text-gray-500">{ago(c.created_at)}</span></div>
                       <p className="text-xs mt-0.5 break-words">{c.text}</p>
@@ -749,8 +795,8 @@ function ClipClapApp() {
             </div>
             {replyTo && <div className="flex items-center justify-between px-4 py-2 bg-neutral-800 text-xs text-gray-300"><span>Réponse à @{replyTo.profiles?.username}</span><button onClick={() => { setReplyTo(null); setCText(''); }} className="text-gray-400 px-2">✕</button></div>}
             <form onSubmit={addComment} className="flex gap-2 p-3 bg-neutral-900 border-t border-neutral-800">
-              <input value={cText} onChange={e => setCText(e.target.value)} placeholder="Ajouter un commentaire..." className="flex-1 min-w-0 bg-neutral-800 px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-pink-500" />
-              <button className="bg-pink-500 px-4 py-2.5 rounded-full text-sm font-semibold">Envoyer</button>
+              <input value={cText} onChange={e => setCText(e.target.value)} placeholder="Ajouter un commentaire..." className="flex-1 min-w-0 bg-neutral-800 px-4 py-2.5 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500" />
+              <button className="bg-fuchsia-500 px-4 py-2.5 rounded-full text-sm font-semibold">Envoyer</button>
             </form>
           </div>
         </div>
@@ -765,7 +811,7 @@ function ClipClapApp() {
                >
             <button onClick={() => setViewing(null)} className="mb-4 w-9 h-9 bg-white/10 rounded-full text-base font-bold">‹</button>
             <div className="flex flex-col items-center">
-              <div className="w-20 h-20 rounded-full border-2 border-pink-500 overflow-hidden bg-purple-900 flex items-center justify-center mb-3"><Av src={p.avatar_url} size="text-3xl" /></div>
+              <div className="w-20 h-20 rounded-full border-2 border-fuchsia-500 overflow-hidden bg-purple-900 flex items-center justify-center mb-3"><Av src={p.avatar_url} size="text-3xl" /></div>
               <h2 className="text-lg font-extrabold">{p.display_name || p.username}</h2>
               <p className="text-xs text-gray-400 mb-2">@{p.username}</p>
               {p.bio && <p className="text-xs text-gray-200 text-center max-w-xs mb-3">{p.bio}</p>}
@@ -774,7 +820,7 @@ function ClipClapApp() {
                 <div><span className="block font-bold text-sm">{st ? st.followers : 0}</span><span className="text-[10px] text-gray-400">Abonnés</span></div>
                 <div><span className="block font-bold text-sm">{fmt(list.reduce((s, v) => s + v.likes_count, 0))}</span><span className="text-[10px] text-gray-400">J'aime</span></div>
               </div>
-              {!isMe && <button onClick={e => follow(viewing.id, e)} className={`w-36 py-2 rounded-full text-xs font-bold mb-4 ${following[viewing.id] ? 'bg-white/20' : 'bg-gradient-to-r from-pink-500 to-purple-600'}`}>{following[viewing.id] ? 'Abonné' : "S'abonner"}</button>}
+              {!isMe && <button onClick={e => follow(viewing.id, e)} className={`w-36 py-2 rounded-full text-xs font-bold mb-4 ${following[viewing.id] ? 'bg-white/20' : 'bg-gradient-to-r from-fuchsia-500 to-violet-600'}`}>{following[viewing.id] ? 'Abonné' : "S'abonner"}</button>}
             </div>
             <div className="border-t border-white/10 pt-4"><Grid list={list} canDelete={false} /></div>
           </div>
@@ -786,15 +832,15 @@ function ClipClapApp() {
         <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="w-full max-w-sm bg-[#120c24] border border-white/10 rounded-3xl p-6 space-y-4">
             <h3 className="text-base font-extrabold text-center">Modifier mon profil</h3>
-            <input value={eName} onChange={e => setEName(e.target.value)} placeholder="Nom d'affichage" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-pink-500" />
-            <textarea value={eBio} onChange={e => setEBio(e.target.value)} rows="2" placeholder="Bio" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-pink-500 resize-none"></textarea>
+            <input value={eName} onChange={e => setEName(e.target.value)} placeholder="Nom d'affichage" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-fuchsia-500" />
+            <textarea value={eBio} onChange={e => setEBio(e.target.value)} rows="2" placeholder="Bio" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-fuchsia-500 resize-none"></textarea>
             <div className="flex items-center gap-3">
               {eAvatar && <img src={eAvatar} className="w-10 h-10 rounded-full object-cover" alt="" />}
-              <input type="file" accept="image/*" onChange={e => pickAvatar(e.target.files[0])} className="flex-1 min-w-0 text-xs text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-pink-500 file:text-white" />
+              <input type="file" accept="image/*" onChange={e => pickAvatar(e.target.files[0])} className="flex-1 min-w-0 text-xs text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-fuchsia-500 file:text-white" />
             </div>
             <div className="flex gap-2">
               <button onClick={() => setEditing(false)} className="flex-1 py-3 bg-white/10 rounded-xl text-xs font-bold">Annuler</button>
-              <button onClick={saveProfile} className="flex-1 py-3 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl text-xs font-extrabold">Enregistrer</button>
+              <button onClick={saveProfile} className="flex-1 py-3 bg-gradient-to-r from-fuchsia-500 to-violet-600 rounded-xl text-xs font-extrabold">Enregistrer</button>
             </div>
           </div>
         </div>
@@ -807,7 +853,7 @@ function ClipClapApp() {
           <video src={previewUrl} controls autoPlay playsInline className="w-full max-w-sm max-h-[60vh] rounded-2xl bg-black object-contain" />
           <div className="w-full max-w-sm flex gap-4 pb-6">
             <button onClick={() => { setPreviewUrl(null); setBlob(null); setRecMode(true); }} className="flex-1 py-3 rounded-xl bg-gray-800 font-semibold">Recommencer 🔄</button>
-            <button disabled={uploading} onClick={publishFreestyle} className="flex-1 py-3 rounded-xl bg-red-600 font-semibold disabled:opacity-60">{uploading ? 'Envoi...' : 'Publier 🚀'}</button>
+            <button disabled={uploading} onClick={publishFreestyle} className="flex-1 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-semibold disabled:opacity-60">{uploading ? 'Envoi...' : 'Publier 🚀'}</button>
           </div>
         </div>
       )}
