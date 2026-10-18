@@ -105,6 +105,9 @@ function ClipClapApp() {
   const [videos, setVideos] = useState([]);
   const [liked, setLiked] = useState({}); const [saved, setSaved] = useState({}); const [following, setFollowing] = useState({});
   const [votes, setVotes] = useState([]);
+  const [battle, setBattle] = useState(null); const [isAdmin, setIsAdmin] = useState(false); const [battleMode, setBattleMode] = useState(false);
+  const [, setTick] = useState(0);
+  const [showBattleForm, setShowBattleForm] = useState(false); const [bTitle, setBTitle] = useState(''); const [bDays, setBDays] = useState(7); const [bFile, setBFile] = useState(null);
   const [stats, setStats] = useState({}); // {userId: {followers, profile}}
 
   const [tab, setTab] = useState('feed'); const [feedTab, setFeedTab] = useState('foryou'); const [profTab, setProfTab] = useState('mine');
@@ -141,15 +144,21 @@ function ClipClapApp() {
     if (data) setVideos(data);
   };
   const loadMine = async () => {
-    const [l, s, f, v] = await Promise.all([
+    const [l, s, f] = await Promise.all([
       sb.from('likes').select('video_id').eq('user_id', uid),
       sb.from('saves').select('video_id').eq('user_id', uid),
       sb.from('follows').select('following_id').eq('follower_id', uid),
-      sb.from('battle_votes').select('candidate_id'),
+      
     ]);
     const toMap = (rows, k) => (rows || []).reduce((a, r) => ({ ...a, [r[k]]: true }), {});
     setLiked(toMap(l.data, 'video_id')); setSaved(toMap(s.data, 'video_id')); setFollowing(toMap(f.data, 'following_id'));
-    setVotes(v.data || []);
+    
+  };
+  const loadBattle = async () => {
+    const { data: b } = await sb.from('battles').select('*').order('created_at', { ascending: false }).limit(1).maybeSingle();
+    setBattle(b || null);
+    if (b) { const { data: vs } = await sb.from('battle_votes').select('user_id,candidate_id').eq('battle_id', b.id); setVotes(vs || []); }
+    else setVotes([]);
   };
   const loadMe = async () => {
     let { data } = await sb.from('profiles').select('*').eq('id', uid).maybeSingle();
@@ -170,17 +179,20 @@ function ClipClapApp() {
 
   useEffect(() => {
     if (!uid) { setMe(null); setVideos([]); return; }
-    loadMe(); loadMine(); loadVideos();
+    loadMe(); loadMine(); loadVideos(); loadBattle();
+    sb.from('admins').select('user_id').eq('user_id', uid).maybeSingle().then(r => setIsAdmin(!!r.data));
   }, [uid]);
 
   // Actualisation automatique (compteurs des autres utilisateurs)
   useEffect(() => {
     if (!uid) return;
-    const t = setInterval(() => { if (!document.hidden) { loadVideos(); sb.from('battle_votes').select('candidate_id').then(r => r.data && setVotes(r.data)); } }, 15000);
+    const t = setInterval(() => { if (!document.hidden) { loadVideos(); loadBattle(); setTick(t => t + 1); } }, 15000);
     return () => clearInterval(t);
   }, [uid]);
 
   useEffect(() => { if (me && tab === 'profile') loadStats(me.id); }, [tab, me?.id]);
+  useEffect(() => { if (uid && tab === 'search') loadBattle(); }, [tab]);
+  useEffect(() => { if (tab !== 'studio' && battleMode && !recMode && !previewUrl) { setBattleMode(false); setInstru(null); setInstruUrl(null); } }, [tab]);
   useEffect(() => { if (viewing) loadStats(viewing.id); }, [viewing?.id]);
 
   /* ---------- FIL ---------- */
@@ -259,20 +271,40 @@ function ClipClapApp() {
   };
 
   const vote = async (candidateId) => {
-    const { error } = await sb.from('battle_votes').insert({ user_id: uid, candidate_id: candidateId });
+    if (!battle) return say('Pas de battle en cours');
+    if (candidateId === uid) return say('Tu ne peux pas voter pour toi');
+    if (new Date(battle.ends_at) <= new Date()) return say('La battle est terminée');
+    const { error } = await sb.from('battle_votes').insert({ battle_id: battle.id, user_id: uid, candidate_id: candidateId });
     if (error) return say('Tu as déjà voté');
-    setVotes(v => [...v, { candidate_id: candidateId, mine: true }]); say('Vote enregistré ! 🏆');
+    setVotes(v => [...v, { user_id: uid, candidate_id: candidateId }]); say('Vote enregistré ! 🏆');
   };
 
-  const upload = async (f, cap, music) => {
+  const createBattle = async (e) => {
+    e.preventDefault();
+    if (!bTitle.trim() || !bFile) return say('Titre et instru (MP3) obligatoires');
+    if (bFile.size > 20971520) return say('Instru trop lourde (20 Mo max)');
+    setUploading(true);
+    const path = `${uid}/${Date.now()}_${bFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const up = await sb.storage.from('instrus').upload(path, bFile, { contentType: bFile.type || 'audio/mpeg' });
+    if (up.error) { setUploading(false); return say('Envoi impossible : ' + up.error.message); }
+    const url = sb.storage.from('instrus').getPublicUrl(path).data.publicUrl;
+    const ends = new Date(Date.now() + (Number(bDays) || 7) * 86400000).toISOString();
+    const { error } = await sb.from('battles').insert({ title: bTitle.trim(), instru_url: url, instru_path: path, ends_at: ends, created_by: uid });
+    setUploading(false);
+    if (error) return say('Erreur : ' + error.message);
+    setShowBattleForm(false); setBTitle(''); setBFile(null); await loadBattle(); say('Nouvelle battle lancée ! 🏆');
+  };
+
+  const upload = async (f, cap, music, battleId = null) => {
     if (f.size > 52428800) { say('Vidéo trop lourde (50 Mo max)'); return false; }
+    if (battleId && battle && new Date(battle.ends_at) <= new Date()) { say('La battle est terminée'); return false; }
     setUploading(true);
     const ext = f.name ? f.name.split('.').pop().toLowerCase() : (f.type.includes('mp4') ? 'mp4' : 'webm');
     const path = `${uid}/${Date.now()}.${ext}`;
     const up = await sb.storage.from('videos').upload(path, f, { contentType: f.type || 'video/mp4' });
     if (up.error) { setUploading(false); say('Envoi impossible : ' + up.error.message); return false; }
     const url = sb.storage.from('videos').getPublicUrl(path).data.publicUrl;
-    const { error } = await sb.from('videos').insert({ user_id: uid, video_url: url, storage_path: path, caption: cap, music });
+    const { error } = await sb.from('videos').insert({ user_id: uid, video_url: url, storage_path: path, caption: cap, music, battle_id: battleId });
     setUploading(false);
     if (error) { say('Erreur : ' + error.message); return false; }
     await loadVideos(); setFeedTab('foryou'); setCurrentId(null); setTab('feed'); say('Vidéo publiée ! 🚀'); return true;
@@ -283,7 +315,7 @@ function ClipClapApp() {
     if (await upload(file, caption || 'Nouvelle vidéo ClipClap ! 🎬 #clipclap', `Son original - ${me.display_name || me.username} 🎵`)) { setShowUpload(false); setFile(null); setCaption(''); }
   };
   const publishFreestyle = async () => {
-    if (await upload(blob, `Freestyle sur ${instru || 'une instru'} 🎤 #clipclap`, `Son original - ${me.display_name || me.username} 🎵`)) { setPreviewUrl(null); setBlob(null); setInstru(null); setInstruUrl(null); }
+    if (await upload(blob, battleMode ? `🏆 Battle : ${battle.title} #battle` : `Freestyle sur ${instru || 'une instru'} 🎤 #clipclap`, `Son original - ${me.display_name || me.username} 🎵`, battleMode ? battle.id : null)) { setPreviewUrl(null); setBlob(null); setInstru(null); setInstruUrl(null); setBattleMode(false); }
   };
 
   const removeVideo = async (v, e) => {
@@ -342,7 +374,7 @@ function ClipClapApp() {
     ? <p className="text-center text-xs text-gray-500 py-10">Aucune vidéo pour le moment.</p>
     : <div className="grid grid-cols-3 gap-1">{list.map(v => (
         <div key={v.id} onClick={() => openVideo(v)} className="relative aspect-[9/16] bg-gray-900 overflow-hidden rounded-lg cursor-pointer">
-          <video src={v.video_url} className="w-full h-full object-cover" muted playsInline preload="metadata" />
+          <video src={v.video_url + '#t=0.1'} className="w-full h-full object-cover bg-gray-900" muted playsInline preload="metadata" onLoadedMetadata={e => { try { e.target.currentTime = 0.1; } catch (err) {} }} />
           <div className="absolute bottom-1 left-1 text-[11px] font-bold bg-black/70 px-2 py-0.5 rounded">▶ {fmt(v.views_count)}</div>
           {canDelete && <button onClick={(e) => removeVideo(v, e)} className="absolute top-1 right-1 w-6 h-6 bg-black/70 rounded-full text-[10px]">🗑️</button>}
         </div>))}</div>;
@@ -357,11 +389,20 @@ function ClipClapApp() {
   const myLikes = myVideos.reduce((s, v) => s + v.likes_count, 0);
   const btn = "w-11 h-11 rounded-full flex items-center justify-center bg-black/40 backdrop-blur-md border border-white/10";
 
-  // Classement Battle
-  const board = Object.values(videos.reduce((a, v) => {
-    a[v.user_id] = a[v.user_id] || { id: v.user_id, name: v.username, avatar: v.avatar_url, views: 0 }; a[v.user_id].views += v.views_count; return a;
-  }, {})).sort((a, b) => b.views - a.views).map((c, i) => ({ ...c, rank: i + 1, votes: votes.filter(x => x.candidate_id === c.id).length }));
-  const myVote = votes.some(x => x.mine);
+  // Battle en cours
+  const bEnded = battle ? new Date(battle.ends_at) <= new Date() : false;
+  const bLeft = battle ? Math.max(0, new Date(battle.ends_at) - new Date()) : 0;
+  const bDaysLeft = Math.floor(bLeft / 86400000);
+  const bH = Math.floor((bLeft % 86400000) / 3600000), bM = Math.floor((bLeft % 3600000) / 60000);
+  const bCount = bEnded ? 'Terminée' : bDaysLeft >= 1 ? `Reste ${bDaysLeft} jour${bDaysLeft > 1 ? 's' : ''}` : `Reste ${bH} h ${bM} min`;
+  const bVideos = battle ? videos.filter(v => v.battle_id === battle.id) : [];
+  const board = Object.values(bVideos.reduce((a, v) => {
+    a[v.user_id] = a[v.user_id] || { id: v.user_id, name: v.username, avatar: v.avatar_url, views: 0, vid: v };
+    a[v.user_id].views += v.views_count; return a;
+  }, {})).map(c => ({ ...c, votes: votes.filter(x => x.candidate_id === c.id).length }))
+    .sort((a, b) => b.votes - a.votes || b.views - a.views).map((c, i) => ({ ...c, rank: i + 1 }));
+  const myVoteId = (votes.find(x => x.user_id === me.id) || {}).candidate_id;
+  const winner = bEnded && board.length && board[0].votes > 0 ? board[0] : null;
 
   return (
     <div className="h-full w-full flex flex-col bg-black overflow-hidden relative">
@@ -423,21 +464,40 @@ function ClipClapApp() {
         {/* ===== BATTLE ===== */}
         {tab === 'search' && (
           <div className="absolute inset-0 bg-[#07040f] overflow-y-auto p-4 pt-10 pb-24">
-            <h2 className="text-xl font-extrabold mb-1">🏆 Battle de la Semaine</h2>
-            <p className="text-xs text-gray-400 mb-4">Classement selon les vues. 1 vote par personne.</p>
-            {board.length === 0 && <p className="text-center text-sm text-gray-500 py-10">Aucun créateur n'a encore publié.</p>}
-            <div className="space-y-2">
-              {board.map(c => (
-                <div key={c.id} className={`rounded-2xl p-3 flex items-center justify-between border ${c.rank <= 2 ? 'bg-purple-900/30 border-pink-500/40' : 'bg-slate-900/60 border-white/5'}`}>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-gray-300 w-6">#{c.rank}</span>
-                    <div className="w-9 h-9 rounded-full bg-slate-800 overflow-hidden flex items-center justify-center"><Av src={c.avatar} /></div>
-                    <div><p className="font-bold text-xs">@{c.name}</p><p className="text-[10px] text-gray-400">👁️ {fmt(c.views)} · {c.votes} vote{c.votes > 1 ? 's' : ''}</p></div>
-                  </div>
-                  <button disabled={myVote} onClick={() => vote(c.id)} className={`text-xs px-3 py-1.5 rounded-xl font-bold ${myVote ? 'bg-white/5 text-gray-600' : 'bg-purple-600'}`}>Voter</button>
-                </div>))}
-            </div>
-            <button onClick={() => setTab('studio')} className="w-full mt-6 bg-gradient-to-r from-amber-500 to-red-600 font-extrabold py-3 rounded-xl">🎤 Enregistrer un freestyle</button>
+            <h2 className="text-xl font-extrabold mb-4">🏆 Battle de la Semaine</h2>
+            {isAdmin && <button onClick={() => setShowBattleForm(true)} className="w-full mb-4 bg-white/10 border border-amber-500/40 text-amber-300 font-bold py-2.5 rounded-xl text-xs">⚙️ Lancer une nouvelle battle (admin)</button>}
+            {!battle ? <p className="text-center text-sm text-gray-500 py-10">Aucune battle en cours. Reviens bientôt !</p> : <>
+              <div className="p-5 bg-gradient-to-br from-purple-900/40 via-red-900/30 to-black border border-amber-500/40 rounded-2xl space-y-3 mb-4">
+                <div className="flex items-center justify-between">
+                  <span className="bg-red-600 text-xs font-bold px-3 py-1 rounded-full uppercase">🏆 Concours</span>
+                  <span className={`text-xs font-semibold ${bEnded ? 'text-gray-400' : 'text-amber-400'}`}>⏰ {bCount}</span>
+                </div>
+                <h3 className="text-lg font-bold">{battle.title}</h3>
+                <p className="text-xs text-gray-400">Écoute l'instru imposé, puis pose ton freestyle dessus.</p>
+                <audio controls src={battle.instru_url} className="w-full h-10" />
+                {!bEnded
+                  ? <button onClick={() => { click(); setInstru(battle.title); setInstruUrl(battle.instru_url); setBattleMode(true); setTab('studio'); }} className="w-full bg-gradient-to-r from-amber-500 to-red-600 font-extrabold py-3 rounded-xl">🎤 Poser sur l'instru de la Battle</button>
+                  : <p className="text-center text-xs text-gray-400">Battle terminée : les votes sont fermés.</p>}
+              </div>
+              {winner && <div className="mb-4 p-4 rounded-2xl bg-amber-500/20 border border-amber-400/50 text-center"><p className="text-2xl">👑</p><p className="font-extrabold">Vainqueur : @{winner.name}</p><p className="text-xs text-amber-300">{winner.votes} vote{winner.votes > 1 ? 's' : ''}</p></div>}
+              {bEnded && !winner && <p className="text-center text-xs text-gray-400 mb-4">Aucun vote : pas de vainqueur cette fois.</p>}
+              <h3 className="font-bold text-sm text-gray-200 mb-2">Classement ({board.length} participant{board.length > 1 ? 's' : ''})</h3>
+              {board.length === 0 && <p className="text-center text-xs text-gray-500 py-6">Personne n'a encore posé sur cette instru. Sois le premier !</p>}
+              <div className="space-y-2">
+                {board.map(c => (
+                  <div key={c.id} className={`rounded-2xl p-3 flex items-center justify-between border ${c.rank === 1 ? 'bg-purple-900/30 border-pink-500/40' : 'bg-slate-900/60 border-white/5'}`}>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-gray-300 w-6">{bEnded && c.rank === 1 && winner ? '👑' : `#${c.rank}`}</span>
+                      <div className="w-9 h-9 rounded-full bg-slate-800 overflow-hidden flex items-center justify-center"><Av src={c.avatar} /></div>
+                      <div><p className="font-bold text-xs">@{c.name}</p><p className="text-[10px] text-gray-400">{c.votes} vote{c.votes > 1 ? 's' : ''} · 👁️ {fmt(c.views)}</p></div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => openVideo(c.vid)} className="text-xs px-2.5 py-1.5 rounded-xl bg-white/10 font-bold">▶</button>
+                      <button disabled={!!myVoteId || bEnded || c.id === me.id} onClick={() => vote(c.id)} className={`text-xs px-3 py-1.5 rounded-xl font-bold ${myVoteId === c.id ? 'bg-emerald-500/30 text-emerald-300' : (myVoteId || bEnded || c.id === me.id) ? 'bg-white/5 text-gray-600' : 'bg-purple-600'}`}>{myVoteId === c.id ? 'Voté ✓' : 'Voter'}</button>
+                    </div>
+                  </div>))}
+              </div>
+            </>}
           </div>
         )}
 
@@ -445,11 +505,11 @@ function ClipClapApp() {
         {tab === 'studio' && (
           <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 p-4 pt-6 pb-24 space-y-5">
             <h2 className="text-xl font-extrabold">🎙️ Studio d'enregistrement</h2>
-            <label className="cursor-pointer bg-purple-600 font-bold py-3 px-4 rounded-xl block text-center">
+            {battleMode ? <div className="bg-red-600/20 border border-red-500/40 rounded-xl p-3 text-sm font-bold">🏆 Instru imposé par la Battle : {instru}</div> : <label className="cursor-pointer bg-purple-600 font-bold py-3 px-4 rounded-xl block text-center">
               📁 Importer un instrumental (MP3 / WAV)
               <input type="file" accept="audio/*" className="hidden" onChange={e => { const f = e.target.files[0]; if (f) { setInstru(f.name.replace(/\.[^/.]+$/, '')); setInstruUrl(URL.createObjectURL(f)); } }} />
-            </label>
-            {instru && <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-3 text-sm font-bold">🔥 {instru} <span className="text-emerald-400 text-xs font-medium">Sélectionné ✓</span></div>}
+            </label>}
+            {instru && !battleMode && <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-3 text-sm font-bold">🔥 {instru} <span className="text-emerald-400 text-xs font-medium">Sélectionné ✓</span></div>}
             <textarea value={lyrics} onChange={e => setLyrics(e.target.value)} placeholder="Bloc-notes : écris tes rimes ici..." className="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-3 text-sm focus:outline-none focus:border-pink-500 resize-none"></textarea>
             <button onClick={() => { click(); setRecMode(true); }} className="w-full bg-white text-black font-bold py-3 rounded-xl">🎥 Lancer l'enregistrement</button>
           </div>
@@ -492,6 +552,23 @@ function ClipClapApp() {
         {[['studio', '🎙️', 'Studio'], ['profile', '👤', 'Profil']].map(([k, i, l]) => (
           <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-pink-500 font-bold' : 'text-gray-400'}`}><span className="text-xl">{i}</span><span className="text-[10px]">{l}</span></button>))}
       </div>
+
+      {/* ===== NOUVELLE BATTLE (admin) ===== */}
+      {showBattleForm && (
+        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <form onSubmit={createBattle} className="w-full max-w-sm bg-[#120c24] border border-white/10 rounded-3xl p-6 space-y-4">
+            <h3 className="text-base font-extrabold text-center">Nouvelle battle</h3>
+            <input value={bTitle} onChange={e => setBTitle(e.target.value)} placeholder="Titre (ex : Beat de la Semaine #2)" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-pink-500" />
+            <input type="file" accept="audio/*" onChange={e => setBFile(e.target.files[0])} className="w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-pink-500 file:text-white" />
+            <div className="flex items-center gap-2 text-xs text-gray-300"><span>Durée (jours)</span><input type="number" min="1" max="30" value={bDays} onChange={e => setBDays(e.target.value)} className="w-16 bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 text-center" /></div>
+            <p className="text-[10px] text-gray-500">La battle précédente est remplacée. Ses votes et ses résultats restent en base.</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setShowBattleForm(false)} className="flex-1 py-3 bg-white/10 rounded-xl text-xs font-bold">Annuler</button>
+              <button disabled={uploading} className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-red-600 rounded-xl text-xs font-extrabold disabled:opacity-60">{uploading ? 'Envoi...' : 'Lancer 🏆'}</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* ===== UPLOAD ===== */}
       {showUpload && (
