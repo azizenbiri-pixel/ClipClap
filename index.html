@@ -21,6 +21,7 @@
     .blob { position:absolute; border-radius:9999px; filter: blur(70px); opacity:.45; animation: floatBlob 7s ease-in-out infinite; }
     .eq-bar { width:6px; height:100%; border-radius:4px; background: linear-gradient(to top,#fbbf24,#ec4899,#8b5cf6); transform-origin: bottom; animation: eq 1s ease-in-out infinite; }
     .clap-stick { transform-box: fill-box; transform-origin: 0% 100%; animation: clap 1.6s ease-out .5s both; }
+    @keyframes wm { 0%{opacity:0;transform:translateY(6px)} 12%{opacity:.8;transform:none} 88%{opacity:.8} 100%{opacity:0} }
     @keyframes bgShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
     @keyframes floatBlob { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,-40px) scale(1.15)} }
     @keyframes popIn { 0%{opacity:0;transform:scale(.4) rotate(-8deg)} 60%{opacity:1;transform:scale(1.08) rotate(2deg)} 100%{opacity:1;transform:scale(1) rotate(0)} }
@@ -125,6 +126,24 @@ const Splash = () => (
     <p className="absolute bottom-8 text-[11px] text-white/40 tracking-[0.3em] uppercase" style={{ animation: 'fadeUp .8s 1.8s both' }}>Freestyle · Clips · Battle</p>
   </div>
 );
+
+/* ================= FILIGRANE CLIPCLAP ================= */
+// Change de coin à chaque cycle : impossible à rogner en gardant la vidéo entière.
+const WM_POS = [{ top: '22%', left: 14 }, { top: '34%', right: 14 }, { top: '46%', left: 14 }, { top: '27%', right: 14 }];
+const Watermark = ({ user, gid = 'wmg' }) => {
+  const [i, setI] = useState(0);
+  return (
+    <div className="absolute z-20 pointer-events-none flex items-center gap-1.5"
+         style={{ ...WM_POS[i], animation: 'wm 4.5s ease-in-out infinite' }}
+         onAnimationIteration={() => setI(x => (x + 1) % WM_POS.length)}>
+      <Logo size={24} id={gid} />
+      <div className="leading-tight" style={{ textShadow: '0 1px 4px rgba(0,0,0,.85)' }}>
+        <p className="text-[14px] font-black text-white">ClipClap</p>
+        <p className="text-[10px] font-semibold text-white/85">@{user}</p>
+      </div>
+    </div>
+  );
+};
 
 /* ================= CONNEXION / INSCRIPTION ================= */
 function AuthScreen() {
@@ -365,7 +384,7 @@ function ClipClapApp() {
   const share = async (v, e) => {
     e.stopPropagation(); click(); let ok = false;
     try {
-      if (navigator.share) { await navigator.share({ title: 'ClipClap', url: location.href }); ok = true; }
+      if (navigator.share) { await navigator.share({ title: 'ClipClap', text: `@${v.username} sur ClipClap : viens découvrir ClipClap 🎬`, url: location.href }); ok = true; }
       else { await navigator.clipboard.writeText(location.href); ok = true; say('Lien copié ! 🔗'); }
     } catch (err) {}
     if (ok) { patch(v.id, x => ({ shares_count: x.shares_count + 1 })); sb.rpc('increment_shares', { vid: v.id }); }
@@ -581,6 +600,7 @@ function ClipClapApp() {
               <div className="relative h-full w-full bg-black">
                 <video ref={setVideoEl} src={cur.video_url} className="absolute inset-0 h-full w-full object-cover" loop playsInline autoPlay muted={muted} onClick={togglePlay} />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none"></div>
+                <Watermark user={cur.username} />
                 {playIcon && <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"><div className="w-16 h-16 bg-black/60 rounded-full flex items-center justify-center text-white animate-ping"><Icon n="play" size={26} fill /></div></div>}
                 <button onClick={() => { click(); setMuted(!muted); }} className={`absolute top-14 right-4 z-30 ${btn}`}><Icon n={muted ? 'volx' : 'vol'} size={20} /></button>
 
@@ -850,7 +870,10 @@ function ClipClapApp() {
       {previewUrl && (
         <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-between p-6">
           <h2 className="text-xl font-bold pt-4">Aperçu de ton Freestyle 🎤</h2>
-          <video src={previewUrl} controls autoPlay playsInline className="w-full max-w-sm max-h-[60vh] rounded-2xl bg-black object-contain" />
+          <div className="relative w-full max-w-sm rounded-2xl overflow-hidden bg-black">
+            <video src={previewUrl} controls autoPlay playsInline className="w-full max-h-[60vh] object-contain" />
+            <Watermark user={me.username} gid="wmp" />
+          </div>
           <div className="w-full max-w-sm flex gap-4 pb-6">
             <button onClick={() => { setPreviewUrl(null); setBlob(null); setRecMode(true); }} className="flex-1 py-3 rounded-xl bg-gray-800 font-semibold">Recommencer 🔄</button>
             <button disabled={uploading} onClick={publishFreestyle} className="flex-1 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-semibold disabled:opacity-60">{uploading ? 'Envoi...' : 'Publier 🚀'}</button>
