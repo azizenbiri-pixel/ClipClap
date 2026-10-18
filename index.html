@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>ClipClap</title>
+  <meta name="theme-color" content="#0b0719" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -13,6 +14,22 @@
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
     html, body { height:100%; width:100%; margin:0; padding:0; overflow:hidden; background:#0b0719; font-family:'Plus Jakarta Sans',sans-serif; -webkit-tap-highlight-color:transparent; overscroll-behavior:none; }
     .swipe { touch-action:none; }
+    .bg-app { background: radial-gradient(120% 60% at 50% -10%, rgba(168,85,247,.35), transparent 60%), radial-gradient(80% 50% at 100% 100%, rgba(236,72,153,.22), transparent 60%), radial-gradient(70% 40% at 0% 80%, rgba(251,191,36,.10), transparent 60%), #07040f; }
+    .grad-text { background: linear-gradient(90deg,#fbbf24,#f472b6,#a78bfa); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+    .clip-glow { animation: pulseGlow 2.4s ease-in-out infinite; }
+    .splash-bg { background: linear-gradient(160deg,#0b0719,#1e0b4a 40%,#4a0d52 75%,#0b0719); background-size: 200% 200%; animation: bgShift 8s ease infinite; }
+    .blob { position:absolute; border-radius:9999px; filter: blur(70px); opacity:.45; animation: floatBlob 7s ease-in-out infinite; }
+    .eq-bar { width:6px; height:100%; border-radius:4px; background: linear-gradient(to top,#fbbf24,#ec4899,#8b5cf6); transform-origin: bottom; animation: eq 1s ease-in-out infinite; }
+    .clap-stick { transform-box: fill-box; transform-origin: 0% 100%; animation: clap 1.6s ease-out .5s both; }
+    @keyframes bgShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    @keyframes floatBlob { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,-40px) scale(1.15)} }
+    @keyframes popIn { 0%{opacity:0;transform:scale(.4) rotate(-8deg)} 60%{opacity:1;transform:scale(1.08) rotate(2deg)} 100%{opacity:1;transform:scale(1) rotate(0)} }
+    @keyframes clap { 0%,35%{transform:rotate(-32deg)} 48%{transform:rotate(2deg)} 56%{transform:rotate(-6deg)} 64%,100%{transform:rotate(0)} }
+    @keyframes letterUp { from{opacity:0;transform:translateY(24px) scale(.8)} to{opacity:1;transform:translateY(0) scale(1)} }
+    @keyframes eq { 0%,100%{transform:scaleY(.25)} 50%{transform:scaleY(1)} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes loadbar { from{width:0} to{width:100%} }
+    @keyframes pulseGlow { 0%,100%{box-shadow:0 0 30px 6px rgba(236,72,153,.45)} 50%{box-shadow:0 0 60px 16px rgba(139,92,246,.6)} }
   </style>
 </head>
 <body class="text-white select-none">
@@ -47,6 +64,45 @@ const click = (type = 'click') => {
 const Av = ({ src, cls = 'w-full h-full object-cover', size = 'text-lg' }) =>
   src ? <img src={src} alt="" className={cls} /> : <span className={size}>👤</span>;
 
+/* ================= LOGO & SPLASH ================= */
+const Logo = ({ size = 96, id = 'lg' }) => (
+  <svg viewBox="0 0 120 120" width={size} height={size} style={{ overflow: 'visible' }}>
+    <defs><linearGradient id={id} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fbbf24" /><stop offset=".5" stopColor="#ec4899" /><stop offset="1" stopColor="#8b5cf6" /></linearGradient></defs>
+    <rect x="10" y="40" width="100" height="70" rx="14" fill={`url(#${id})`} />
+    <g className="clap-stick">
+      <rect x="10" y="18" width="100" height="20" rx="6" fill="#fff" />
+      <path d="M24 18l-12 20h14l12-20zM52 18L40 38h14l12-20zM80 18L68 38h14l12-20z" fill="#12082b" opacity=".9" />
+    </g>
+    <path d="M50 62v32l30-16z" fill="#fff" />
+  </svg>
+);
+
+const LETTER_COLORS = ['#fbbf24', '#fb923c', '#f87171', '#f472b6', '#e879f9', '#c084fc', '#a78bfa', '#8b5cf6'];
+const Splash = () => (
+  <div className="splash-bg h-full w-full flex flex-col items-center justify-center relative overflow-hidden text-white select-none">
+    <div className="blob" style={{ width: 280, height: 280, background: '#a855f7', top: -60, left: -80 }} />
+    <div className="blob" style={{ width: 260, height: 260, background: '#ec4899', bottom: -40, right: -70, animationDelay: '-3s' }} />
+    <div className="blob" style={{ width: 160, height: 160, background: '#fbbf24', top: '58%', left: '62%', animationDelay: '-6s', opacity: 0.25 }} />
+    <div className="relative mb-6" style={{ animation: 'popIn .9s cubic-bezier(.2,1.2,.3,1) both' }}>
+      <div className="absolute -inset-5 rounded-[2rem]" style={{ animation: 'pulseGlow 2s ease-in-out infinite' }} />
+      <Logo size={112} id="lgs" />
+    </div>
+    <h1 className="flex text-5xl font-black tracking-tight mb-2">
+      {'ClipClap'.split('').map((ch, i) => (
+        <span key={i} style={{ color: LETTER_COLORS[i], textShadow: `0 0 18px ${LETTER_COLORS[i]}88`, animation: `letterUp .6s ${0.7 + i * 0.07}s cubic-bezier(.2,1.2,.3,1) both` }}>{ch}</span>
+      ))}
+    </h1>
+    <p className="text-sm text-fuchsia-200/80 font-semibold tracking-wide mb-8" style={{ animation: 'fadeUp .8s 1.5s both' }}>Pose ton clip. Gagne la battle. 🎤</p>
+    <div className="flex items-end gap-1.5 h-10 mb-8" style={{ animation: 'fadeUp .8s 1.3s both' }}>
+      {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => <span key={i} className="eq-bar" style={{ animationDelay: `${i * 0.11}s` }} />)}
+    </div>
+    <div className="w-44 h-1.5 bg-white/10 rounded-full overflow-hidden" style={{ animation: 'fadeUp .6s 1.6s both' }}>
+      <div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#fbbf24,#ec4899,#8b5cf6)', animation: 'loadbar 1.2s 1.6s ease-in-out both' }} />
+    </div>
+    <p className="absolute bottom-8 text-[11px] text-white/40 tracking-[0.3em] uppercase" style={{ animation: 'fadeUp .8s 1.8s both' }}>Freestyle · Clips · Battle</p>
+  </div>
+);
+
 /* ================= CONNEXION / INSCRIPTION ================= */
 function AuthScreen() {
   const [mode, setMode] = useState('login');
@@ -73,9 +129,9 @@ function AuthScreen() {
 
   const inp = "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-pink-500";
   return (
-    <div className="h-full w-full flex flex-col items-center justify-center bg-[#07040f] px-6">
-      <div className="w-20 h-20 bg-[#120c24] border border-white/10 rounded-3xl flex items-center justify-center mb-4"><span className="text-3xl">🎬</span></div>
-      <h1 className="text-2xl font-extrabold mb-1">ClipClap</h1>
+    <div className="h-full w-full flex flex-col items-center justify-center bg-app px-6">
+      <div className="mb-3"><Logo size={84} id="lga" /></div>
+      <h1 className="text-3xl font-black mb-1 grad-text">ClipClap</h1>
       <p className="text-xs text-gray-400 mb-5">{mode === 'login' ? 'Connecte-toi pour continuer' : 'Crée ton compte'}</p>
       <form onSubmit={submit} className="w-full max-w-xs space-y-3">
         {mode === 'signup' && <>
@@ -99,6 +155,8 @@ function AuthScreen() {
 /* ================= APPLICATION ================= */
 function ClipClapApp() {
   const [booted, setBooted] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setSplashDone(true), 2900); return () => clearTimeout(t); }, []);
   const [session, setSession] = useState(null);
   const [me, setMe] = useState(null);
 
@@ -126,6 +184,18 @@ function ClipClapApp() {
   const camRef = useRef(null); const recRef = useRef(null); const chunksRef = useRef([]); const audioRef = useRef(null);
 
   const videoRef = useRef(null); const viewedRef = useRef(new Set()); const tx = useRef(0); const ty = useRef(0);
+  const audioElRef = useRef(null);
+  const tabStack = useRef([]); const prevTab = useRef('feed'); const popping = useRef(false); const backRef = useRef(null); const lastRoot = useRef(0);
+  const gx = useRef(0); const gy = useRef(0); const gt = useRef(null);
+  // Quand le lecteur disparaît de l'écran, on coupe vraiment le son (certains navigateurs continuent sinon)
+  const setVideoEl = React.useCallback((node) => {
+    if (!node && videoRef.current) { const v = videoRef.current; try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }
+    videoRef.current = node;
+  }, []);
+  const setAudioEl = React.useCallback((node) => {
+    if (!node && audioElRef.current) { try { audioElRef.current.pause(); } catch (e) {} }
+    audioElRef.current = node;
+  }, []);
 
   const say = (m) => { setToast(m); setTimeout(() => setToast(''), 2200); };
   const patch = (id, fn) => setVideos(vs => vs.map(v => v.id === id ? { ...v, ...fn(v) } : v));
@@ -195,13 +265,37 @@ function ClipClapApp() {
   useEffect(() => { if (tab !== 'studio' && battleMode && !recMode && !previewUrl) { setBattleMode(false); setInstru(null); setInstruUrl(null); } }, [tab]);
   useEffect(() => { if (viewing) loadStats(viewing.id); }, [viewing?.id]);
 
+  /* ---------- HISTORIQUE / RETOUR ---------- */
+  useEffect(() => {
+    if (prevTab.current !== tab) {
+      if (popping.current) popping.current = false;
+      else { tabStack.current.push(prevTab.current); if (tabStack.current.length > 20) tabStack.current.shift(); }
+      prevTab.current = tab;
+    }
+  }, [tab]);
+
+  useEffect(() => {
+    const onHide = () => { if (document.hidden && videoRef.current) videoRef.current.pause(); };
+    document.addEventListener('visibilitychange', onHide);
+    try { history.replaceState({ cc: 0 }, ''); history.pushState({ cc: 1 }, ''); } catch (e) {}
+    const onPop = () => {
+      const handled = backRef.current && backRef.current();
+      if (handled) { history.pushState({ cc: 1 }, ''); return; }
+      const now = Date.now();
+      if (now - lastRoot.current < 2000) { history.back(); return; }
+      lastRoot.current = now; history.pushState({ cc: 1 }, ''); say('Reviens encore une fois pour quitter');
+    };
+    window.addEventListener('popstate', onPop);
+    return () => { document.removeEventListener('visibilitychange', onHide); window.removeEventListener('popstate', onPop); };
+  }, []);
+
   /* ---------- FIL ---------- */
   const isPlayerTab = tab === 'feed' || tab === 'clips';
   // Accueil = freestyles (Studio + Battle) ; page Clip = clips uniquement
   const pool = videos.filter(v => tab === 'clips' ? v.kind === 'clip' : v.kind !== 'clip');
   const displayed = feedTab === 'following' ? pool.filter(v => following[v.user_id]) : pool;
   const cur = displayed.find(v => v.id === currentId) || displayed[0];
-  const overlay = viewing || showUpload || showComments || recMode || previewUrl || editing;
+  const overlay = viewing || showUpload || showComments || recMode || previewUrl || editing || showBattleForm;
 
   // Vues réelles : +1 par vidéo et par session
   useEffect(() => {
@@ -372,6 +466,24 @@ function ClipClapApp() {
     }
   };
 
+  /* ---------- RETOUR EN ARRIÈRE ---------- */
+  const back = () => {
+    if (recMode) { closeStudio(); return true; }
+    if (previewUrl) { setPreviewUrl(null); setBlob(null); return true; }
+    if (showComments) { setShowComments(false); return true; }
+    if (showUpload) { setShowUpload(false); setFile(null); return true; }
+    if (showBattleForm) { setShowBattleForm(false); return true; }
+    if (editing) { setEditing(false); return true; }
+    if (viewing) { setViewing(null); return true; }
+    if (tab !== 'feed') {
+      let t = tabStack.current.pop();
+      if (!t || t === tab) t = 'feed';
+      popping.current = true; setTab(t); return true;
+    }
+    return false;
+  };
+  backRef.current = back;
+
   /* ---------- RENDU ---------- */
   const Grid = ({ list, canDelete }) => !list.length
     ? <p className="text-center text-xs text-gray-500 py-10">Aucune vidéo pour le moment.</p>
@@ -383,9 +495,9 @@ function ClipClapApp() {
           {canDelete && <button onClick={(e) => removeVideo(v, e)} className="absolute top-1 right-1 w-6 h-6 bg-black/70 rounded-full text-[10px]">🗑️</button>}
         </div>))}</div>;
 
-  if (!booted) return <div className="h-full flex items-center justify-center bg-[#07040f] text-4xl">🎬</div>;
+  if (!splashDone || !booted) return <Splash />;
   if (!session) return <AuthScreen />;
-  if (!me) return <div className="h-full flex flex-col items-center justify-center bg-[#07040f] gap-3"><span className="text-4xl">🎬</span><p className="text-xs text-gray-400">Chargement du profil...</p><button onClick={() => sb.auth.signOut()} className="text-xs underline text-gray-500">Se déconnecter</button></div>;
+  if (!me) return <div className="h-full flex flex-col items-center justify-center bg-app gap-3"><span className="text-4xl">🎬</span><p className="text-xs text-gray-400">Chargement du profil...</p><button onClick={() => sb.auth.signOut()} className="text-xs underline text-gray-500">Se déconnecter</button></div>;
 
   const myVideos = videos.filter(v => v.user_id === me.id);
   const myFree = myVideos.filter(v => v.kind !== 'clip'); const myClips = myVideos.filter(v => v.kind === 'clip');
@@ -410,16 +522,22 @@ function ClipClapApp() {
   const winner = bEnded && board.length && board[0].votes > 0 ? board[0] : null;
 
   return (
-    <div className="h-full w-full flex flex-col bg-black overflow-hidden relative">
+    <div className="h-full w-full flex flex-col bg-black overflow-hidden relative"
+         onTouchStart={e => { gx.current = e.touches[0].clientX; gy.current = e.touches[0].clientY; gt.current = e.target; }}
+         onTouchEnd={e => {
+           const dx = e.changedTouches[0].clientX - gx.current, dy = e.changedTouches[0].clientY - gy.current, t = gt.current;
+           if (t && (['INPUT', 'TEXTAREA', 'AUDIO'].includes(t.tagName) || (t.closest && t.closest('video[controls]')))) return;
+           if (dx > 90 && Math.abs(dy) < 60 && Math.abs(dx) > Math.abs(dy) * 2) back();
+         }}>
       {toast && <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[60] bg-black/80 border border-white/10 text-xs font-semibold px-4 py-2 rounded-full">⚡ {toast}</div>}
 
       <div className="flex-1 relative overflow-hidden">
         {/* ===== FIL ===== */}
         {isPlayerTab && (
-          <div className="absolute inset-0 swipe bg-[#07040f]" onTouchStart={e => { tx.current = e.touches[0].clientX; ty.current = e.touches[0].clientY; }} onTouchEnd={onTouchEnd}>
+          <div className="absolute inset-0 swipe bg-app" onTouchStart={e => { tx.current = e.touches[0].clientX; ty.current = e.touches[0].clientY; }} onTouchEnd={onTouchEnd}>
             {cur ? (
               <div className="relative h-full w-full bg-black">
-                <video ref={videoRef} src={cur.video_url} className="absolute inset-0 h-full w-full object-cover" loop playsInline autoPlay muted={muted} onClick={togglePlay} />
+                <video ref={setVideoEl} src={cur.video_url} className="absolute inset-0 h-full w-full object-cover" loop playsInline autoPlay muted={muted} onClick={togglePlay} />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none"></div>
                 {playIcon && <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"><div className="w-16 h-16 bg-black/60 rounded-full flex items-center justify-center text-2xl animate-ping">▶️</div></div>}
                 <button onClick={() => { click(); setMuted(!muted); }} className={`absolute top-14 right-4 z-30 w-10 h-10 ${btn}`}>{muted ? '🔇' : '🔊'}</button>
@@ -463,6 +581,7 @@ function ClipClapApp() {
             )}
             {tab === 'clips' && cur && <button onClick={() => { click(); setShowUpload(true); }} className="absolute top-14 left-4 z-30 bg-gradient-to-r from-pink-500 to-purple-600 text-xs font-bold px-3 py-2 rounded-full shadow-lg">➕ Publier un clip</button>}
             <div className="absolute top-0 left-0 right-0 z-30 pt-3 pb-2 flex justify-center gap-6 bg-gradient-to-b from-black/90 to-transparent">
+              <span className="absolute left-4 top-3 text-[13px] font-black grad-text tracking-wide pointer-events-none">ClipClap</span>
               {[['following', 'Abonnements'], ['foryou', 'Pour toi']].map(([k, l]) => (
                 <button key={k} onClick={() => { click(); setFeedTab(k); }} className={`text-sm font-bold ${feedTab === k ? 'border-b-2 border-pink-500 pb-1' : 'text-white/60'}`}>{l}</button>))}
             </div>
@@ -471,8 +590,8 @@ function ClipClapApp() {
 
         {/* ===== BATTLE ===== */}
         {tab === 'search' && (
-          <div className="absolute inset-0 bg-[#07040f] overflow-y-auto p-4 pt-10 pb-24">
-            <h2 className="text-xl font-extrabold mb-4">🏆 Battle de la Semaine</h2>
+          <div className="absolute inset-0 bg-app overflow-y-auto p-4 pt-10 pb-24">
+            <h2 className="text-2xl font-black mb-4 grad-text">🏆 Battle de la Semaine</h2>
             {isAdmin && <button onClick={() => setShowBattleForm(true)} className="w-full mb-4 bg-white/10 border border-amber-500/40 text-amber-300 font-bold py-2.5 rounded-xl text-xs">⚙️ Lancer une nouvelle battle (admin)</button>}
             {!battle ? <div className="p-6 bg-gradient-to-br from-purple-900/40 via-red-900/30 to-black border border-amber-500/40 rounded-2xl text-center space-y-3">
                 <p className="text-4xl">🎤</p>
@@ -487,7 +606,7 @@ function ClipClapApp() {
                 </div>
                 <h3 className="text-lg font-bold">{battle.title}</h3>
                 <p className="text-xs text-gray-400">Écoute l'instru imposé, puis pose ton freestyle dessus.</p>
-                <audio controls src={battle.instru_url} className="w-full h-10" />
+                <audio ref={setAudioEl} controls src={battle.instru_url} className="w-full h-10" />
                 {!bEnded
                   ? <button onClick={() => { click(); setInstru(battle.title); setInstruUrl(battle.instru_url); setBattleMode(true); setTab('studio'); }} className="w-full bg-gradient-to-r from-amber-500 to-red-600 font-extrabold py-3 rounded-xl">🎤 Poser sur l'instru de la Battle</button>
                   : <p className="text-center text-xs text-gray-400">Battle terminée : les votes sont fermés.</p>}
@@ -516,8 +635,8 @@ function ClipClapApp() {
 
         {/* ===== STUDIO ===== */}
         {tab === 'studio' && (
-          <div className="absolute inset-0 bg-[#07040f] overflow-y-auto z-40 p-4 pt-6 pb-24 space-y-5">
-            <h2 className="text-xl font-extrabold">🎙️ Studio d'enregistrement</h2>
+          <div className="absolute inset-0 bg-app overflow-y-auto z-40 p-4 pt-6 pb-24 space-y-5">
+            <h2 className="text-2xl font-black grad-text">🎙️ Studio d'enregistrement</h2>
             {battleMode ? <div className="bg-red-600/20 border border-red-500/40 rounded-xl p-3 text-sm font-bold">🏆 Instru imposé par la Battle : {instru}</div> : <label className="cursor-pointer bg-purple-600 font-bold py-3 px-4 rounded-xl block text-center">
               📁 Importer un instrumental (MP3 / WAV)
               <input type="file" accept="audio/*" className="hidden" onChange={e => { const f = e.target.files[0]; if (f) { setInstru(f.name.replace(/\.[^/.]+$/, '')); setInstruUrl(URL.createObjectURL(f)); } }} />
@@ -530,9 +649,9 @@ function ClipClapApp() {
 
         {/* ===== PROFIL ===== */}
         {tab === 'profile' && (
-          <div className="absolute inset-0 bg-[#07040f] overflow-y-auto p-4 pt-10 pb-24">
+          <div className="absolute inset-0 bg-app overflow-y-auto p-4 pt-10 pb-24">
             <div className="flex flex-col items-center mt-2">
-              <div className="w-24 h-24 rounded-full border-2 border-pink-500 overflow-hidden bg-purple-900 flex items-center justify-center mb-3"><Av src={me.avatar_url} size="text-4xl" /></div>
+              <div className="w-24 h-24 rounded-full border-2 border-fuchsia-400 shadow-[0_0_28px_rgba(217,70,239,0.55)] overflow-hidden bg-purple-900 flex items-center justify-center mb-3"><Av src={me.avatar_url} size="text-4xl" /></div>
               <h2 className="text-xl font-extrabold">{me.display_name || me.username}</h2>
               <p className="text-xs text-gray-400 mb-2">@{me.username}</p>
               {me.bio && <p className="text-xs text-gray-200 text-center max-w-xs mb-3">{me.bio}</p>}
@@ -558,15 +677,15 @@ function ClipClapApp() {
       </div>
 
       {/* ===== NAVIGATION ===== */}
-      <div className="absolute bottom-0 left-0 right-0 h-16 bg-[#090514]/95 backdrop-blur-xl border-t border-white/10 flex items-center justify-around px-2 z-40">
+      <div className="absolute bottom-0 left-0 right-0 h-16 bg-[#0d0820]/85 backdrop-blur-2xl border-t border-fuchsia-500/20 shadow-[0_-8px_30px_rgba(168,85,247,0.18)] flex items-center justify-around px-2 z-40">
         {[['feed', '🏠', 'Accueil'], ['search', '🔥', 'Battle']].map(([k, i, l]) => (
-          <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-pink-500 font-bold' : 'text-gray-400'}`}><span className="text-xl">{i}</span><span className="text-[10px]">{l}</span></button>))}
+          <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-fuchsia-400 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 'text-gray-400'}`}><span className="text-xl">{i}</span><span className="text-[10px]">{l}</span></button>))}
         <button onClick={() => { click(); setTab('clips'); setViewing(null); }} className="flex flex-col items-center gap-1 -mt-3">
-          <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-600 to-cyan-400 flex items-center justify-center text-2xl shadow-lg shadow-pink-500/40 ${tab === 'clips' ? 'ring-2 ring-white' : ''}`}>🎬</div>
-          <span className={`text-[10px] ${tab === 'clips' ? 'text-pink-500 font-bold' : 'text-gray-400'}`}>Clip</span>
+          <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-600 to-cyan-400 flex items-center justify-center text-2xl clip-glow ${tab === 'clips' ? 'ring-2 ring-white' : ''}`}>🎬</div>
+          <span className={`text-[10px] ${tab === 'clips' ? 'text-fuchsia-400 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 'text-gray-400'}`}>Clip</span>
         </button>
         {[['studio', '🎙️', 'Studio'], ['profile', '👤', 'Profil']].map(([k, i, l]) => (
-          <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-pink-500 font-bold' : 'text-gray-400'}`}><span className="text-xl">{i}</span><span className="text-[10px]">{l}</span></button>))}
+          <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-fuchsia-400 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 'text-gray-400'}`}><span className="text-xl">{i}</span><span className="text-[10px]">{l}</span></button>))}
       </div>
 
       {/* ===== NOUVELLE BATTLE (admin) ===== */}
@@ -642,8 +761,8 @@ function ClipClapApp() {
         const st = stats[viewing.id]; const list = videos.filter(v => v.user_id === viewing.id); const isMe = viewing.id === me.id;
         const p = st?.profile || viewing;
         return (
-          <div className="absolute inset-0 z-50 bg-[#07040f] overflow-y-auto p-4 pt-10 pb-24"
-               onTouchStart={e => { window._px = e.touches[0].clientX; }} onTouchEnd={e => { if (e.changedTouches[0].clientX - window._px > 80) setViewing(null); }}>
+          <div className="absolute inset-0 z-50 bg-app overflow-y-auto p-4 pt-10 pb-24"
+               >
             <button onClick={() => setViewing(null)} className="mb-4 w-9 h-9 bg-white/10 rounded-full text-base font-bold">‹</button>
             <div className="flex flex-col items-center">
               <div className="w-20 h-20 rounded-full border-2 border-pink-500 overflow-hidden bg-purple-900 flex items-center justify-center mb-3"><Av src={p.avatar_url} size="text-3xl" /></div>
