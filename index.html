@@ -67,6 +67,7 @@ const Av = ({ src, cls = 'w-full h-full object-cover', size = 'text-lg' }) =>
 
 /* ================= ICÔNES ================= */
 const ICONS = {
+  more: <><circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" /></>,
   home: <><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M9 22V12h6v10" /></>,
   flame: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z" />,
   clap: <><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z" /><path d="m6.2 5.3 3.1 3.9" /><path d="m12.4 3.4 3.1 4" /><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /></>,
@@ -145,19 +146,85 @@ const Watermark = ({ user, gid = 'wmg' }) => {
   );
 };
 
+/* ================= TEXTES LÉGAUX & NOUVEAU MOT DE PASSE ================= */
+const CONTACT_EMAIL = 'azizenbiri@gmail.com';
+const LEGAL = {
+  cgu: { title: "Conditions d'utilisation", body: [
+    ['1. Objet', "ClipClap est une application de partage de courtes vidéos (clips et freestyles) avec un concours hebdomadaire appelé Battle."],
+    ['2. Compte', "Tu dois avoir au moins 15 ans pour créer un compte. Tu es responsable de ton mot de passe et de l'activité de ton compte. Tu ne dois pas usurper l'identité d'une autre personne."],
+    ['3. Contenus', "Tu ne peux publier que des contenus dont tu détiens les droits (image, voix, musique, instrumentaux). Sont interdits : les contenus haineux, violents, sexuellement explicites, harcelants, illégaux ou portant atteinte aux droits d'autrui. Tu gardes tes droits sur tes vidéos, mais tu autorises ClipClap à les afficher dans l'application, avec un filigrane ClipClap."],
+    ['4. Modération', "Tu peux signaler un contenu ou bloquer un utilisateur. ClipClap peut retirer tout contenu et suspendre tout compte qui ne respecte pas ces règles."],
+    ['5. Battle', "La Battle dure le temps annoncé dans l'application. Le classement est établi d'après les votes. ClipClap peut annuler des votes en cas de fraude."],
+    ['6. Responsabilité', "L'application est fournie en l'état. Les contenus sont publiés sous la responsabilité de leurs auteurs ; ClipClap retire rapidement les contenus illicites qui lui sont signalés."],
+    ['7. Contact', 'Pour toute question : ' + CONTACT_EMAIL],
+  ] },
+  privacy: { title: 'Politique de confidentialité', body: [
+    ['Données collectées', "Adresse email, pseudo, nom d'affichage, photo et bio (facultatives), vidéos, commentaires, likes, favoris, abonnements, votes et signalements."],
+    ['Utilisation', "Ces données servent uniquement à faire fonctionner ClipClap : créer ton compte, afficher tes vidéos, compter les vues, likes et votes, et modérer les contenus."],
+    ['Ce qui est public', "Ton pseudo, ta photo, ta bio, tes vidéos, tes commentaires et tes compteurs sont visibles par les autres utilisateurs. Ton email ne l'est jamais."],
+    ['Hébergement', "Les données sont stockées chez Supabase. Elles ne sont ni vendues ni cédées à des tiers."],
+    ['Conservation', "Tes données sont conservées tant que ton compte existe. Quand tu le supprimes, ton compte, tes vidéos, tes commentaires et tes likes sont effacés."],
+    ['Tes droits', "Tu peux accéder à tes données, les corriger et supprimer ton compte depuis Profil > Réglages > Supprimer mon compte. Tu peux aussi écrire à " + CONTACT_EMAIL + " ou saisir la CNIL (cnil.fr)."],
+    ['Stockage sur ton appareil', "ClipClap enregistre dans ton navigateur uniquement ce qui sert à te garder connecté."],
+  ] },
+};
+const LegalSheet = ({ type, onClose }) => {
+  const d = LEGAL[type]; if (!d) return null;
+  return (
+    <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-md flex items-end justify-center" onClick={onClose}>
+      <div className="w-full max-w-md h-[80%] bg-[#120c24] border-t border-white/10 rounded-t-3xl flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b border-white/10"><h3 className="text-sm font-extrabold">{d.title}</h3><button type="button" onClick={onClose} className="text-gray-400 text-lg px-2">✕</button></div>
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4">
+          {d.body.map(([t, x]) => <div key={t}><p className="text-xs font-bold text-fuchsia-300 mb-1">{t}</p><p className="text-xs text-gray-300 leading-relaxed">{x}</p></div>)}
+          <p className="text-[10px] text-gray-500">Dernière mise à jour : octobre 2026</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ResetScreen = ({ onDone }) => {
+  const [pw, setPw] = useState(''); const [msg, setMsg] = useState(''); const [busy, setBusy] = useState(false);
+  const submit = async (e) => {
+    e.preventDefault(); setBusy(true);
+    const { error } = await sb.auth.updateUser({ password: pw });
+    setBusy(false);
+    if (error) return setMsg(error.message);
+    onDone();
+  };
+  return (
+    <div className="h-full w-full flex flex-col items-center justify-center bg-app px-6">
+      <Logo size={72} id="lgr" />
+      <h1 className="text-xl font-black mt-3 mb-1 grad-text">Nouveau mot de passe</h1>
+      <p className="text-xs text-gray-400 mb-5">Choisis ton nouveau mot de passe.</p>
+      <form onSubmit={submit} className="w-full max-w-xs space-y-3">
+        <input type="password" minLength={6} required value={pw} onChange={e => setPw(e.target.value)} placeholder="Nouveau mot de passe (6 caractères min.)" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-fuchsia-500" />
+        {msg && <p className="text-xs text-fuchsia-300 text-center">{msg}</p>}
+        <button disabled={busy} className="w-full py-3 bg-gradient-to-r from-fuchsia-500 to-violet-600 rounded-xl font-extrabold text-sm disabled:opacity-60">{busy ? '...' : 'Enregistrer'}</button>
+      </form>
+    </div>
+  );
+};
+
 /* ================= CONNEXION / INSCRIPTION ================= */
 function AuthScreen() {
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState(''); const [password, setPassword] = useState('');
   const [username, setUsername] = useState(''); const [name, setName] = useState('');
   const [msg, setMsg] = useState(''); const [busy, setBusy] = useState(false);
+  const [legal, setLegal] = useState(null); const [accepted, setAccepted] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault(); setMsg(''); setBusy(true);
     try {
-      if (mode === 'signup') {
+      if (mode === 'forgot') {
+        const { error } = await sb.auth.resetPasswordForEmail(email.trim(), { redirectTo: location.origin + location.pathname });
+        if (error) throw error;
+        setMsg('Email envoyé ! Clique sur le lien reçu pour choisir un nouveau mot de passe.');
+      } else if (mode === 'signup') {
         const u = username.trim().replace(/^@+/, '').toLowerCase();
         if (!/^[a-z0-9_.]{3,20}$/.test(u)) throw new Error("Pseudo : 3 à 20 caractères (lettres, chiffres, _ ou .)");
+        if (!accepted) throw new Error("Accepte les conditions d'utilisation pour continuer");
         const { data, error } = await sb.auth.signUp({ email, password, options: { data: { username: u, display_name: name.trim() || u } } });
         if (error) throw error;
         if (!data.session) { setMode('login'); setMsg("Compte créé ! Confirme ton email puis connecte-toi."); }
@@ -174,19 +241,25 @@ function AuthScreen() {
     <div className="h-full w-full flex flex-col items-center justify-center bg-app px-6">
       <div className="mb-3"><Logo size={84} id="lga" /></div>
       <h1 className="text-3xl font-black mb-1 grad-text">ClipClap</h1>
-      <p className="text-xs text-gray-400 mb-5">{mode === 'login' ? 'Connecte-toi pour continuer' : 'Crée ton compte'}</p>
+      <p className="text-xs text-gray-400 mb-5">{mode === 'login' ? 'Connecte-toi pour continuer' : mode === 'forgot' ? 'Recevoir un lien de réinitialisation' : 'Crée ton compte'}</p>
       <form onSubmit={submit} className="w-full max-w-xs space-y-3">
         {mode === 'signup' && <>
           <input className={inp} placeholder="Nom d'affichage" value={name} onChange={e => setName(e.target.value)} />
           <input className={inp} placeholder="@pseudo" autoCapitalize="none" value={username} onChange={e => setUsername(e.target.value)} />
         </>}
         <input className={inp} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
-        <input className={inp} type="password" placeholder="Mot de passe (6 caractères min.)" minLength={6} value={password} onChange={e => setPassword(e.target.value)} required />
+        {mode !== 'forgot' && <input className={inp} type="password" placeholder="Mot de passe (6 caractères min.)" minLength={6} value={password} onChange={e => setPassword(e.target.value)} required />}
+        {mode === 'signup' && <label className="flex items-start gap-2 text-[11px] text-gray-300 leading-snug">
+          <input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} className="mt-0.5" />
+          <span>J'ai 15 ans ou plus et j'accepte les <button type="button" onClick={() => setLegal('cgu')} className="underline text-fuchsia-300">conditions d'utilisation</button> et la <button type="button" onClick={() => setLegal('privacy')} className="underline text-fuchsia-300">politique de confidentialité</button>.</span>
+        </label>}
+        <LegalSheet type={legal} onClose={() => setLegal(null)} />
         {msg && <p className="text-xs text-pink-300 text-center">{msg}</p>}
         <button disabled={busy} className="w-full py-3 bg-gradient-to-r from-fuchsia-500 to-violet-600 rounded-xl font-extrabold text-sm disabled:opacity-60">
-          {busy ? '...' : mode === 'login' ? 'Se connecter' : "S'inscrire"}
+          {busy ? '...' : mode === 'login' ? 'Se connecter' : mode === 'forgot' ? 'Envoyer le lien' : "S'inscrire"}
         </button>
       </form>
+      {mode === 'login' && <button onClick={() => { setMode('forgot'); setMsg(''); }} className="mt-3 text-xs text-fuchsia-300 underline">Mot de passe oublié ?</button>}
       <button onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setMsg(''); }} className="mt-4 text-xs text-gray-400 underline">
         {mode === 'login' ? "Pas de compte ? S'inscrire" : 'Déjà un compte ? Se connecter'}
       </button>
@@ -196,7 +269,8 @@ function AuthScreen() {
 
 /* ================= APPLICATION ================= */
 function ClipClapApp() {
-  const [booted, setBooted] = useState(false);
+  const [booted, setBooted] = useState(false); const [recovering, setRecovering] = useState(false);
+  const [blocked, setBlocked] = useState({}); const [blockedList, setBlockedList] = useState([]); const [menuVideo, setMenuVideo] = useState(null); const [showSettings, setShowSettings] = useState(false); const [legal, setLegal] = useState(null);
   const [splashDone, setSplashDone] = useState(false);
   useEffect(() => { const t = setTimeout(() => setSplashDone(true), 2900); return () => clearTimeout(t); }, []);
   const [session, setSession] = useState(null);
@@ -247,7 +321,7 @@ function ClipClapApp() {
   /* ---------- AUTH ---------- */
   useEffect(() => {
     sb.auth.getSession().then(({ data }) => { setSession(data.session); setBooted(true); });
-    const { data: sub } = sb.auth.onAuthStateChange((_e, s) => setSession(s));
+    const { data: sub } = sb.auth.onAuthStateChange((e, s) => { setSession(s); if (e === 'PASSWORD_RECOVERY') setRecovering(true); });
     return () => sub.subscription.unsubscribe();
   }, []);
   const uid = session?.user?.id;
@@ -258,14 +332,15 @@ function ClipClapApp() {
     if (data) setVideos(data);
   };
   const loadMine = async () => {
-    const [l, s, f] = await Promise.all([
+    const [l, s, f, bk] = await Promise.all([
       sb.from('likes').select('video_id').eq('user_id', uid),
       sb.from('saves').select('video_id').eq('user_id', uid),
       sb.from('follows').select('following_id').eq('follower_id', uid),
+      sb.from('blocks').select('blocked_id').eq('blocker_id', uid),
       
     ]);
     const toMap = (rows, k) => (rows || []).reduce((a, r) => ({ ...a, [r[k]]: true }), {});
-    setLiked(toMap(l.data, 'video_id')); setSaved(toMap(s.data, 'video_id')); setFollowing(toMap(f.data, 'following_id'));
+    setLiked(toMap(l.data, 'video_id')); setSaved(toMap(s.data, 'video_id')); setFollowing(toMap(f.data, 'following_id')); setBlocked(toMap(bk.data, 'blocked_id'));
     
   };
   const loadBattle = async () => {
@@ -336,17 +411,17 @@ function ClipClapApp() {
   /* ---------- FIL ---------- */
   const isPlayerTab = tab === 'feed' || tab === 'clips';
   // Accueil = freestyles (Studio + Battle) ; page Clip = clips uniquement
-  const pool = videos.filter(v => tab === 'clips' ? v.kind === 'clip' : v.kind !== 'clip');
+  const pool = videos.filter(v => !blocked[v.user_id] && (tab === 'clips' ? v.kind === 'clip' : v.kind !== 'clip'));
   const displayed = feedTab === 'following' ? pool.filter(v => following[v.user_id]) : pool;
   const cur = displayed.find(v => v.id === currentId) || displayed[0];
-  const overlay = viewing || showUpload || showComments || recMode || previewUrl || editing || showBattleForm;
+  const overlay = viewing || showUpload || showComments || recMode || previewUrl || editing || showBattleForm || menuVideo || showSettings || legal;
 
   // Vues réelles : +1 par vidéo et par session
   useEffect(() => {
     if (!cur || !isPlayerTab || overlay || viewedRef.current.has(cur.id)) return;
     viewedRef.current.add(cur.id);
-    patch(cur.id, v => ({ views_count: v.views_count + 1 }));
-    sb.rpc('increment_views', { vid: cur.id });
+    
+    sb.rpc('register_view', { vid: cur.id }).then(({ data }) => { if (data) patch(cur.id, v => ({ views_count: v.views_count + 1 })); });
   }, [cur?.id, tab, !!overlay]);
 
   useEffect(() => {
@@ -387,7 +462,7 @@ function ClipClapApp() {
       if (navigator.share) { await navigator.share({ title: 'ClipClap', text: `@${v.username} sur ClipClap : viens découvrir ClipClap 🎬`, url: location.href }); ok = true; }
       else { await navigator.clipboard.writeText(location.href); ok = true; say('Lien copié ! 🔗'); }
     } catch (err) {}
-    if (ok) { patch(v.id, x => ({ shares_count: x.shares_count + 1 })); sb.rpc('increment_shares', { vid: v.id }); }
+    if (ok) sb.rpc('register_share', { vid: v.id }).then(({ data }) => { if (data) patch(v.id, x => ({ shares_count: x.shares_count + 1 })); });
   };
 
   const follow = async (userId, e) => {
@@ -510,6 +585,47 @@ function ClipClapApp() {
     }
   };
 
+  /* ---------- MODÉRATION & COMPTE ---------- */
+  const reportVideo = async (v, reason) => {
+    const { error } = await sb.from('reports').insert({ reporter_id: uid, video_id: v.id, reason });
+    setMenuVideo(null); say(error ? 'Signalement impossible' : 'Merci, signalement envoyé');
+  };
+  const reportComment = async (c) => {
+    const { error } = await sb.from('reports').insert({ reporter_id: uid, comment_id: c.id, reason: 'Commentaire inapproprié' });
+    say(error ? 'Signalement impossible' : 'Merci, signalement envoyé');
+  };
+  const blockUser = async (v) => {
+    if (!confirm(`Bloquer @${v.username} ? Tu ne verras plus ses vidéos ni ses commentaires.`)) return;
+    const { error } = await sb.from('blocks').insert({ blocker_id: uid, blocked_id: v.user_id });
+    if (error) return say('Blocage impossible');
+    setBlocked(b => ({ ...b, [v.user_id]: true })); setMenuVideo(null); setViewing(null); say(`@${v.username} bloqué`);
+  };
+  const loadBlocked = async () => {
+    const { data } = await sb.from('blocks').select('blocked_id, profiles!blocked_id(username)').eq('blocker_id', uid);
+    setBlockedList(data || []);
+  };
+  const unblock = async (id) => {
+    await sb.from('blocks').delete().match({ blocker_id: uid, blocked_id: id });
+    setBlocked(b => ({ ...b, [id]: false })); setBlockedList(l => l.filter(x => x.blocked_id !== id));
+  };
+  const removeFromMenu = async (v) => { setMenuVideo(null); await removeVideo(v, { stopPropagation() {} }); };
+  const deleteComment = async (c) => {
+    if (!confirm('Supprimer ce commentaire ?')) return;
+    const { error } = await sb.from('comments').delete().eq('id', c.id);
+    if (error) return say('Suppression impossible');
+    const removed = comments.filter(x => x.id === c.id || x.parent_id === c.id).length;
+    setComments(l => l.filter(x => x.id !== c.id && x.parent_id !== c.id));
+    patch(cur.id, x => ({ comments_count: Math.max(0, x.comments_count - removed) }));
+  };
+  const deleteAccount = async () => {
+    if (!confirm('Supprimer définitivement ton compte, tes vidéos, tes commentaires et tes likes ? Cette action est irréversible.')) return;
+    const { data: mine } = await sb.from('videos').select('storage_path').eq('user_id', uid);
+    if (mine && mine.length) await sb.storage.from('videos').remove(mine.map(m => m.storage_path));
+    const { error } = await sb.rpc('delete_my_account');
+    if (error) return say('Suppression impossible : ' + error.message);
+    setShowSettings(false); await sb.auth.signOut(); say('Compte supprimé');
+  };
+
   /* ---------- GLISSER VERS LE BAS POUR FERMER LES COMMENTAIRES ---------- */
   const sheetStart = (e) => {
     const inList = listRef.current && listRef.current.contains(e.target);
@@ -530,6 +646,9 @@ function ClipClapApp() {
   const back = () => {
     if (recMode) { closeStudio(); return true; }
     if (previewUrl) { setPreviewUrl(null); setBlob(null); return true; }
+    if (legal) { setLegal(null); return true; }
+    if (menuVideo) { setMenuVideo(null); return true; }
+    if (showSettings) { setShowSettings(false); return true; }
     if (showComments) { setShowComments(false); return true; }
     if (showUpload) { setShowUpload(false); setFile(null); return true; }
     if (showBattleForm) { setShowBattleForm(false); return true; }
@@ -556,6 +675,7 @@ function ClipClapApp() {
         </div>))}</div>;
 
   if (!splashDone || !booted) return <Splash />;
+  if (recovering) return <ResetScreen onDone={() => setRecovering(false)} />;
   if (!session) return <AuthScreen />;
   if (!me) return <div className="h-full flex flex-col items-center justify-center bg-app gap-3"><span className="text-4xl">🎬</span><p className="text-xs text-gray-400">Chargement du profil...</p><button onClick={() => sb.auth.signOut()} className="text-xs underline text-gray-500">Se déconnecter</button></div>;
 
@@ -573,7 +693,7 @@ function ClipClapApp() {
   const bDaysLeft = Math.floor(bLeft / 86400000);
   const bH = Math.floor((bLeft % 86400000) / 3600000), bM = Math.floor((bLeft % 3600000) / 60000);
   const bCount = bEnded ? 'Terminée' : bDaysLeft >= 1 ? `Reste ${bDaysLeft} jour${bDaysLeft > 1 ? 's' : ''}` : `Reste ${bH} h ${bM} min`;
-  const bVideos = battle ? videos.filter(v => v.battle_id === battle.id) : [];
+  const bVideos = battle ? videos.filter(v => v.battle_id === battle.id && !blocked[v.user_id]) : [];
   const board = Object.values(bVideos.reduce((a, v) => {
     a[v.user_id] = a[v.user_id] || { id: v.user_id, name: v.username, avatar: v.avatar_url, views: 0, vid: v };
     a[v.user_id].views += v.views_count; return a;
@@ -602,6 +722,7 @@ function ClipClapApp() {
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none"></div>
                 <Watermark user={cur.username} />
                 {playIcon && <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"><div className="w-16 h-16 bg-black/60 rounded-full flex items-center justify-center text-white animate-ping"><Icon n="play" size={26} fill /></div></div>}
+                <button onClick={() => { click(); setMenuVideo(cur); }} className={`absolute top-14 right-[4.5rem] z-30 ${btn}`}><Icon n="more" size={20} fill /></button>
                 <button onClick={() => { click(); setMuted(!muted); }} className={`absolute top-14 right-4 z-30 ${btn}`}><Icon n={muted ? 'volx' : 'vol'} size={20} /></button>
 
                 <div className="absolute right-3 bottom-20 z-30 flex flex-col items-center gap-4">
@@ -724,7 +845,7 @@ function ClipClapApp() {
               </div>
               <div className="flex gap-2 w-full max-w-xs mb-5">
                 <button onClick={() => { setEName(me.display_name || ''); setEBio(me.bio || ''); setEAvatar(null); setEditing(true); }} className="flex-1 bg-white/10 border border-white/10 py-2 rounded-xl text-xs font-bold">Modifier le profil</button>
-                <button onClick={() => sb.auth.signOut()} className="bg-white/10 border border-white/10 px-3 py-2 rounded-xl text-xs font-bold">Déconnexion</button>
+                <button onClick={() => { loadBlocked(); setShowSettings(true); }} className="bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold">Réglages</button>
               </div>
             </div>
             <div className="border-t border-white/10 pt-4">
@@ -749,6 +870,46 @@ function ClipClapApp() {
         {[['studio', 'mic', 'Studio'], ['profile', 'user', 'Profil']].map(([k, i, l]) => (
           <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-fuchsia-400 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 'text-gray-400'}`}><Icon n={i} size={22} /><span className="text-[10px]">{l}</span></button>))}
       </div>
+
+      {/* ===== OPTIONS DE LA VIDÉO ===== */}
+      {menuVideo && (() => {
+        const v = menuVideo; const mine = v.user_id === me.id;
+        const reasons = ['Contenu inapproprié', 'Harcèlement ou haine', "Droits d'auteur", 'Spam'];
+        return (
+          <div className="absolute inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center" onClick={() => setMenuVideo(null)}>
+            <div className="w-full max-w-md bg-[#120c24] border-t border-white/10 rounded-t-3xl p-5 space-y-3" onClick={e => e.stopPropagation()}>
+              <div className="w-12 h-1.5 bg-white/25 rounded-full mx-auto"></div>
+              {!mine && <>
+                <p className="text-xs font-bold text-gray-300">Signaler cette vidéo</p>
+                <div className="flex flex-wrap gap-2">{reasons.map(r => <button key={r} onClick={() => reportVideo(v, r)} className="text-xs px-3 py-2 rounded-full bg-white/10 border border-white/10">{r}</button>)}</div>
+                <button onClick={() => blockUser(v)} className="w-full py-3 rounded-xl bg-white/10 text-sm font-bold">Bloquer @{v.username}</button>
+              </>}
+              {(mine || isAdmin) && <button onClick={() => removeFromMenu(v)} className="w-full py-3 rounded-xl bg-red-600/80 text-sm font-bold">{mine ? 'Supprimer ma vidéo' : 'Retirer cette vidéo (admin)'}</button>}
+              <button onClick={() => setMenuVideo(null)} className="w-full py-3 rounded-xl text-sm text-gray-400">Annuler</button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ===== RÉGLAGES ===== */}
+      {showSettings && (
+        <div className="absolute inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center" onClick={() => setShowSettings(false)}>
+          <div className="w-full max-w-md max-h-[80%] overflow-y-auto bg-[#120c24] border-t border-white/10 rounded-t-3xl p-5 space-y-2" onClick={e => e.stopPropagation()}>
+            <div className="w-12 h-1.5 bg-white/25 rounded-full mx-auto mb-2"></div>
+            <h3 className="text-base font-extrabold mb-2">Réglages</h3>
+            <button onClick={() => setLegal('cgu')} className="w-full text-left py-3 px-4 rounded-xl bg-white/5 text-sm">Conditions d'utilisation</button>
+            <button onClick={() => setLegal('privacy')} className="w-full text-left py-3 px-4 rounded-xl bg-white/5 text-sm">Politique de confidentialité</button>
+            {blockedList.length > 0 && <div className="pt-2">
+              <p className="text-xs font-bold text-gray-400 mb-1">Utilisateurs bloqués</p>
+              {blockedList.map(b => <div key={b.blocked_id} className="flex items-center justify-between py-2 text-sm"><span>@{b.profiles?.username}</span><button onClick={() => unblock(b.blocked_id)} className="text-xs px-3 py-1.5 rounded-full bg-white/10">Débloquer</button></div>)}
+            </div>}
+            <button onClick={() => { setShowSettings(false); sb.auth.signOut(); }} className="w-full py-3 rounded-xl bg-white/10 text-sm font-bold mt-2">Se déconnecter</button>
+            <button onClick={deleteAccount} className="w-full py-3 rounded-xl text-sm font-bold text-red-400 border border-red-500/30">Supprimer mon compte</button>
+            <p className="text-center text-[10px] text-gray-500 pt-2">Contact : {CONTACT_EMAIL}</p>
+          </div>
+        </div>
+      )}
+      <LegalSheet type={legal} onClose={() => setLegal(null)} />
 
       {/* ===== NOUVELLE BATTLE (admin) ===== */}
       {showBattleForm && (
@@ -795,21 +956,26 @@ function ClipClapApp() {
             </div>
             <div ref={listRef} className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4">
               {(() => {
-                const tops = comments.filter(c => !c.parent_id);
+                const vis = comments.filter(c => !blocked[c.user_id]);
+                const tops = vis.filter(c => !c.parent_id);
                 const Row = (c, isReply) => (
                   <div key={c.id} className={`flex gap-3 ${isReply ? 'ml-11' : ''}`}>
                     <div className={`${isReply ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-xs'} rounded-full bg-fuchsia-500 flex items-center justify-center font-bold flex-shrink-0`}>{(c.profiles?.username || '?')[0].toUpperCase()}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex gap-2"><span className="text-xs font-bold text-gray-300">@{c.profiles?.username}</span><span className="text-[10px] text-gray-500">{ago(c.created_at)}</span></div>
                       <p className="text-xs mt-0.5 break-words">{c.text}</p>
-                      <button onClick={() => { setReplyTo(c); setCText(isReply ? `@${c.profiles?.username} ` : ''); }} className="text-xs text-neutral-400 mt-1">Répondre</button>
+                      <div className="flex gap-4 mt-1">
+                        <button onClick={() => { setReplyTo(c); setCText(isReply ? `@${c.profiles?.username} ` : ''); }} className="text-xs text-neutral-400">Répondre</button>
+                        {(c.user_id === me.id || isAdmin) && <button onClick={() => deleteComment(c)} className="text-xs text-neutral-500">Supprimer</button>}
+                        {c.user_id !== me.id && <button onClick={() => reportComment(c)} className="text-xs text-neutral-500">Signaler</button>}
+                      </div>
                     </div>
                   </div>
                 );
                 return tops.length ? tops.map(c => (
                   <div key={c.id} className="space-y-3">
                     {Row(c, false)}
-                    {comments.filter(r => r.parent_id === c.id).sort((x, y) => new Date(x.created_at) - new Date(y.created_at)).map(r => Row(r, true))}
+                    {vis.filter(r => r.parent_id === c.id).sort((x, y) => new Date(x.created_at) - new Date(y.created_at)).map(r => Row(r, true))}
                   </div>)) : <p className="text-center text-xs text-gray-400 pt-10">Aucun commentaire. Sois le premier !</p>;
               })()}
             </div>
