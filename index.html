@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>ClipClap</title>
   <meta name="theme-color" content="#0b0719" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="ClipClap" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="description" content="ClipClap : pose ton clip, gagne la battle." />
+  <meta property="og:title" content="ClipClap" />
+  <meta property="og:description" content="Pose ton clip. Gagne la battle. Freestyles, clips et battle hebdomadaire." />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -65,8 +74,31 @@ const click = (type = 'click') => {
 const Av = ({ src, cls = 'w-full h-full object-cover', size = 'text-lg' }) =>
   src ? <img src={src} alt="" className={cls} /> : <Icon n="user" size="55%" className="text-white/80" />;
 
+/* ================= ENVOI AVEC PROGRESSION & DURÉE ================= */
+const uploadWithProgress = (path, f, token, onProgress) => new Promise((resolve, reject) => {
+  const x = new XMLHttpRequest();
+  x.open('POST', `${SB_URL}/storage/v1/object/videos/${path}`);
+  x.setRequestHeader('Authorization', `Bearer ${token}`);
+  x.setRequestHeader('apikey', SB_KEY);
+  x.setRequestHeader('Content-Type', f.type || 'video/mp4');
+  x.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100)); };
+  x.onload = () => (x.status >= 200 && x.status < 300 ? resolve() : reject(new Error(x.responseText || ('Erreur ' + x.status))));
+  x.onerror = () => reject(new Error('Réseau indisponible'));
+  x.send(f);
+});
+const videoDuration = (f) => new Promise((res) => {
+  const v = document.createElement('video'); v.preload = 'metadata';
+  const url = URL.createObjectURL(f);
+  v.onloadedmetadata = () => { URL.revokeObjectURL(url); res(isFinite(v.duration) ? v.duration : 0); };
+  v.onerror = () => { URL.revokeObjectURL(url); res(0); };
+  v.src = url;
+});
+
 /* ================= ICÔNES ================= */
 const ICONS = {
+  search: <><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></>,
+  bell: <><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></>,
+  trophy: <><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" /></>,
   more: <><circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" /></>,
   home: <><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M9 22V12h6v10" /></>,
   flame: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z" />,
@@ -88,6 +120,12 @@ const ICONS = {
 const Icon = ({ n, size = 22, fill = false, className = '' }) => (
   <svg viewBox="0 0 24 24" width={size} height={size} fill={fill ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{ICONS[n]}</svg>
 );
+
+const WinBadge = ({ n, compact }) => n > 0 ? (
+  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-300 bg-amber-400/15 border border-amber-400/30 px-2 py-0.5 rounded-full">
+    <Icon n="trophy" size={11} />{compact ? n : `${n} battle${n > 1 ? 's' : ''} gagnée${n > 1 ? 's' : ''}`}
+  </span>
+) : null;
 
 /* ================= LOGO & SPLASH ================= */
 const Logo = ({ size = 96, id = 'lg' }) => (
@@ -270,7 +308,11 @@ function AuthScreen() {
 /* ================= APPLICATION ================= */
 function ClipClapApp() {
   const [booted, setBooted] = useState(false); const [recovering, setRecovering] = useState(false);
-  const [blocked, setBlocked] = useState({}); const [blockedList, setBlockedList] = useState([]); const [menuVideo, setMenuVideo] = useState(null); const [showSettings, setShowSettings] = useState(false); const [legal, setLegal] = useState(null);
+  const [blocked, setBlocked] = useState({}); const [blockedList, setBlockedList] = useState([]); const [menuVideo, setMenuVideo] = useState(null);
+  const [results, setResults] = useState([]); const [notifs, setNotifs] = useState([]); const [unread, setUnread] = useState(0); const [showNotifs, setShowNotifs] = useState(false);
+  const [showSearch, setShowSearch] = useState(false); const [searchQ, setSearchQ] = useState(''); const [searchRes, setSearchRes] = useState([]);
+  const [progress, setProgress] = useState(0); const [hasMore, setHasMore] = useState(true); const [loadingMore, setLoadingMore] = useState(false);
+  const deepLink = useRef(new URLSearchParams(location.search).get('v')); const [showSettings, setShowSettings] = useState(false); const [legal, setLegal] = useState(null);
   const [splashDone, setSplashDone] = useState(false);
   useEffect(() => { const t = setTimeout(() => setSplashDone(true), 2900); return () => clearTimeout(t); }, []);
   const [session, setSession] = useState(null);
@@ -304,7 +346,7 @@ function ClipClapApp() {
   const videoRef = useRef(null); const viewedRef = useRef(new Set()); const tx = useRef(0); const ty = useRef(0);
   const audioElRef = useRef(null);
   const tabStack = useRef([]); const prevTab = useRef('feed'); const popping = useRef(false); const backRef = useRef(null); const lastRoot = useRef(0);
-  const gx = useRef(0); const gy = useRef(0); const gt = useRef(null);
+  const gx = useRef(0); const gy = useRef(0); const gt = useRef(null); const recTimer = useRef(null);
   // Quand le lecteur disparaît de l'écran, on coupe vraiment le son (certains navigateurs continuent sinon)
   const setVideoEl = React.useCallback((node) => {
     if (!node && videoRef.current) { const v = videoRef.current; try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }
@@ -327,9 +369,14 @@ function ClipClapApp() {
   const uid = session?.user?.id;
 
   /* ---------- CHARGEMENT ---------- */
+  const mergeVideos = (rows) => setVideos(prev => {
+    const m = new Map(prev.map(v => [v.id, v]));
+    rows.forEach(r => m.set(r.id, r));
+    return [...m.values()].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  });
   const loadVideos = async () => {
-    const { data } = await sb.from('video_stats').select('*').order('created_at', { ascending: false }).limit(100);
-    if (data) setVideos(data);
+    const { data } = await sb.from('video_stats').select('*').order('created_at', { ascending: false }).limit(40);
+    if (data) { mergeVideos(data); if (data.length < 40) setHasMore(false); }
   };
   const loadMine = async () => {
     const [l, s, f, bk] = await Promise.all([
@@ -368,21 +415,21 @@ function ClipClapApp() {
 
   useEffect(() => {
     if (!uid) { setMe(null); setVideos([]); return; }
-    loadMe(); loadMine(); loadVideos(); loadBattle();
+    loadMe(); loadMine(); loadVideos(); loadBattle(); loadUnread(); loadResults();
     sb.from('admins').select('user_id').eq('user_id', uid).maybeSingle().then(r => setIsAdmin(!!r.data));
   }, [uid]);
 
   // Actualisation automatique (compteurs des autres utilisateurs)
   useEffect(() => {
     if (!uid) return;
-    const t = setInterval(() => { if (!document.hidden) { loadVideos(); loadBattle(); setTick(t => t + 1); } }, 15000);
+    const t = setInterval(() => { if (!document.hidden) { loadVideos(); loadBattle(); loadUnread(); setTick(t => t + 1); } }, 15000);
     return () => clearInterval(t);
   }, [uid]);
 
-  useEffect(() => { if (me && tab === 'profile') loadStats(me.id); }, [tab, me?.id]);
-  useEffect(() => { if (uid && tab === 'search') loadBattle(); }, [tab]);
+  useEffect(() => { if (me && tab === 'profile') { loadStats(me.id); sb.from('video_stats').select('*').eq('user_id', me.id).order('created_at', { ascending: false }).limit(60).then(({ data }) => data && mergeVideos(data)); } }, [tab, me?.id]);
+  useEffect(() => { if (uid && tab === 'search') { loadBattle(); loadResults(); } }, [tab]);
   useEffect(() => { if (tab !== 'studio' && battleMode && !recMode && !previewUrl) { setBattleMode(false); setInstru(null); setInstruUrl(null); } }, [tab]);
-  useEffect(() => { if (viewing) loadStats(viewing.id); }, [viewing?.id]);
+  useEffect(() => { if (viewing) { loadStats(viewing.id); sb.from('video_stats').select('*').eq('user_id', viewing.id).order('created_at', { ascending: false }).limit(60).then(({ data }) => data && mergeVideos(data)); } }, [viewing?.id]);
 
   /* ---------- HISTORIQUE / RETOUR ---------- */
   useEffect(() => {
@@ -414,7 +461,36 @@ function ClipClapApp() {
   const pool = videos.filter(v => !blocked[v.user_id] && (tab === 'clips' ? v.kind === 'clip' : v.kind !== 'clip'));
   const displayed = feedTab === 'following' ? pool.filter(v => following[v.user_id]) : pool;
   const cur = displayed.find(v => v.id === currentId) || displayed[0];
-  const overlay = viewing || showUpload || showComments || recMode || previewUrl || editing || showBattleForm || menuVideo || showSettings || legal;
+  const overlay = viewing || showUpload || showComments || recMode || previewUrl || editing || showBattleForm || menuVideo || showSettings || legal || showNotifs || showSearch;
+
+  // Lien direct vers une vidéo (?v=...)
+  useEffect(() => {
+    if (!me || !deepLink.current) return;
+    const id = deepLink.current; deepLink.current = null;
+    try { history.replaceState(history.state, '', location.pathname); } catch (e) {}
+    sb.from('video_stats').select('*').eq('id', id).maybeSingle().then(({ data }) => {
+      if (!data) return say('Vidéo introuvable');
+      mergeVideos([data]); setFeedTab('foryou'); setCurrentId(data.id); setTab(data.kind === 'clip' ? 'clips' : 'feed');
+    });
+  }, [me?.id]);
+
+  // Charge les vidéos suivantes quand on approche de la fin du fil
+  useEffect(() => {
+    if (!isPlayerTab || !cur) return;
+    if (displayed.findIndex(v => v.id === cur.id) >= displayed.length - 3) loadMore();
+  }, [cur?.id, displayed.length, tab]);
+
+  // Recherche d'utilisateurs
+  useEffect(() => {
+    if (!showSearch) return;
+    const q = searchQ.trim().replace(/[%_,()]/g, '');
+    if (q.length < 2) { setSearchRes([]); return; }
+    const t = setTimeout(async () => {
+      const { data } = await sb.from('profiles').select('id,username,display_name,avatar_url').ilike('username', `%${q}%`).limit(20);
+      setSearchRes((data || []).filter(u => u.id !== uid && !blocked[u.id]));
+    }, 300);
+    return () => clearTimeout(t);
+  }, [searchQ, showSearch]);
 
   // Vues réelles : +1 par vidéo et par session
   useEffect(() => {
@@ -456,11 +532,12 @@ function ClipClapApp() {
   const like = (v, e) => { e.stopPropagation(); click('like'); toggleRel('likes', liked, setLiked, v, 1, 'likes_count'); };
   const save = (v, e) => { e.stopPropagation(); click(); say(saved[v.id] ? 'Retirée des favoris' : 'Vidéo enregistrée ! 📌'); toggleRel('saves', saved, setSaved, v, 1, 'saves_count'); };
 
+  const videoLink = (v) => `${location.origin}${location.pathname}?v=${v.id}`;
   const share = async (v, e) => {
     e.stopPropagation(); click(); let ok = false;
     try {
-      if (navigator.share) { await navigator.share({ title: 'ClipClap', text: `@${v.username} sur ClipClap : viens découvrir ClipClap 🎬`, url: location.href }); ok = true; }
-      else { await navigator.clipboard.writeText(location.href); ok = true; say('Lien copié ! 🔗'); }
+      if (navigator.share) { await navigator.share({ title: 'ClipClap', text: `@${v.username} sur ClipClap : viens découvrir ClipClap 🎬`, url: videoLink(v) }); ok = true; }
+      else { await navigator.clipboard.writeText(videoLink(v)); ok = true; say('Lien copié ! 🔗'); }
     } catch (err) {}
     if (ok) sb.rpc('register_share', { vid: v.id }).then(({ data }) => { if (data) patch(v.id, x => ({ shares_count: x.shares_count + 1 })); });
   };
@@ -514,10 +591,14 @@ function ClipClapApp() {
   const upload = async (f, cap, music, battleId = null, kind = 'freestyle') => {
     if (f.size > 52428800) { say('Vidéo trop lourde (50 Mo max)'); return false; }
     if (battleId && battle && new Date(battle.ends_at) <= new Date()) { say('La battle est terminée'); return false; }
+    const dur = await videoDuration(f);
+    if (dur && dur > 120) { say('Vidéo trop longue (2 min maximum)'); return false; }
     setUploading(true);
     const ext = f.name ? f.name.split('.').pop().toLowerCase() : (f.type.includes('mp4') ? 'mp4' : 'webm');
     const path = `${uid}/${Date.now()}.${ext}`;
-    const up = await sb.storage.from('videos').upload(path, f, { contentType: f.type || 'video/mp4' });
+    setProgress(0);
+    let up = {};
+    try { const { data: ss } = await sb.auth.getSession(); await uploadWithProgress(path, f, ss.session.access_token, setProgress); } catch (err) { up = { error: err }; }
     if (up.error) { setUploading(false); say('Envoi impossible : ' + up.error.message); return false; }
     const url = sb.storage.from('videos').getPublicUrl(path).data.publicUrl;
     const { error } = await sb.from('videos').insert({ user_id: uid, video_url: url, storage_path: path, caption: cap, music, battle_id: battleId, kind });
@@ -565,24 +646,57 @@ function ClipClapApp() {
   const stopInstru = () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
   const closeStudio = () => {
     if (recRef.current && recRef.current.state !== 'inactive') { recRef.current.onstop = null; try { recRef.current.stop(); } catch (e) {} }
-    stopCam(); stopInstru(); setRecording(false); setRecMode(false);
+    clearTimeout(recTimer.current); stopCam(); stopInstru(); setRecording(false); setRecMode(false);
   };
   const toggleRec = () => {
     if (!recording) {
       const el = camRef.current; if (!el || !el.srcObject) return alert("La caméra n'est pas encore active !");
       try {
         chunksRef.current = [];
-        const opt = MediaRecorder.isTypeSupported('video/webm') ? { mimeType: 'video/webm' } : {};
+        const opt = MediaRecorder.isTypeSupported('video/webm') ? { mimeType: 'video/webm', videoBitsPerSecond: 2500000 } : { videoBitsPerSecond: 2500000 };
         const mr = new MediaRecorder(el.srcObject, opt); recRef.current = mr;
         mr.ondataavailable = (ev) => ev.data && ev.data.size && chunksRef.current.push(ev.data);
         mr.onstop = () => { const b = new Blob(chunksRef.current, { type: mr.mimeType || 'video/webm' }); setBlob(b); setPreviewUrl(URL.createObjectURL(b)); };
         mr.start(); setRecording(true);
+        recTimer.current = setTimeout(() => { if (recRef.current && recRef.current.state !== 'inactive') recRef.current.stop(); stopCam(); stopInstru(); setRecording(false); setRecMode(false); say('Durée maximale atteinte (2 min)'); }, 120000);
         if (instruUrl) { const a = new Audio(instruUrl); audioRef.current = a; a.play().catch(() => {}); }
       } catch (err) { alert("Impossible de démarrer l'enregistrement."); }
     } else {
       if (recRef.current && recRef.current.state !== 'inactive') recRef.current.stop();
-      stopCam(); stopInstru(); setRecording(false); setRecMode(false);
+      clearTimeout(recTimer.current); stopCam(); stopInstru(); setRecording(false); setRecMode(false);
     }
+  };
+
+  /* ---------- CHARGEMENT PROGRESSIF, NOTIFICATIONS, RÉSULTATS ---------- */
+  const loadMore = async () => {
+    if (loadingMore || !hasMore || !videos.length) return;
+    setLoadingMore(true);
+    const oldest = videos[videos.length - 1].created_at;
+    const { data } = await sb.from('video_stats').select('*').lt('created_at', oldest).order('created_at', { ascending: false }).limit(40);
+    if (data) { mergeVideos(data); if (data.length < 40) setHasMore(false); }
+    setLoadingMore(false);
+  };
+  const loadResults = async () => {
+    const { data } = await sb.from('battle_results').select('*').order('ends_at', { ascending: false });
+    if (data) setResults(data);
+  };
+  const loadUnread = async () => {
+    const { count } = await sb.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', uid).eq('read', false);
+    setUnread(count || 0);
+  };
+  const openNotifs = async () => {
+    setShowNotifs(true);
+    const { data } = await sb.from('notifications').select('id,type,created_at,read,video_id,comment_text,actor_id,profiles!actor_id(username,avatar_url)').eq('user_id', uid).order('created_at', { ascending: false }).limit(50);
+    setNotifs(data || []);
+    if (unread > 0) { setUnread(0); await sb.from('notifications').update({ read: true }).eq('user_id', uid).eq('read', false); }
+  };
+  const openNotif = async (n) => {
+    setShowNotifs(false);
+    if (n.type === 'follow') { setViewing({ id: n.actor_id, username: n.profiles?.username, avatar_url: n.profiles?.avatar_url }); return; }
+    if (!n.video_id) return;
+    const { data } = await sb.from('video_stats').select('*').eq('id', n.video_id).maybeSingle();
+    if (!data) return say('Vidéo supprimée');
+    mergeVideos([data]); setFeedTab('foryou'); setCurrentId(data.id); setTab(data.kind === 'clip' ? 'clips' : 'feed');
   };
 
   /* ---------- MODÉRATION & COMPTE ---------- */
@@ -646,6 +760,8 @@ function ClipClapApp() {
   const back = () => {
     if (recMode) { closeStudio(); return true; }
     if (previewUrl) { setPreviewUrl(null); setBlob(null); return true; }
+    if (showNotifs) { setShowNotifs(false); return true; }
+    if (showSearch) { setShowSearch(false); return true; }
     if (legal) { setLegal(null); return true; }
     if (menuVideo) { setMenuVideo(null); return true; }
     if (showSettings) { setShowSettings(false); return true; }
@@ -701,6 +817,8 @@ function ClipClapApp() {
     .sort((a, b) => b.votes - a.votes || b.views - a.views).map((c, i) => ({ ...c, rank: i + 1 }));
   const myVoteId = (votes.find(x => x.user_id === me.id) || {}).candidate_id;
   const winner = bEnded && board.length && board[0].votes > 0 ? board[0] : null;
+  const wins = results.reduce((a, r) => ({ ...a, [r.candidate_id]: (a[r.candidate_id] || 0) + 1 }), {});
+  const pastResults = results.filter(r => !battle || r.battle_id !== battle.id);
 
   return (
     <div className="h-full w-full flex flex-col bg-black overflow-hidden relative"
@@ -721,6 +839,7 @@ function ClipClapApp() {
                 <video ref={setVideoEl} src={cur.video_url} className="absolute inset-0 h-full w-full object-cover" loop playsInline autoPlay muted={muted} onClick={togglePlay} />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none"></div>
                 <Watermark user={cur.username} />
+                {(() => { const i = displayed.findIndex(v => v.id === cur.id); const nx = displayed[i + 1]; return nx ? <video key={nx.id} src={nx.video_url} preload="auto" muted playsInline className="hidden" /> : null; })()}
                 {playIcon && <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"><div className="w-16 h-16 bg-black/60 rounded-full flex items-center justify-center text-white animate-ping"><Icon n="play" size={26} fill /></div></div>}
                 <button onClick={() => { click(); setMenuVideo(cur); }} className={`absolute top-14 right-[4.5rem] z-30 ${btn}`}><Icon n="more" size={20} fill /></button>
                 <button onClick={() => { click(); setMuted(!muted); }} className={`absolute top-14 right-4 z-30 ${btn}`}><Icon n={muted ? 'volx' : 'vol'} size={20} /></button>
@@ -745,6 +864,7 @@ function ClipClapApp() {
                 <div className="absolute left-4 bottom-20 right-16 z-30">
                   <div className="flex items-center gap-2 mb-2">
                     <span onClick={() => setViewing({ id: cur.user_id, username: cur.username, avatar_url: cur.avatar_url })} className="font-extrabold text-base cursor-pointer">@{cur.username}</span>
+                    <WinBadge n={wins[cur.user_id]} compact />
                     {following[cur.user_id] && <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">Abonné</span>}
                   </div>
                   <p className="text-sm text-gray-200 mb-2 line-clamp-2">{cur.caption}</p>
@@ -765,6 +885,8 @@ function ClipClapApp() {
             {tab === 'clips' && cur && <button onClick={() => { click(); setShowUpload(true); }} className="absolute top-14 left-4 z-30 bg-gradient-to-r from-fuchsia-500 to-violet-600 text-xs font-bold px-3 py-2 rounded-full shadow-lg flex items-center gap-1.5"><Icon n="plus" size={14} /> Publier un clip</button>}
             <div className="absolute top-0 left-0 right-0 z-30 pt-3 pb-2 flex justify-center gap-6 bg-gradient-to-b from-black/90 to-transparent">
               <span className="absolute left-4 top-3 text-[13px] font-black grad-text tracking-wide pointer-events-none">ClipClap</span>
+              <button onClick={() => { click(); setSearchQ(''); setSearchRes([]); setShowSearch(true); }} className="absolute right-12 top-2 p-1.5 text-white"><Icon n="search" size={20} /></button>
+              <button onClick={() => { click(); openNotifs(); }} className="absolute right-3 top-2 p-1.5 text-white"><Icon n="bell" size={20} />{unread > 0 && <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-fuchsia-500 text-[10px] font-bold flex items-center justify-center">{unread > 9 ? '9+' : unread}</span>}</button>
               {[['following', 'Abonnements'], ['foryou', 'Pour toi']].map(([k, l]) => (
                 <button key={k} onClick={() => { click(); setFeedTab(k); }} className={`text-sm font-bold ${feedTab === k ? 'border-b-2 border-fuchsia-500 pb-1' : 'text-white/60'}`}>{l}</button>))}
             </div>
@@ -813,6 +935,14 @@ function ClipClapApp() {
                   </div>))}
               </div>
             </>}
+            {pastResults.length > 0 && <div className="mt-6">
+              <h3 className="font-bold text-sm text-gray-200 mb-2">Anciennes battles</h3>
+              <div className="space-y-2">{pastResults.map(r => (
+                <div key={r.battle_id} className="rounded-2xl p-3 bg-slate-900/60 border border-white/5 flex items-center justify-between gap-3">
+                  <div className="min-w-0"><p className="text-xs font-bold truncate">{r.title}</p><p className="text-[10px] text-gray-400">{new Date(r.ends_at).toLocaleDateString('fr-FR')}</p></div>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300 flex-shrink-0"><Icon n="trophy" size={14} />@{r.username}<span className="text-gray-400 font-normal">· {r.votes}</span></div>
+                </div>))}</div>
+            </div>}
           </div>
         )}
 
@@ -837,6 +967,7 @@ function ClipClapApp() {
               <div className="w-24 h-24 rounded-full border-2 border-fuchsia-400 shadow-[0_0_28px_rgba(217,70,239,0.55)] overflow-hidden bg-purple-900 flex items-center justify-center mb-3"><Av src={me.avatar_url} size="text-4xl" /></div>
               <h2 className="text-xl font-extrabold">{me.display_name || me.username}</h2>
               <p className="text-xs text-gray-400 mb-2">@{me.username}</p>
+              <div className="mb-2"><WinBadge n={wins[me.id]} /></div>
               {me.bio && <p className="text-xs text-gray-200 text-center max-w-xs mb-3">{me.bio}</p>}
               <div className="flex items-center gap-6 mb-4 text-center">
                 <div><span className="block font-extrabold">{Object.values(following).filter(Boolean).length}</span><span className="text-[11px] text-gray-400">Abonnements</span></div>
@@ -871,6 +1002,48 @@ function ClipClapApp() {
           <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-fuchsia-400 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 'text-gray-400'}`}><Icon n={i} size={22} /><span className="text-[10px]">{l}</span></button>))}
       </div>
 
+      {/* ===== NOTIFICATIONS ===== */}
+      {showNotifs && (
+        <div className="absolute inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center" onClick={() => setShowNotifs(false)}>
+          <div className="w-full max-w-md h-[75%] bg-[#120c24] border-t border-white/10 rounded-t-3xl flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-white/10"><h3 className="text-sm font-extrabold">Notifications</h3><button onClick={() => setShowNotifs(false)} className="text-gray-400 text-lg px-2">✕</button></div>
+            <div className="flex-1 overflow-y-auto overscroll-contain p-3 space-y-1">
+              {notifs.filter(n => !blocked[n.actor_id]).length === 0 && <p className="text-center text-xs text-gray-500 pt-10">Aucune notification pour le moment.</p>}
+              {notifs.filter(n => !blocked[n.actor_id]).map(n => (
+                <button key={n.id} onClick={() => openNotif(n)} className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left ${n.read ? '' : 'bg-fuchsia-500/10'}`}>
+                  <div className="w-10 h-10 rounded-full bg-purple-900 overflow-hidden flex items-center justify-center flex-shrink-0"><Av src={n.profiles?.avatar_url} /></div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs"><span className="font-bold">@{n.profiles?.username}</span> {n.type === 'like' ? 'a aimé ta vidéo' : n.type === 'follow' ? "s'est abonné à toi" : 'a commenté : '}{n.type === 'comment' && <span className="text-gray-300">« {n.comment_text} »</span>}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">{ago(n.created_at)}</p>
+                  </div>
+                </button>))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== RECHERCHE D'UTILISATEURS ===== */}
+      {showSearch && (
+        <div className="absolute inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center" onClick={() => setShowSearch(false)}>
+          <div className="w-full max-w-md h-[75%] bg-[#120c24] border-t border-white/10 rounded-t-3xl flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-2 p-4 border-b border-white/10">
+              <Icon n="search" size={18} className="text-gray-400" />
+              <input autoFocus value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Rechercher un pseudo..." className="flex-1 min-w-0 bg-transparent text-sm focus:outline-none" />
+              <button onClick={() => setShowSearch(false)} className="text-gray-400 text-lg px-2">✕</button>
+            </div>
+            <div className="flex-1 overflow-y-auto overscroll-contain p-3 space-y-1">
+              {searchQ.trim().length < 2 && <p className="text-center text-xs text-gray-500 pt-10">Tape au moins 2 lettres.</p>}
+              {searchQ.trim().length >= 2 && searchRes.length === 0 && <p className="text-center text-xs text-gray-500 pt-10">Aucun utilisateur trouvé.</p>}
+              {searchRes.map(u => (
+                <button key={u.id} onClick={() => { setShowSearch(false); setViewing({ id: u.id, username: u.username, avatar_url: u.avatar_url }); }} className="w-full flex items-center gap-3 p-3 rounded-2xl text-left hover:bg-white/5">
+                  <div className="w-10 h-10 rounded-full bg-purple-900 overflow-hidden flex items-center justify-center flex-shrink-0"><Av src={u.avatar_url} /></div>
+                  <div className="min-w-0"><p className="text-sm font-bold">@{u.username}</p>{u.display_name && <p className="text-[11px] text-gray-400">{u.display_name}</p>}</div>
+                </button>))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ===== OPTIONS DE LA VIDÉO ===== */}
       {menuVideo && (() => {
         const v = menuVideo; const mine = v.user_id === me.id;
@@ -897,6 +1070,7 @@ function ClipClapApp() {
           <div className="w-full max-w-md max-h-[80%] overflow-y-auto bg-[#120c24] border-t border-white/10 rounded-t-3xl p-5 space-y-2" onClick={e => e.stopPropagation()}>
             <div className="w-12 h-1.5 bg-white/25 rounded-full mx-auto mb-2"></div>
             <h3 className="text-base font-extrabold mb-2">Réglages</h3>
+            <p className="text-[11px] text-gray-400 leading-snug bg-white/5 rounded-xl p-3">Installe ClipClap comme une vraie app : sur iPhone, appuie sur Partager puis « Sur l'écran d'accueil ». Sur Android, menu du navigateur puis « Installer l'application ».</p>
             <button onClick={() => setLegal('cgu')} className="w-full text-left py-3 px-4 rounded-xl bg-white/5 text-sm">Conditions d'utilisation</button>
             <button onClick={() => setLegal('privacy')} className="w-full text-left py-3 px-4 rounded-xl bg-white/5 text-sm">Politique de confidentialité</button>
             {blockedList.length > 0 && <div className="pt-2">
@@ -936,7 +1110,8 @@ function ClipClapApp() {
             <form onSubmit={publishFile} className="space-y-4">
               <input type="file" accept="video/*" onChange={e => setFile(e.target.files[0])} className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-fuchsia-500 file:text-white" />
               <textarea value={caption} onChange={e => setCaption(e.target.value)} rows="3" placeholder="Description & hashtags" className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-fuchsia-500 resize-none"></textarea>
-              <button disabled={uploading} className="w-full py-3.5 bg-gradient-to-r from-fuchsia-500 to-violet-600 rounded-xl font-extrabold text-sm disabled:opacity-60">{uploading ? 'Envoi en cours...' : 'Publier sur ClipClap 🚀'}</button>
+              <button disabled={uploading} className="w-full py-3.5 bg-gradient-to-r from-fuchsia-500 to-violet-600 rounded-xl font-extrabold text-sm disabled:opacity-60">{uploading ? `Envoi ${progress} %` : 'Publier sur ClipClap 🚀'}</button>
+              {uploading && <div className="h-1.5 bg-white/10 rounded-full overflow-hidden"><div className="h-full bg-gradient-to-r from-fuchsia-500 to-violet-600 transition-all" style={{ width: `${progress}%` }} /></div>}
             </form>
           </div>
         </div>
@@ -1000,6 +1175,7 @@ function ClipClapApp() {
               <div className="w-20 h-20 rounded-full border-2 border-fuchsia-500 overflow-hidden bg-purple-900 flex items-center justify-center mb-3"><Av src={p.avatar_url} size="text-3xl" /></div>
               <h2 className="text-lg font-extrabold">{p.display_name || p.username}</h2>
               <p className="text-xs text-gray-400 mb-2">@{p.username}</p>
+              <div className="mb-2"><WinBadge n={wins[viewing.id]} /></div>
               {p.bio && <p className="text-xs text-gray-200 text-center max-w-xs mb-3">{p.bio}</p>}
               <div className="flex gap-6 mb-4 text-center">
                 <div><span className="block font-bold text-sm">{list.length}</span><span className="text-[10px] text-gray-400">Vidéos</span></div>
@@ -1042,7 +1218,7 @@ function ClipClapApp() {
           </div>
           <div className="w-full max-w-sm flex gap-4 pb-6">
             <button onClick={() => { setPreviewUrl(null); setBlob(null); setRecMode(true); }} className="flex-1 py-3 rounded-xl bg-gray-800 font-semibold">Recommencer 🔄</button>
-            <button disabled={uploading} onClick={publishFreestyle} className="flex-1 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-semibold disabled:opacity-60">{uploading ? 'Envoi...' : 'Publier 🚀'}</button>
+            <button disabled={uploading} onClick={publishFreestyle} className="flex-1 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-semibold disabled:opacity-60">{uploading ? `${progress} %` : 'Publier 🚀'}</button>
           </div>
         </div>
       )}
