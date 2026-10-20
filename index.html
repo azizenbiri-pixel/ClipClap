@@ -30,6 +30,8 @@
     .blob { position:absolute; border-radius:9999px; filter: blur(70px); opacity:.45; animation: floatBlob 7s ease-in-out infinite; }
     .eq-bar { width:6px; height:100%; border-radius:4px; background: linear-gradient(to top,#fbbf24,#ec4899,#8b5cf6); transform-origin: bottom; animation: eq 1s ease-in-out infinite; }
     .clap-stick { transform-box: fill-box; transform-origin: 0% 100%; animation: clap 1.6s ease-out .5s both; }
+    @keyframes heartPop { 0%{transform:scale(.3);opacity:0} 20%{transform:scale(1.25);opacity:1} 55%{transform:scale(1);opacity:1} 100%{transform:translateY(-50px) scale(1);opacity:0} }
+    @keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); opacity:.9 } }
     @keyframes wm { 0%{opacity:0;transform:translateY(6px)} 12%{opacity:.8;transform:none} 88%{opacity:.8} 100%{opacity:0} }
     @keyframes bgShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
     @keyframes floatBlob { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,-40px) scale(1.15)} }
@@ -128,6 +130,18 @@ const WinBadge = ({ n, compact }) => n > 0 ? (
   </span>
 ) : null;
 
+const Confetti = () => {
+  const parts = useRef(Array.from({ length: 48 }, (_, i) => ({
+    left: Math.random() * 100, delay: Math.random() * 0.5, dur: 1.6 + Math.random() * 1.3,
+    w: 6 + Math.random() * 7, rot: Math.random() * 360, c: ['#fbbf24', '#f472b6', '#c084fc', '#8b5cf6', '#34d399', '#ffffff'][i % 6],
+  }))).current;
+  return (
+    <div className="fixed inset-0 z-[90] pointer-events-none overflow-hidden">
+      {parts.map((q, i) => <span key={i} style={{ position: 'absolute', top: -24, left: `${q.left}%`, width: q.w, height: q.w * 1.6, background: q.c, borderRadius: 2, transform: `rotate(${q.rot}deg)`, animation: `confettiFall ${q.dur}s ${q.delay}s ease-in forwards` }} />)}
+    </div>
+  );
+};
+
 /* ================= LOGO & SPLASH ================= */
 const Logo = ({ size = 96, id = 'lg' }) => (
   <svg viewBox="0 0 120 120" width={size} height={size} style={{ overflow: 'visible' }}>
@@ -213,7 +227,7 @@ const Sheet = ({ onClose, children, height = 'max-h-[85%]', pos = 'absolute', z 
 
 /* ================= TEXTES LÉGAUX & NOUVEAU MOT DE PASSE ================= */
 const CONTACT_EMAIL = 'azizenbiri@gmail.com';
-const INTRO_IN_VIDEO = true;  // true : la présentation vocale est enregistrée dans la vidéo ; false : l'enregistrement démarre au « 0 »
+const INTRO_IN_VIDEO = false;  // true : la présentation vocale est enregistrée dans la vidéo ; false : l'enregistrement démarre au « 0 »
 const INTRO_GAP_MS = 2200;    // temps laissé pour répondre à chaque question de la voix
 const CLASH_REPLY_H = 72; // heures pour répondre à un clash
 const CLASH_VOTE_H = 72;  // heures de vote après la réponse
@@ -346,7 +360,9 @@ function ClipClapApp() {
   const [bSecs, setBSecs] = useState(45); const [ciTitle, setCiTitle] = useState(''); const [ciFile, setCiFile] = useState(null); const [ciSecs, setCiSecs] = useState(30); const [notifs, setNotifs] = useState([]); const [unread, setUnread] = useState(0); const [showNotifs, setShowNotifs] = useState(false);
   const [showSearch, setShowSearch] = useState(false); const [searchQ, setSearchQ] = useState(''); const [searchRes, setSearchRes] = useState([]);
   const [progress, setProgress] = useState(0); const [hasMore, setHasMore] = useState(true); const [loadingMore, setLoadingMore] = useState(false);
-  const deepLink = useRef(new URLSearchParams(location.search).get('v')); const [showSettings, setShowSettings] = useState(false); const [legal, setLegal] = useState(null);
+  const deepLink = useRef(new URLSearchParams(location.search).get('v')); const userLink = useRef(new URLSearchParams(location.search).get('u'));
+  const [showTour, setShowTour] = useState(() => { try { return !localStorage.getItem('cc_tour_done'); } catch (e) { return false; } }); const [tourStep, setTourStep] = useState(0);
+  const [hearts, setHearts] = useState([]); const [confetti, setConfetti] = useState(0); const lastTap = useRef({ t: 0, timer: null }); const [showSettings, setShowSettings] = useState(false); const [legal, setLegal] = useState(null);
   const [splashDone, setSplashDone] = useState(false);
   useEffect(() => { const t = setTimeout(() => setSplashDone(true), 2900); return () => clearTimeout(t); }, []);
   const [session, setSession] = useState(null);
@@ -504,7 +520,7 @@ function ClipClapApp() {
   const pool = videos.filter(v => !blocked[v.user_id] && v.kind === 'freestyle');
   const displayed = feedTab === 'following' ? pool.filter(v => following[v.user_id]) : pool;
   const cur = displayed.find(v => v.id === currentId) || displayed[0];
-  const overlay = viewing || showUpload || showComments || recMode || previewUrl || editing || showBattleForm || menuVideo || showSettings || legal || showNotifs || showSearch || showCompose || showClashInstruForm;
+  const overlay = viewing || showUpload || showComments || recMode || previewUrl || editing || showBattleForm || menuVideo || showSettings || legal || showNotifs || showSearch || showCompose || showClashInstruForm || showTour;
 
   // Lien direct vers une vidéo (?v=...)
   useEffect(() => {
@@ -514,6 +530,17 @@ function ClipClapApp() {
     sb.from('video_stats').select('*').eq('id', id).maybeSingle().then(({ data }) => {
       if (!data) return say('Vidéo introuvable');
       mergeVideos([data]); setFeedTab('foryou'); setCurrentId(data.id); setTab(data.kind === 'clash' ? 'clash' : 'feed');
+    });
+  }, [me?.id]);
+
+  // Lien direct vers un profil (?u=pseudo)
+  useEffect(() => {
+    if (!me || !userLink.current) return;
+    const uname = userLink.current.toLowerCase(); userLink.current = null;
+    try { history.replaceState(history.state, '', location.pathname); } catch (e) {}
+    sb.from('profiles').select('id,username,avatar_url').eq('username', uname).maybeSingle().then(({ data }) => {
+      if (!data) return say('Profil introuvable');
+      setViewing({ id: data.id, username: data.username, avatar_url: data.avatar_url });
     });
   }, [me?.id]);
 
@@ -591,6 +618,25 @@ function ClipClapApp() {
   const save = (v, e) => { e.stopPropagation(); click(); say(saved[v.id] ? 'Retirée des favoris' : 'Vidéo enregistrée ! 📌'); toggleRel('saves', saved, setSaved, v, 1, 'saves_count'); };
 
   const videoLink = (v) => `${location.origin}${location.pathname}?v=${v.id}`;
+  const shareProfile = async (username) => {
+    const url = `${location.origin}${location.pathname}?u=${username}`;
+    const text = `Viens me clasher sur ClipClap : @${username} 🎤`;
+    try { if (navigator.share) await navigator.share({ title: 'ClipClap', text, url }); else { await navigator.clipboard.writeText(url); say('Lien copié ! 🔗'); } } catch (e) {}
+  };
+  const fireConfetti = () => { const id = Date.now(); setConfetti(id); setTimeout(() => setConfetti(c => c === id ? 0 : c), 3400); };
+  // Double tap = like avec un gros cœur ; un seul tap = lecture / pause
+  const onVideoTap = (e) => {
+    const now = Date.now(); const r = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    if (now - lastTap.current.t < 300) {
+      clearTimeout(lastTap.current.timer); lastTap.current.t = 0;
+      if (cur && !liked[cur.id]) like(cur, { stopPropagation() {} });
+      const id = now; setHearts(h => [...h, { id, x, y }]); setTimeout(() => setHearts(h => h.filter(k => k.id !== id)), 900);
+    } else {
+      lastTap.current.t = now; clearTimeout(lastTap.current.timer);
+      lastTap.current.timer = setTimeout(() => togglePlay(), 300);
+    }
+  };
   const share = async (v, e) => {
     e.stopPropagation(); click(); let ok = false;
     try {
@@ -678,7 +724,7 @@ function ClipClapApp() {
     setUploading(false);
     if (error) { say('Erreur : ' + error.message); return false; }
     if (kind === 'clash') return ins.id;
-    await loadVideos(); setFeedTab('foryou'); setCurrentId(null); setTab('feed'); say('Vidéo publiée ! 🚀'); return ins.id;
+    await loadVideos(); setFeedTab('foryou'); setCurrentId(null); setTab('feed'); say('Vidéo publiée ! 🚀'); fireConfetti(); return ins.id;
   };
 
   const publishFile = async (e) => {
@@ -828,11 +874,11 @@ function ClipClapApp() {
     if (mode.type === 'reply') {
       const { error } = await sb.rpc('answer_clash', { cid: mode.clash.id, vid: vidId });
       if (error) { say('Réponse impossible : ' + error.message); return false; }
-      say('Réponse envoyée !');
+      say('Réponse envoyée !'); fireConfetti();
     } else {
       const { error } = await sb.rpc('create_clash', { opp: mode.opp.id, vid: vidId });
       if (error) { say('Clash impossible : ' + error.message); return false; }
-      say(`Clash lancé ! @${mode.opp.username} a ${CLASH_REPLY_H} h pour répondre.`);
+      say(`Clash lancé ! @${mode.opp.username} a ${CLASH_REPLY_H} h pour répondre.`); fireConfetti();
     }
     await loadClashes(); setTab('clash'); return true;
   };
@@ -935,6 +981,7 @@ function ClipClapApp() {
 
   /* ---------- RETOUR EN ARRIÈRE ---------- */
   const back = () => {
+    if (showTour) return true;
     if (recMode) { closeStudio(); return true; }
     if (previewUrl) { setPreviewUrl(null); setBlob(null); setClashMode(null); return true; }
     if (showCompose) { setShowCompose(false); return true; }
@@ -1043,9 +1090,7 @@ function ClipClapApp() {
 
         {st === 'open' && c.opponent_id === me.id && <div className="mt-3 space-y-2">
           <button onClick={() => { click(); goStudio({ type: 'reply', clash: c, max: c.max_seconds || 30, instruUrl: c.instru_url, instruTitle: c.instru_title }); }} className="w-full py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-extrabold text-sm flex items-center justify-center gap-2"><Icon n="mic" size={16} /> Répondre ({c.max_seconds || 30} s)</button>
-          <label className="block w-full py-2.5 rounded-xl bg-white/10 text-center text-xs font-bold cursor-pointer">Importer une vidéo
-            <input type="file" accept="video/*" className="hidden" onChange={async e => { const f = e.target.files[0]; e.target.value = ''; if (f) await publishClash(f, { type: 'reply', clash: c, max: c.max_seconds || 30 }); }} />
-          </label>
+          
         </div>}
 
         {st === 'forfeit' && <p className="text-center text-xs font-bold text-amber-300 mt-3">Forfait de @{c.opponent?.username} : @{c.challenger?.username} gagne</p>}
@@ -1084,9 +1129,10 @@ function ClipClapApp() {
           <div className="absolute inset-0 swipe bg-app" onTouchStart={e => { tx.current = e.touches[0].clientX; ty.current = e.touches[0].clientY; }} onTouchEnd={onTouchEnd}>
             {cur ? (
               <div className="relative h-full w-full bg-black">
-                <video ref={setVideoEl} src={cur.video_url} className="absolute inset-0 h-full w-full object-cover" loop playsInline autoPlay muted={muted} onClick={togglePlay} />
+                <video ref={setVideoEl} src={cur.video_url} className="absolute inset-0 h-full w-full object-cover" loop playsInline autoPlay muted={muted} onClick={onVideoTap} />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none"></div>
                 <Watermark user={cur.username} />
+                {hearts.map(h => <div key={h.id} className="absolute z-20 pointer-events-none" style={{ left: h.x - 40, top: h.y - 40, animation: 'heartPop .9s ease-out forwards' }}><Icon n="heart" size={80} fill className="text-fuchsia-500 drop-shadow-[0_0_18px_rgba(217,70,239,0.9)]" /></div>)}
                 {(() => { const i = displayed.findIndex(v => v.id === cur.id); const nx = displayed[i + 1]; return nx ? <video key={nx.id} src={nx.video_url} preload="auto" muted playsInline className="hidden" /> : null; })()}
                 {playIcon && <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"><div className="w-16 h-16 bg-black/60 rounded-full flex items-center justify-center text-white animate-ping"><Icon n="play" size={26} fill /></div></div>}
                 <button onClick={() => { click(); setMenuVideo(cur); }} className={`absolute top-14 right-[4.5rem] z-30 ${btn}`}><Icon n="more" size={20} fill /></button>
@@ -1260,6 +1306,7 @@ function ClipClapApp() {
               </div>
               <div className="flex gap-2 w-full max-w-xs mb-5">
                 <button onClick={() => { setEName(me.display_name || ''); setEBio(me.bio || ''); setEAvatar(null); setEditing(true); }} className="flex-1 bg-white/10 border border-white/10 py-2 rounded-xl text-xs font-bold">Modifier le profil</button>
+                <button onClick={() => shareProfile(me.username)} className="bg-white/10 border border-white/10 px-3 py-2 rounded-xl flex items-center justify-center" aria-label="Partager mon profil"><Icon n="send" size={16} /></button>
                 <button onClick={() => { loadBlocked(); setShowSettings(true); }} className="bg-white/10 border border-white/10 px-4 py-2 rounded-xl text-xs font-bold">Réglages</button>
               </div>
             </div>
@@ -1349,6 +1396,7 @@ function ClipClapApp() {
           <div className="p-5 space-y-2">
             <h3 className="text-base font-extrabold mb-2">Réglages</h3>
             <p className="text-[11px] text-gray-400 leading-snug bg-white/5 rounded-xl p-3">Installe ClipClap comme une vraie app : sur iPhone, appuie sur Partager puis « Sur l'écran d'accueil ». Sur Android, menu du navigateur puis « Installer l'application ».</p>
+            <button onClick={() => { setShowSettings(false); setTourStep(0); setShowTour(true); }} className="w-full text-left py-3 px-4 rounded-xl bg-white/5 text-sm">Revoir le tutoriel</button>
             <button onClick={() => setLegal('cgu')} className="w-full text-left py-3 px-4 rounded-xl bg-white/5 text-sm">Conditions d'utilisation</button>
             <button onClick={() => setLegal('privacy')} className="w-full text-left py-3 px-4 rounded-xl bg-white/5 text-sm">Politique de confidentialité</button>
             {blockedList.length > 0 && <div className="pt-2">
@@ -1362,6 +1410,40 @@ function ClipClapApp() {
         </Sheet>
       )}
       <LegalSheet type={legal} onClose={() => setLegal(null)} />
+
+      {/* ===== CONFETTIS ===== */}
+      {confetti > 0 && <Confetti key={confetti} />}
+
+      {/* ===== TUTORIEL DE BIENVENUE ===== */}
+      {showTour && (() => {
+        const slides = [
+          { icon: 'clap', title: 'Freestyle', text: "Filme ton freestyle au Studio. Il passe sur l'accueil avec le filigrane ClipClap : partage-le partout." },
+          { icon: 'flame', title: 'Battle', text: "Une instru imposée, un chrono, la communauté vote. Le plus de votes gagne un trophée." },
+          { icon: 'swords', title: 'Clash', text: "Tag un rival : il a 72 h pour te répondre. Vos deux vidéos côte à côte, la communauté tranche." },
+        ];
+        const last = tourStep === slides.length - 1; const sl = slides[tourStep];
+        const finish = () => { try { localStorage.setItem('cc_tour_done', '1'); } catch (e) {} setShowTour(false); setTourStep(0); };
+        return (
+          <div className="absolute inset-0 z-[80] bg-app flex flex-col items-center justify-between px-8 py-10 text-center"
+               onTouchStart={e => { window._tx = e.touches[0].clientX; }}
+               onTouchEnd={e => { const d = e.changedTouches[0].clientX - window._tx; if (d < -60 && !last) setTourStep(x => x + 1); if (d > 60 && tourStep > 0) setTourStep(x => x - 1); }}>
+            <button onClick={finish} className="self-end text-xs text-gray-400 px-2 py-1">Passer</button>
+            <div key={tourStep} className="flex flex-col items-center" style={{ animation: 'fadeUp .5s both' }}>
+              <div className="w-28 h-28 rounded-[2rem] bg-gradient-to-br from-fuchsia-500 to-violet-600 flex items-center justify-center clip-glow mb-8"><Icon n={sl.icon} size={56} className="text-white" /></div>
+              <h2 className="text-3xl font-black grad-text mb-3">{sl.title}</h2>
+              <p className="text-sm text-gray-300 leading-relaxed max-w-xs">{sl.text}</p>
+            </div>
+            <div className="w-full max-w-xs space-y-3">
+              <div className="flex justify-center gap-2">{slides.map((_, i) => <span key={i} className={`h-1.5 rounded-full transition-all ${i === tourStep ? 'w-6 bg-fuchsia-500' : 'w-1.5 bg-white/20'}`} />)}</div>
+              {last ? <>
+                <button onClick={() => { finish(); setTab('studio'); }} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-extrabold text-sm">Lancer mon premier freestyle</button>
+                <button onClick={() => shareProfile(me.username)} className="w-full py-3 rounded-xl bg-white/10 text-sm font-bold flex items-center justify-center gap-2"><Icon n="send" size={16} /> Inviter un pote à me clasher</button>
+                <button onClick={finish} className="w-full py-2 text-xs text-gray-400">Explorer d'abord</button>
+              </> : <button onClick={() => setTourStep(x => x + 1)} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-extrabold text-sm">Suivant</button>}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ===== LANCER UN CLASH ===== */}
       {showCompose && (
@@ -1390,13 +1472,6 @@ function ClipClapApp() {
                 setShowCompose(false);
                 goStudio({ type: 'challenge', opp: compose.opp, max: (clashInstru && clashInstru.max_seconds) || 30, instruUrl: clashInstru && clashInstru.instru_url, instruTitle: clashInstru && clashInstru.title });
               }} className="w-full py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-extrabold text-sm flex items-center justify-center gap-2 mb-2"><Icon n="mic" size={16} /> Aller au Studio</button>
-              <label className="block w-full py-3 rounded-xl bg-white/10 text-center text-sm font-bold cursor-pointer">Ou importer une vidéo déjà faite
-                <input type="file" accept="video/*" className="hidden" onChange={async e => {
-                  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-                  if (!compose.opp) return say('Choisis un adversaire');
-                  if (await publishClash(f, { type: 'challenge', opp: compose.opp, max: (clashInstru && clashInstru.max_seconds) || 30 })) setShowCompose(false);
-                }} />
-              </label>
               {uploading && <div className="h-1.5 bg-white/10 rounded-full overflow-hidden mt-3"><div className="h-full bg-gradient-to-r from-fuchsia-500 to-violet-600" style={{ width: `${progress}%` }} /></div>}
             </div>
             <p className="text-[11px] text-gray-500 leading-snug">Ton adversaire a {CLASH_REPLY_H} h pour répondre. Sans réponse, il perd par forfait. Ensuite, la communauté vote pendant {CLASH_VOTE_H} h.</p>
@@ -1505,6 +1580,7 @@ function ClipClapApp() {
                 <div><span className="block font-bold text-sm">{fmt(list.reduce((s, v) => s + v.likes_count, 0))}</span><span className="text-[10px] text-gray-400">J'aime</span></div>
               </div>
               {!isMe && <button onClick={e => follow(viewing.id, e)} className={`w-36 py-2 rounded-full text-xs font-bold mb-4 ${following[viewing.id] ? 'bg-white/20' : 'bg-gradient-to-r from-fuchsia-500 to-violet-600'}`}>{following[viewing.id] ? 'Abonné' : "S'abonner"}</button>}
+              {!isMe && <button onClick={() => { const o = { id: viewing.id, username: p.username, avatar_url: p.avatar_url }; setViewing(null); setCompose({ opp: o }); setOppQ(''); setOppRes([]); setShowCompose(true); }} className="w-52 py-2.5 rounded-full text-xs font-bold mb-4 bg-gradient-to-r from-fuchsia-500 to-violet-600 flex items-center justify-center gap-2"><Icon n="swords" size={14} /> Défier @{p.username} en clash</button>}
             </div>
             <div className="border-t border-white/10 pt-4"><Grid list={list} canDelete={false} /></div>
           </div>
