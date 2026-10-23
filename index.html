@@ -261,10 +261,12 @@ const Sheet = ({ onClose, children, height = 'max-h-[85%]', pos = 'absolute', z 
 /* ================= TEXTES LÉGAUX & NOUVEAU MOT DE PASSE ================= */
 const CONTACT_EMAIL = 'azizenbiri@gmail.com';
 const INTRO_IN_VIDEO = false;  // true : la présentation vocale est enregistrée dans la vidéo ; false : l'enregistrement démarre au « 0 »
-const INTRO_GAP_MS = 2200;
+const INTRO_GAP_MS = 2000;
+// Fichiers de la voix du MC (à mettre dans le même dossier que ce fichier). S'ils sont absents, une voix de secours du téléphone est utilisée.
+const MC_FILES = { q1: 'mc-blase.mp3', q2: 'mc-dou.mp3', q3: 'mc-represente.mp3', go: 'mc-go.mp3' };
 const CLASH_SELECT = '*, challenger:profiles!challenger_id(username,avatar_url), opponent:profiles!opponent_id(username,avatar_url), cv:videos!challenger_video_id(id,video_url,views_count), ov:videos!opponent_video_id(id,video_url,views_count)';    // temps laissé pour répondre à chaque question de la voix
-const CLASH_REPLY_H = 72; // heures pour répondre à un clash
-const CLASH_VOTE_H = 72;  // heures de vote après la réponse
+const CLASH_REPLY_H = 12; // heures pour répondre à un clash
+const CLASH_VOTE_H = 12;  // heures de vote après la réponse
 const LEGAL = {
   cgu: { title: "Conditions d'utilisation", body: [
     ['1. Objet', "ClipClap est une application de partage de courtes vidéos (clips et freestyles) avec un concours hebdomadaire appelé Battle."],
@@ -430,7 +432,7 @@ function ClipClapApp() {
   const videoRef = useRef(null); const viewedRef = useRef(new Set()); const tx = useRef(0); const ty = useRef(0);
   const audioElRef = useRef(null);
   const tabStack = useRef([]); const prevTab = useRef('feed'); const popping = useRef(false); const backRef = useRef(null); const lastRoot = useRef(0);
-  const gx = useRef(0); const gy = useRef(0); const gt = useRef(null); const recTimer = useRef(null); const recTick = useRef(null); const introToken = useRef(0);
+  const gx = useRef(0); const gy = useRef(0); const gt = useRef(null); const recTimer = useRef(null); const recTick = useRef(null); const introToken = useRef(0); const mcRef = useRef(null);
   // Quand le lecteur disparaît de l'écran, on coupe vraiment le son (certains navigateurs continuent sinon)
   const setVideoEl = React.useCallback((node) => {
     if (!node && videoRef.current) { const v = videoRef.current; try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }
@@ -797,18 +799,44 @@ function ClipClapApp() {
   const stopCam = () => { const el = camRef.current; if (el && el.srcObject) { el.srcObject.getTracks().forEach(t => t.stop()); el.srcObject = null; } };
   const stopInstru = () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-  // Voix du présentateur (synthèse vocale du téléphone, en français)
-  const speak = (text, rate = 1, maxMs = 6000) => new Promise((res) => {
+  // Voix de secours (synthèse du téléphone, la plus grave possible) si les fichiers du MC sont absents
+  const speak = (text, maxMs = 5000) => new Promise((res) => {
     try {
       if (!window.speechSynthesis) return res();
-      const u = new SpeechSynthesisUtterance(text); u.lang = 'fr-FR'; u.rate = rate; u.pitch = 0.9;
+      const u = new SpeechSynthesisUtterance(text); u.lang = 'fr-FR'; u.rate = 0.85; u.pitch = 0.3;
       const fr = speechSynthesis.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith('fr')); if (fr) u.voice = fr;
       let done = false; const end = () => { if (!done) { done = true; res(); } };
       u.onend = end; u.onerror = end; setTimeout(end, maxMs);
       speechSynthesis.speak(u);
     } catch (e) { res(); }
   });
-  const cancelVoice = () => { introToken.current++; try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) {} };
+  // Joue un enregistrement de la voix du MC ; renvoie false s'il est introuvable
+  const playMc = (key) => new Promise((res) => {
+    const mc = mcRef.current; if (!mc) return res(false);
+    let done = false; const end = (ok) => { if (!done) { done = true; mc.onended = null; mc.onerror = null; res(ok); } };
+    mc.onended = () => end(true); mc.onerror = () => end(false);
+    mc.src = MC_FILES[key];
+    const pr = mc.play(); if (pr && pr.catch) pr.catch(() => end(false));
+    setTimeout(() => end(false), 12000);
+  });
+  // Petits « bips » du décompte (sons simples, pas de voix)
+  const makeTicker = () => {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)(); if (ctx.resume) ctx.resume();
+      return (hi) => { try {
+        const o = ctx.createOscillator(), g = ctx.createGain(); o.connect(g); g.connect(ctx.destination);
+        o.type = 'square'; o.frequency.value = hi ? 1320 : 660;
+        g.gain.setValueAtTime(0.0001, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (hi ? 0.35 : 0.12));
+        o.start(); o.stop(ctx.currentTime + (hi ? 0.4 : 0.15));
+      } catch (e) {} };
+    } catch (e) { return () => {}; }
+  };
+  const cancelVoice = () => {
+    introToken.current++;
+    try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) {}
+    try { if (mcRef.current) { mcRef.current.onended = null; mcRef.current.pause(); } } catch (e) {}
+  };
 
   const stopRecording = (msg) => {
     cancelVoice(); clearTimeout(recTimer.current); clearInterval(recTick.current);
@@ -837,31 +865,38 @@ function ClipClapApp() {
   const beginFreestyle = () => {
     setRecSec(0); clearInterval(recTick.current); recTick.current = setInterval(() => setRecSec(x => x + 1), 1000);
     clearTimeout(recTimer.current); recTimer.current = setTimeout(() => stopRecording(`Temps écoulé (${recMax} s)`), recMax * 1000);
-    if (instruUrl) { const a = new Audio(instruUrl); audioRef.current = a; a.play().catch(() => {}); }
+    if (instruUrl) { const a = audioRef.current || new Audio(instruUrl); a.muted = false; try { a.currentTime = 0; } catch (e) {} audioRef.current = a; a.play().catch(() => {}); }
   };
-  // Présentation façon présentateur : 3 questions, annonce, décompte 5 -> 0, puis départ
+  // Présentation du MC : 3 questions (2 s d'attente entre chaque), décompte 5 -> 1, puis « C'est parti, fais péter le MIC ! » et départ
   const runIntro = async () => {
     const token = ++introToken.current; const alive = () => introToken.current === token;
     if (!camRef.current || !camRef.current.srcObject) return alert("La caméra n'est pas encore active !");
     if (INTRO_IN_VIDEO && !beginRecorder()) return;
     setRecSec(0);
-    const lines = ['Quel est ton blase ?', "Tu viens d'où ?", 'Tu représentes quoi ?', `${clashMode ? 'Le clash' : 'La battle'} commence maintenant !`];
-    for (let i = 0; i < lines.length; i++) {
-      if (!alive()) return;
-      setIntro({ text: lines[i] });
-      await speak(lines[i], 1);
-      if (i < 3) await sleep(INTRO_GAP_MS);
+    // Les sons sont « débloqués » pendant le geste de l'utilisateur (obligatoire sur iPhone)
+    mcRef.current = new Audio();
+    const tick = makeTicker();
+    if (instruUrl) {
+      const inst = new Audio(instruUrl); inst.preload = 'auto'; inst.muted = true; audioRef.current = inst;
+      const pr = inst.play(); if (pr && pr.then) pr.then(() => { inst.pause(); try { inst.currentTime = 0; } catch (e) {} inst.muted = false; }).catch(() => { inst.muted = false; });
     }
-    const NUM = ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq'];
-    for (let n = 5; n >= 0; n--) {
+    const lines = [['q1', 'Quel est ton blase ?'], ['q2', "Tu viens d'où ?"], ['q3', 'Tu représentes quoi ?']];
+    for (const [key, text] of lines) {
       if (!alive()) return;
-      setIntro({ count: n });
-      await Promise.all([speak(NUM[n], 1.1, 1500), sleep(1000)]);
+      setIntro({ mic: true });
+      if (!(await playMc(key))) await speak(text);
+      if (!alive()) return;
+      setIntro(null);
+      await sleep(INTRO_GAP_MS);
     }
+    for (let n = 5; n >= 1; n--) { if (!alive()) return; setIntro({ count: n }); tick(false); await sleep(1000); }
     if (!alive()) return;
-    setIntro(null);
+    setIntro({ count: 0 }); tick(true);
     if (!INTRO_IN_VIDEO && !beginRecorder()) return;
     beginFreestyle();
+    playMc('go').then(ok => { if (!ok) speak("C'est parti ! Fais péter le mic !"); });
+    await sleep(900);
+    if (alive()) setIntro(null);
   };
   const toggleRec = () => {
     if (!recording) {
@@ -872,7 +907,7 @@ function ClipClapApp() {
     } else stopRecording();
   };
 
-/* ---------- CLASH TAG ---------- */
+  /* ---------- CLASH TAG ---------- */
   const clashState = (c) => {
     if (c.status === 'pending_payment') return 'pending_payment';
     if (c.status === 'answered') return Date.now() > new Date(c.answered_at).getTime() + CLASH_VOTE_H * 3600000 ? 'finished' : 'voting';
@@ -1090,6 +1125,9 @@ function ClipClapApp() {
   const toReply = clashList.filter(c => c.opponent_id === me.id && clashState(c) === 'open');
   const mineOpen = clashList.filter(c => c.challenger_id === me.id && ['open', 'pending_payment'].includes(clashState(c)));
   const restList = clashList.filter(c => !toReply.includes(c) && !mineOpen.includes(c) && clashState(c) !== 'pending_payment');
+  const votingList = restList.filter(c => clashState(c) === 'voting');
+  const restOthers = restList.filter(c => clashState(c) !== 'voting');
+  const toVoteCount = votingList.filter(c => c.challenger_id !== me.id && c.opponent_id !== me.id && !clashVotes.some(v => v.clash_id === c.id && v.user_id === me.id)).length;
   const renderClash = (c) => {
     const st = clashState(c);
     const vC = clashVotes.filter(v => v.clash_id === c.id && v.side === 'c').length;
@@ -1246,6 +1284,11 @@ function ClipClapApp() {
               <button onClick={() => setShowBattleForm(true)} className="bg-white/10 border border-fuchsia-500/40 text-fuchsia-300 font-bold py-2.5 rounded-xl text-[11px]">Nouvelle battle (admin)</button>
               <button onClick={() => setShowClashInstruForm(true)} className="bg-white/10 border border-fuchsia-500/40 text-fuchsia-300 font-bold py-2.5 rounded-xl text-[11px]">Instru du Clash (admin)</button>
             </div>}
+            {((battle && !bEnded && board.length > 0) || toVoteCount > 0) && <div className="rounded-2xl p-4 mb-4 bg-white/5 border border-fuchsia-500/30 space-y-2">
+              <p className="text-xs font-bold text-fuchsia-300 flex items-center gap-1.5"><Icon n="trophy" size={14} /> Votes ouverts</p>
+              {battle && !bEnded && board.length > 0 && <button onClick={() => { const el = document.getElementById('battle-ranking'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }} className="w-full text-left py-3 px-4 rounded-xl bg-white/5 text-sm font-bold flex items-center justify-between"><span>Battle : {board.length} participant{board.length > 1 ? 's' : ''}</span><span className="text-xs text-fuchsia-300">{myVoteId ? 'Voté ✓' : 'Voter ↓'}</span></button>}
+              {toVoteCount > 0 && <button onClick={() => setTab('clash')} className="w-full text-left py-3 px-4 rounded-xl bg-white/5 text-sm font-bold flex items-center justify-between"><span>Clash : {toVoteCount} à départager</span><span className="text-xs text-fuchsia-300">Voter →</span></button>}
+            </div>}
             {!battle ? <div className="p-6 bg-gradient-to-br from-purple-900/40 via-red-900/30 to-black border border-amber-500/40 rounded-2xl text-center space-y-3">
                 <Icon n="mic" size={44} className="text-fuchsia-400 mx-auto" />
                 <p className="font-bold">Aucune battle en cours</p>
@@ -1266,7 +1309,7 @@ function ClipClapApp() {
               </div>
               {winner && <div className="mb-4 p-4 rounded-2xl bg-amber-500/20 border border-amber-400/50 text-center"><p className="text-2xl">👑</p><p className="font-extrabold">Vainqueur : @{winner.name}</p><p className="text-xs text-amber-300">{winner.votes} vote{winner.votes > 1 ? 's' : ''}</p></div>}
               {bEnded && !winner && <p className="text-center text-xs text-gray-400 mb-4">Aucun vote : pas de vainqueur cette fois.</p>}
-              <h3 className="font-bold text-sm text-gray-200 mb-2">Classement ({board.length} participant{board.length > 1 ? 's' : ''})</h3>
+              <h3 id="battle-ranking" className="font-bold text-sm text-gray-200 mb-2">Classement ({board.length} participant{board.length > 1 ? 's' : ''})</h3>
               {board.length === 0 && <p className="text-center text-xs text-gray-500 py-6">Personne n'a encore posé sur cette instru. Sois le premier !</p>}
               <div className="space-y-2">
                 {board.map(c => (
@@ -1308,7 +1351,7 @@ function ClipClapApp() {
             </div>
             <button onClick={() => { click(); openCompose(); }} className="w-full py-3.5 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-extrabold text-sm flex items-center justify-center gap-2 mb-5"><Icon n="swords" size={18} /> Lancer un clash</button>
             {clashList.length === 0 && <p className="text-center text-sm text-gray-500 py-10">Aucun clash pour le moment. Lance le premier !</p>}
-            {[['À toi de répondre', toReply], ['Mes clashs en cours', mineOpen], ['Clashs de la communauté', restList]].map(([title, list]) => list.length > 0 && (
+            {[['À toi de répondre', toReply], ['Votes ouverts : vote pour ton favori', votingList], ['Mes clashs en cours', mineOpen], ['Clashs terminés', restOthers]].map(([title, list]) => list.length > 0 && (
               <div key={title} className="mb-6"><h3 className="font-bold text-sm text-gray-200 mb-2">{title}</h3><div className="space-y-4">{list.map(renderClash)}</div></div>))}
           </div>
         )}
@@ -1469,7 +1512,7 @@ function ClipClapApp() {
         const slides = [
           { icon: 'clap', title: 'Freestyle', text: "Filme ton freestyle au Studio. Il passe sur l'accueil avec le filigrane ClipClap : partage-le partout." },
           { icon: 'flame', title: 'Battle', text: "Une instru imposée, un chrono, la communauté vote. Le plus de votes gagne un trophée." },
-          { icon: 'swords', title: 'Clash', text: "Tag un rival : il a 72 h pour te répondre. Vos deux vidéos côte à côte, la communauté tranche." },
+          { icon: 'swords', title: 'Clash', text: `Tag un rival : il a ${CLASH_REPLY_H} h pour te répondre. Vos deux vidéos côte à côte, la communauté tranche.` },
         ];
         const last = tourStep === slides.length - 1; const sl = slides[tourStep];
         const finish = () => { try { localStorage.setItem('cc_tour_done', '1'); } catch (e) {} setShowTour(false); setTourStep(0); };
@@ -1683,8 +1726,8 @@ function ClipClapApp() {
               ref={node => { camRef.current = node; if (node && !node.srcObject) navigator.mediaDevices?.getUserMedia({ video: { facingMode: 'user' }, audio: true }).then(s => { node.srcObject = s; }).catch(() => {}); }} />
           </div>
           {intro && <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none px-6">
-            {intro.text !== undefined
-              ? <p className="text-center text-3xl font-black text-white" style={{ textShadow: '0 2px 18px rgba(0,0,0,.9)' }}>{intro.text}</p>
+            {intro.mic
+              ? <div className="w-28 h-28 rounded-full bg-fuchsia-500/30 border-2 border-fuchsia-400 flex items-center justify-center" style={{ animation: 'pulseGlow 1.2s ease-in-out infinite' }}><Icon n="mic" size={52} className="text-white" /></div>
               : <p className="text-[9rem] leading-none font-black grad-text" style={{ filter: 'drop-shadow(0 4px 24px rgba(0,0,0,.8))' }}>{intro.count}</p>}
           </div>}
           <div className="relative z-10 mt-20 mx-4 max-h-48 overflow-y-auto bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 text-center">
