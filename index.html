@@ -98,6 +98,39 @@ const videoDuration = (f) => new Promise((res) => {
   v.src = url;
 });
 
+/* ================= BEATMAKERS : OUTILS ================= */
+const BEAT_STYLES = ['Boom bap', 'Trap', 'Drill', 'Cloud', 'Afro', 'Autre'];
+const eur = (c) => (Number(c || 0) / 100).toFixed(2).replace('.', ',') + ' €';
+const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+const toWav = (ab) => {
+  const d = ab.getChannelData(0); const n = d.length;
+  const buf = new ArrayBuffer(44 + n * 2); const v = new DataView(buf);
+  const w = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, ab.sampleRate, true);
+  v.setUint32(28, ab.sampleRate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) { const x = Math.max(-1, Math.min(1, d[i])); v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7fff, true); }
+  return new Blob([buf], { type: 'audio/wav' });
+};
+// Crée l'aperçu de 15 s (mono, 22 kHz, fondu de sortie) directement sur le téléphone
+const makePreview = async (file, secs = 15) => {
+  const AC = window.AudioContext || window.webkitAudioContext; const ctx = new AC(); let buf;
+  try { const ab = await file.arrayBuffer(); buf = await new Promise((res, rej) => ctx.decodeAudioData(ab, res, rej)); }
+  finally { try { ctx.close(); } catch (e) {} }
+  const dur = buf.duration; const len = Math.min(secs, dur);
+  const start = dur <= secs ? 0 : Math.min(dur * 0.2, dur - secs);
+  const rate = 22050; const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const off = new OAC(1, Math.max(1, Math.ceil(len * rate)), rate);
+  const src = off.createBufferSource(); src.buffer = buf;
+  const g = off.createGain();
+  g.gain.setValueAtTime(0, 0); g.gain.linearRampToValueAtTime(1, 0.05);
+  g.gain.setValueAtTime(1, Math.max(0.06, len - 1.5)); g.gain.linearRampToValueAtTime(0, len);
+  src.connect(g); g.connect(off.destination); src.start(0, start, len);
+  const out = await new Promise((res, rej) => { const p = off.startRendering(); if (p && p.then) p.then(res, rej); else off.oncomplete = (e) => res(e.renderedBuffer); });
+  return { blob: toWav(out), duration: dur };
+};
+
 /* ================= ICÔNES ================= */
 const ICONS = {
   swords: <><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" /><line x1="13" x2="19" y1="19" y2="13" /><line x1="16" x2="20" y1="16" y2="20" /><line x1="19" x2="21" y1="21" y2="19" /><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5" /><line x1="5" x2="9" y1="14" y2="18" /><line x1="7" x2="4" y1="17" y2="20" /><line x1="3" x2="5" y1="19" y2="21" /></>,
@@ -121,6 +154,7 @@ const ICONS = {
   trash: <><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></>,
   plus: <><path d="M5 12h14" /><path d="M12 5v14" /></>,
   music: <><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></>,
+  pause: <><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></>,
 };
 const Icon = ({ n, size = 22, fill = false, className = '' }) => (
   <svg viewBox="0 0 24 24" width={size} height={size} fill={fill ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{ICONS[n]}</svg>
@@ -282,7 +316,8 @@ const LEGAL = {
     ['4. Modération', "Tu peux signaler un contenu ou bloquer un utilisateur. ClipClap peut retirer tout contenu et suspendre tout compte qui ne respecte pas ces règles."],
     ['5. Battle', "La Battle dure le temps annoncé dans l'application. Le classement est établi d'après les votes. ClipClap peut annuler des votes en cas de fraude."],
     ['6. Responsabilité', "L'application est fournie en l'état. Les contenus sont publiés sous la responsabilité de leurs auteurs ; ClipClap retire rapidement les contenus illicites qui lui sont signalés."],
-    ['7. Contact', 'Pour toute question : ' + CONTACT_EMAIL],
+    ['7. Beatmakers et instrus', "En ouvrant une boutique, tu certifies être l'auteur de tes instrus et détenir tous les droits (aucun sample non autorisé). Tu fixes ton prix, de 5 € à 500 €. ClipClap peut retirer sans préavis un instru signalé ou contraire aux droits d'autrui. Les conditions de vente et de licence seront précisées avant l'ouverture des achats."],
+    ['8. Contact', 'Pour toute question : ' + CONTACT_EMAIL],
   ] },
   privacy: { title: 'Politique de confidentialité', body: [
     ['Données collectées', "Adresse email, pseudo, nom d'affichage, photo et bio (facultatives), vidéos, commentaires, likes, favoris, abonnements, votes et signalements."],
@@ -418,6 +453,13 @@ function ClipClapApp() {
   const [, setTick] = useState(0);
   const [showBattleForm, setShowBattleForm] = useState(false); const [bTitle, setBTitle] = useState(''); const [bDays, setBDays] = useState(7); const [bFile, setBFile] = useState(null);
   const [stats, setStats] = useState({}); // {userId: {followers, profile}}
+  // Beatmakers
+  const [beats, setBeats] = useState([]); const [bmList, setBmList] = useState([]); const [myBm, setMyBm] = useState(null);
+  const [beatsErr, setBeatsErr] = useState(''); const [beatsLoading, setBeatsLoading] = useState(false);
+  const [beatView, setBeatView] = useState('beats'); const [beatStyle, setBeatStyle] = useState('Tous'); const [beatShop, setBeatShop] = useState(null);
+  const [playingBeat, setPlayingBeat] = useState(null); const [beatPct, setBeatPct] = useState(0); const beatAudio = useRef(null);
+  const [showBmForm, setShowBmForm] = useState(false); const [bmF, setBmF] = useState({ name: '', bio: '', rights: false });
+  const [showBeatForm, setShowBeatForm] = useState(false); const [bf, setBf] = useState({ title: '', bpm: '', style: 'Boom bap', price: '5', file: null, rights: false }); const [bfBusy, setBfBusy] = useState('');
 
   const [tab, setTab] = useState('feed'); const [feedTab, setFeedTab] = useState('foryou'); const [profTab, setProfTab] = useState('mine');
   const [currentId, setCurrentId] = useState(null);
@@ -495,6 +537,7 @@ function ClipClapApp() {
     loadClashInstru();
     const { data: b } = await sb.from('battles').select('*').order('created_at', { ascending: false }).limit(1).maybeSingle();
     setBattle(b || null);
+    if (b) sb.from('video_stats').select('*').eq('battle_id', b.id).order('created_at', { ascending: false }).limit(200).then(({ data }) => data && mergeVideos(data));
     if (b) { const { data: vs } = await sb.from('battle_votes').select('user_id,candidate_id').eq('battle_id', b.id); setVotes(vs || []); }
     else setVotes([]);
   };
@@ -530,6 +573,7 @@ function ClipClapApp() {
 
   useEffect(() => { if (me && tab === 'profile') { loadStats(me.id); sb.from('video_stats').select('*').eq('user_id', me.id).order('created_at', { ascending: false }).limit(60).then(({ data }) => data && mergeVideos(data)); } }, [tab, me?.id]);
   useEffect(() => { if (uid && tab === 'search') { loadBattle(); loadResults(); } if (uid && tab === 'clash') loadClashes(); }, [tab]);
+  useEffect(() => { if (tab !== 'beats') stopBeat(); if (uid && tab === 'beats') loadBeats(); }, [tab]);
   useEffect(() => { if (tab !== 'studio' && (battleMode || clashMode) && !recMode && !previewUrl) { setBattleMode(false); setClashMode(null); setInstru(null); setInstruUrl(null); } }, [tab]);
   useEffect(() => { if (viewing) { loadStats(viewing.id); sb.from('video_stats').select('*').eq('user_id', viewing.id).order('created_at', { ascending: false }).limit(60).then(({ data }) => data && mergeVideos(data)); } }, [viewing?.id]);
 
@@ -563,7 +607,7 @@ function ClipClapApp() {
   const pool = videos.filter(v => !blocked[v.user_id] && (v.kind === 'freestyle' || (v.kind === 'clash' && v.clash_win)));
   const displayed = feedTab === 'following' ? pool.filter(v => following[v.user_id]) : pool;
   const cur = displayed.find(v => v.id === currentId) || displayed[0];
-  const overlay = viewing || showUpload || showComments || recMode || previewUrl || editing || showBattleForm || menuVideo || showSettings || legal || showNotifs || showSearch || showCompose || showClashInstruForm || showTour;
+  const overlay = viewing || showUpload || showComments || recMode || previewUrl || editing || showBattleForm || menuVideo || showSettings || legal || showNotifs || showSearch || showCompose || showClashInstruForm || showBmForm || showBeatForm || showTour;
 
   // Lien direct vers une vidéo (?v=...)
   useEffect(() => {
@@ -962,7 +1006,13 @@ function ClipClapApp() {
     fireConfetti(); say('Tu as gagné ton clash !');
   };
   const loadClashes = async () => {
-    const { data } = await sb.from('clashes').select(CLASH_SELECT).order('created_at', { ascending: false }).limit(40);
+    const [ra, rb] = await Promise.all([
+      sb.from('clashes').select(CLASH_SELECT).order('created_at', { ascending: false }).limit(40),
+      sb.from('clashes').select(CLASH_SELECT).or(`challenger_id.eq.${uid},opponent_id.eq.${uid}`).order('created_at', { ascending: false }).limit(40),
+    ]);
+    if (ra.error && rb.error) return;
+    const cm = new Map(); [...(ra.data || []), ...(rb.data || [])].forEach(c => cm.set(c.id, c));
+    const data = [...cm.values()].sort((x, y) => new Date(y.created_at) - new Date(x.created_at));
     if (!data) return;
     setClashes(data);
     const ids = data.map(c => c.id);
@@ -1138,6 +1188,9 @@ function ClipClapApp() {
     if (showUpload) { setShowUpload(false); setFile(null); return true; }
     if (showBattleForm) { setShowBattleForm(false); return true; }
     if (showClashInstruForm) { setShowClashInstruForm(false); return true; }
+    if (showBmForm) { setShowBmForm(false); return true; }
+    if (showBeatForm && !bfBusy) { setShowBeatForm(false); return true; }
+    if (tab === 'beats' && beatShop) { setBeatShop(null); return true; }
     if (editing) { setEditing(false); return true; }
     if (viewing) { setViewing(null); return true; }
     if (tab !== 'feed') {
@@ -1148,6 +1201,98 @@ function ClipClapApp() {
     return false;
   };
   backRef.current = back;
+
+  /* ---------- BEATMAKERS ---------- */
+  const loadBeats = async () => {
+    setBeatsLoading(true);
+    const [b, m, mine] = await Promise.all([
+      sb.from('beat_list').select('*').order('created_at', { ascending: false }).limit(150),
+      sb.from('beatmaker_list').select('*').order('created_at', { ascending: false }).limit(150),
+      sb.from('beatmakers').select('*').eq('user_id', uid).maybeSingle(),
+    ]);
+    setBeatsLoading(false);
+    const err = b.error || m.error;
+    if (err) { setBeatsErr(/beat_list|beatmaker_list|schema cache|does not exist/i.test(err.message || '') ? "La section Beatmakers n'est pas encore activée (mise à jour de la base à faire)." : err.message); return; }
+    setBeatsErr(''); setBeats(b.data || []); setBmList(m.data || []); setMyBm(mine.data || null);
+  };
+  const stopBeat = () => {
+    const a = beatAudio.current;
+    if (a) { a.onerror = null; a.ontimeupdate = null; a.onended = null; try { a.pause(); a.removeAttribute('src'); a.load(); } catch (e) {} }
+    beatAudio.current = null; setPlayingBeat(null); setBeatPct(0);
+  };
+  const toggleBeat = (b) => {
+    click();
+    if (playingBeat === b.id) return stopBeat();
+    stopBeat();
+    const a = new Audio(b.preview_url); a.preload = 'auto';
+    a.ontimeupdate = () => setBeatPct(a.duration ? (a.currentTime / a.duration) * 100 : 0);
+    a.onended = () => { beatAudio.current = null; setPlayingBeat(null); setBeatPct(0); };
+    a.onerror = () => { say('Aperçu indisponible'); stopBeat(); };
+    beatAudio.current = a; setPlayingBeat(b.id); setBeatPct(0);
+    a.play().catch(() => { say('Lecture impossible'); stopBeat(); });
+  };
+  const saveBeatmaker = async (e) => {
+    e.preventDefault();
+    const name = bmF.name.trim();
+    if (name.length < 2 || name.length > 30) return say('Nom de beatmaker : 2 à 30 caractères');
+    if (!bmF.rights) return say('Coche la case des droits pour continuer');
+    const { error } = await sb.from('beatmakers').insert({ user_id: uid, artist_name: name, bio: bmF.bio.trim().slice(0, 200) || null });
+    if (error) return say(/schema cache|does not exist/i.test(error.message) ? "Beatmakers pas encore activé sur le serveur" : 'Erreur : ' + error.message);
+    setShowBmForm(false); await loadBeats(); say('Ta boutique est ouverte ! 🎛️');
+  };
+  const publishBeat = async (e) => {
+    e.preventDefault();
+    if (bfBusy) return;
+    const f = bf.file; const title = bf.title.trim();
+    if (title.length < 2) return say('Donne un titre à ton instru');
+    if (!f) return say('Choisis le fichier MP3 ou WAV');
+    const ext = ((f.name || '').split('.').pop() || '').toLowerCase();
+    if (!['mp3', 'wav'].includes(ext)) return say('Format accepté : MP3 ou WAV');
+    if (f.size > 15728640) return say('Fichier trop lourd (15 Mo max)');
+    const price = Math.round(parseFloat(String(bf.price).replace(',', '.')) * 100);
+    if (!(price >= 500 && price <= 50000)) return say('Prix : de 5 € à 500 €');
+    const bpm = bf.bpm ? parseInt(bf.bpm, 10) : null;
+    if (bpm && (bpm < 40 || bpm > 260)) return say('BPM : entre 40 et 260');
+    if (!bf.rights) return say("Coche la case : tu certifies être l'auteur");
+    setBfBusy("Création de l'aperçu de 15 s…");
+    let prev;
+    try { prev = await makePreview(f); } catch (err) { setBfBusy(''); return say('Lecture du fichier impossible. Essaie un MP3 plus léger.'); }
+    const id = crypto.randomUUID(); const pPath = `${uid}/${id}.wav`; const fPath = `${uid}/${id}.${ext}`;
+    const cleanup = async () => { await sb.storage.from('beat-previews').remove([pPath]); await sb.storage.from('beat-files').remove([fPath]); };
+    setBfBusy("Envoi de l'aperçu…");
+    const u1 = await sb.storage.from('beat-previews').upload(pPath, prev.blob, { contentType: 'audio/wav' });
+    if (u1.error) { setBfBusy(''); return say('Envoi impossible : ' + u1.error.message); }
+    setBfBusy("Envoi de l'instru complet…");
+    const u2 = await sb.storage.from('beat-files').upload(fPath, f, { contentType: ext === 'wav' ? 'audio/wav' : 'audio/mpeg' });
+    if (u2.error) { await cleanup(); setBfBusy(''); return say('Envoi impossible : ' + u2.error.message); }
+    const url = sb.storage.from('beat-previews').getPublicUrl(pPath).data.publicUrl;
+    const ins = await sb.from('beats').insert({ id, beatmaker_id: uid, title, bpm, style: bf.style, price_cents: price, duration_s: Math.round(prev.duration), preview_url: url, preview_path: pPath });
+    if (ins.error) { await cleanup(); setBfBusy(''); return say('Erreur : ' + ins.error.message); }
+    const fi = await sb.from('beat_files').insert({ beat_id: id, full_path: fPath, size_bytes: f.size });
+    if (fi.error) { await sb.from('beats').delete().eq('id', id); await cleanup(); setBfBusy(''); return say('Erreur : ' + fi.error.message); }
+    setBfBusy(''); setShowBeatForm(false); setBf({ title: '', bpm: '', style: 'Boom bap', price: '5', file: null, rights: false });
+    await loadBeats(); say('Instru mis en vente ! 🔥'); fireConfetti();
+  };
+  const deleteBeat = async (b) => {
+    if (!window.confirm(`Supprimer « ${b.title} » ?`)) return;
+    if (playingBeat === b.id) stopBeat();
+    const { data: ff } = await sb.from('beat_files').select('full_path').eq('beat_id', b.id).maybeSingle();
+    if (ff) await sb.storage.from('beat-files').remove([ff.full_path]);
+    await sb.storage.from('beat-previews').remove([b.preview_path]);
+    const { error } = await sb.from('beats').delete().eq('id', b.id);
+    if (error) return say('Suppression impossible : ' + error.message);
+    setBeats(bs => bs.filter(x => x.id !== b.id)); say('Instru supprimé');
+  };
+  const reportBeat = async (b) => {
+    if (!window.confirm("Signaler cet instru (droits d'auteur, contenu inapproprié) ?")) return;
+    const { error } = await sb.from('beat_reports').insert({ reporter_id: uid, beat_id: b.id, reason: 'signalé' });
+    say(error ? (error.code === '23505' ? 'Tu as déjà signalé cet instru' : 'Signalement impossible') : 'Merci, on regarde ça.');
+  };
+  const testInStudio = (b) => {
+    stopBeat(); setBattleMode(false); setClashMode(null);
+    setInstru(b.title + ' (aperçu 15 s)'); setInstruUrl(b.preview_url); setTab('studio');
+  };
+  const buyBeat = (b) => say('Le paiement arrive très bientôt 🔜');
 
   /* ---------- RENDU ---------- */
   const Grid = ({ list, canDelete }) => !list.length
@@ -1376,6 +1521,11 @@ function ClipClapApp() {
                 <p className="text-[11px] text-gray-300 leading-snug">Défie un rival · {(clashInstru && clashInstru.max_seconds) || 30} s</p>
               </button>
             </div>
+            <button onClick={() => { click(); setBeatShop(null); setTab('beats'); }} className="w-full rounded-2xl p-4 mb-4 text-left bg-gradient-to-br from-amber-500/25 to-fuchsia-600/25 border border-amber-400/40 active:scale-95 transition flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-amber-400/20 flex items-center justify-center flex-shrink-0"><Icon n="music" size={24} className="text-amber-300" /></div>
+              <div className="min-w-0 flex-1"><p className="font-black text-base">Beatmakers</p><p className="text-[11px] text-gray-300 leading-snug">Écoute les instrus en vente et trouve ton prochain son</p></div>
+              <span className="text-gray-400 text-xl">›</span>
+            </button>
             {isAdmin && <div className="grid grid-cols-2 gap-2 mb-4">
               <button onClick={() => setShowBattleForm(true)} className="bg-white/10 border border-fuchsia-500/40 text-fuchsia-300 font-bold py-2.5 rounded-xl text-[11px]">Nouvelle battle (admin)</button>
               <button onClick={() => setShowClashInstruForm(true)} className="bg-white/10 border border-fuchsia-500/40 text-fuchsia-300 font-bold py-2.5 rounded-xl text-[11px]">Instru du Clash (admin)</button>
@@ -1412,7 +1562,7 @@ function ClipClapApp() {
                   <div key={c.id} className={`rounded-2xl p-3 flex items-center justify-between border ${c.rank === 1 ? 'bg-purple-900/30 border-fuchsia-500/40' : 'bg-slate-900/60 border-white/5'}`}>
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-bold text-gray-300 w-6">{bEnded && c.rank === 1 && winner ? '👑' : `#${c.rank}`}</span>
-                      <div className="w-9 h-9 rounded-full bg-slate-800 overflow-hidden flex items-center justify-center"><Av src={c.avatar} /></div>
+                      <button onClick={() => openVideo(c.vid)} className="relative w-11 h-[78px] rounded-lg overflow-hidden bg-slate-800 flex-shrink-0"><Thumb poster={c.vid.thumb_url} /><span className="absolute bottom-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center"><Icon n="play" size={9} fill className="text-white" /></span></button>
                       <div><p className="font-bold text-xs">@{c.name}</p><p className="text-[10px] text-gray-400">{c.votes} vote{c.votes > 1 ? 's' : ''} · 👁️ {fmt(c.views)}</p></div>
                     </div>
                     <div className="flex gap-2">
@@ -1434,6 +1584,91 @@ function ClipClapApp() {
         )}
 
         {/* ===== CLASH TAG ===== */}
+        {tab === 'beats' && (() => {
+          const base = beatShop ? beats.filter(b => b.beatmaker_id === beatShop.user_id) : beats;
+          const vis = base.filter(b => !blocked[b.beatmaker_id] && (beatStyle === 'Tous' || b.style === beatStyle));
+          const makers = bmList.filter(m => !blocked[m.user_id]);
+          const openShop = (b) => setBeatShop(bmList.find(m => m.user_id === b.beatmaker_id) || { user_id: b.beatmaker_id, artist_name: b.artist_name, username: b.username, avatar_url: b.avatar_url, bio: '' });
+          const sellBtn = <button onClick={() => { click(); setShowBeatForm(true); }} className="w-full py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-extrabold text-sm flex items-center justify-center gap-2 mb-4"><Icon n="plus" size={16} /> Mettre un instru en vente</button>;
+          const BeatCard = (b) => {
+            const on = playingBeat === b.id; const mine = b.beatmaker_id === uid;
+            return (
+              <div key={b.id} className="rounded-2xl p-3 bg-white/5 border border-white/10">
+                <div className="flex items-center gap-3">
+                  <button onClick={() => toggleBeat(b)} aria-label={on ? "Mettre l'aperçu en pause" : "Écouter l'aperçu"} className="w-12 h-12 rounded-full bg-gradient-to-br from-fuchsia-500 to-violet-600 flex items-center justify-center flex-shrink-0 active:scale-95 transition"><Icon n={on ? 'pause' : 'play'} size={20} fill className="text-white" /></button>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-extrabold truncate">{b.title}</p>
+                    <button onClick={() => openShop(b)} className="text-[11px] text-fuchsia-300 font-semibold truncate max-w-full block text-left">{b.artist_name} <span className="text-gray-500 font-normal">@{b.username}</span></button>
+                    <p className="text-[10px] text-gray-400">{b.style}{b.bpm ? ` · ${b.bpm} BPM` : ''}{b.duration_s ? ` · ${mmss(b.duration_s)}` : ''}</p>
+                  </div>
+                </div>
+                {on && <div className="h-1 rounded-full bg-white/10 mt-2.5 overflow-hidden"><div className="h-full bg-gradient-to-r from-amber-400 via-pink-500 to-violet-500" style={{ width: beatPct + '%' }}></div></div>}
+                <div className="flex items-center gap-2 mt-3">
+                  <button onClick={() => { click(); buyBeat(b); }} className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 text-xs font-extrabold">Acheter · {eur(b.price_cents)}</button>
+                  <button onClick={() => testInStudio(b)} className="px-3 py-2.5 rounded-xl bg-white/10 border border-white/10 text-[11px] font-bold flex items-center gap-1"><Icon n="mic" size={13} /> Studio</button>
+                  {(mine || isAdmin)
+                    ? <button onClick={() => deleteBeat(b)} aria-label="Supprimer l'instru" className="px-3 py-2.5 rounded-xl bg-white/10 border border-white/10 text-red-400"><Icon n="trash" size={14} /></button>
+                    : <button onClick={() => reportBeat(b)} aria-label="Signaler l'instru" className="px-3 py-2.5 rounded-xl bg-white/10 border border-white/10 text-gray-400"><Icon n="more" size={14} /></button>}
+                </div>
+                <p className="text-[10px] text-gray-500 mt-2">Aperçu de 15 s. L'instru complet est livré après l'achat.</p>
+              </div>
+            );
+          };
+          return (
+            <div className="absolute inset-0 bg-app overflow-y-auto p-4 pt-10 pb-24">
+              {beatShop ? <>
+                <button onClick={() => setBeatShop(null)} className="text-xs text-gray-300 mb-3">‹ Tous les instrus</button>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-16 h-16 rounded-full bg-purple-900 overflow-hidden flex items-center justify-center flex-shrink-0"><Av src={beatShop.avatar_url} /></div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-xl font-black truncate">{beatShop.artist_name}</h2>
+                    <p className="text-[11px] text-gray-400">@{beatShop.username} · {base.length} instru{base.length > 1 ? 's' : ''}</p>
+                  </div>
+                  <button onClick={() => setViewing({ id: beatShop.user_id, username: beatShop.username, avatar_url: beatShop.avatar_url })} className="px-3 py-2 rounded-xl bg-white/10 border border-white/10 text-[11px] font-bold">Profil</button>
+                </div>
+                {beatShop.bio && <p className="text-xs text-gray-300 mb-4">{beatShop.bio}</p>}
+                {beatShop.user_id === uid && sellBtn}
+              </> : <>
+                <h2 className="text-2xl font-black mb-1 grad-text">Beatmakers</h2>
+                <p className="text-[11px] text-gray-400 mb-4">Écoute les aperçus, repère ton beatmaker, pose ton freestyle.</p>
+                {myBm ? sellBtn : <button onClick={() => { click(); setBmF({ name: (me && (me.display_name || me.username)) || '', bio: '', rights: false }); setShowBmForm(true); }} className="w-full rounded-2xl p-3.5 mb-4 text-left bg-white/5 border border-amber-400/40 flex items-center gap-3 active:scale-95 transition">
+                  <Icon n="music" size={22} className="text-amber-300 flex-shrink-0" />
+                  <div className="min-w-0 flex-1"><p className="text-sm font-extrabold">Tu produis des instrus ?</p><p className="text-[11px] text-gray-400">Ouvre ta boutique et fixe ton prix</p></div>
+                  <span className="text-gray-400 text-xl">›</span>
+                </button>}
+                <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-white/5 mb-3">
+                  {[['beats', `Instrus (${beats.filter(b => !blocked[b.beatmaker_id]).length})`], ['makers', `Beatmakers (${makers.length})`]].map(([k, l]) => (
+                    <button key={k} onClick={() => setBeatView(k)} className={`py-2 rounded-lg text-xs font-bold ${beatView === k ? 'bg-fuchsia-500/30 text-white' : 'text-gray-400'}`}>{l}</button>))}
+                </div>
+              </>}
+              {beatsErr && <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-xs text-red-200 mb-4">{beatsErr}</div>}
+              {!beatsErr && (beatShop || beatView === 'beats') && <>
+                {!beatShop && <div className="flex gap-2 overflow-x-auto pb-3 -mx-4 px-4">
+                  {['Tous', ...BEAT_STYLES].map(st => (
+                    <button key={st} onClick={() => setBeatStyle(st)} className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap border ${beatStyle === st ? 'bg-fuchsia-500 border-fuchsia-500' : 'bg-white/5 border-white/10 text-gray-300'}`}>{st}</button>))}
+                </div>}
+                <div className="space-y-3">{vis.map(b => BeatCard(b))}</div>
+                {!vis.length && <div className="text-center text-xs text-gray-400 pt-8 px-6">
+                  {beatsLoading ? 'Chargement…' : <>
+                    <p className="text-sm font-bold text-white mb-1">{beatStyle !== 'Tous' ? `Aucun instru ${beatStyle}` : 'Aucun instru en vente pour le moment'}</p>
+                    <p>{myBm ? 'Sois le premier : mets un instru en vente.' : 'Les premiers instrus arrivent bientôt.'}</p>
+                  </>}
+                </div>}
+              </>}
+              {!beatsErr && !beatShop && beatView === 'makers' && <>
+                <div className="space-y-2">
+                  {makers.map(m => (
+                    <button key={m.user_id} onClick={() => setBeatShop(m)} className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 text-left active:scale-95 transition">
+                      <div className="w-12 h-12 rounded-full bg-purple-900 overflow-hidden flex items-center justify-center flex-shrink-0"><Av src={m.avatar_url} /></div>
+                      <div className="min-w-0 flex-1"><p className="text-sm font-extrabold truncate">{m.artist_name}</p><p className="text-[11px] text-gray-400 truncate">@{m.username}</p></div>
+                      <span className="text-[11px] text-fuchsia-300 font-bold">{m.beats_count} instru{m.beats_count > 1 ? 's' : ''} ›</span>
+                    </button>))}
+                </div>
+                {!makers.length && <p className="text-center text-xs text-gray-400 pt-8">{beatsLoading ? 'Chargement…' : 'Aucun beatmaker pour le moment.'}</p>}
+              </>}
+            </div>
+          );
+        })()}
         {tab === 'clash' && (
           <div className="absolute inset-0 bg-app overflow-y-auto p-4 pt-10 pb-24">
             <h2 className="text-2xl font-black mb-1 grad-text">Clash Tag</h2>
@@ -1687,6 +1922,58 @@ function ClipClapApp() {
       )}
 
       {/* ===== INSTRU DU CLASH (admin) ===== */}
+      {showBmForm && (
+        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowBmForm(false)}>
+          <form onSubmit={saveBeatmaker} onClick={e => e.stopPropagation()} className="w-full max-w-sm max-h-[92%] overflow-y-auto bg-[#120c24] border border-white/10 rounded-3xl p-6 space-y-4">
+            <h3 className="text-base font-extrabold text-center">Ouvrir ma boutique de beatmaker</h3>
+            <input value={bmF.name} onChange={e => setBmF({ ...bmF, name: e.target.value })} maxLength={30} placeholder="Nom de beatmaker" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-fuchsia-500" />
+            <textarea value={bmF.bio} onChange={e => setBmF({ ...bmF, bio: e.target.value })} maxLength={200} rows={3} placeholder="Ton style, tes références (facultatif)" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-fuchsia-500 resize-none" />
+            <label className="flex items-start gap-2.5 text-[11px] text-gray-300 leading-snug">
+              <input type="checkbox" checked={bmF.rights} onChange={e => setBmF({ ...bmF, rights: e.target.checked })} className="mt-0.5 accent-fuchsia-500 w-4 h-4 flex-shrink-0" />
+              <span>Je certifie être l'auteur des instrus que je vends et détenir tous les droits dessus (aucun sample sans autorisation).</span>
+            </label>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setShowBmForm(false)} className="flex-1 py-3 bg-white/10 rounded-xl text-xs font-bold">Annuler</button>
+              <button className="flex-1 py-3 bg-gradient-to-r from-fuchsia-500 to-violet-600 rounded-xl text-xs font-extrabold">Ouvrir</button>
+            </div>
+          </form>
+        </div>
+      )}
+      {showBeatForm && (
+        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4" onClick={() => { if (!bfBusy) setShowBeatForm(false); }}>
+          <form onSubmit={publishBeat} onClick={e => e.stopPropagation()} className="w-full max-w-sm max-h-[92%] overflow-y-auto bg-[#120c24] border border-white/10 rounded-3xl p-6 space-y-4">
+            <h3 className="text-base font-extrabold text-center">Mettre un instru en vente</h3>
+            <input value={bf.title} onChange={e => setBf({ ...bf, title: e.target.value })} maxLength={60} placeholder="Titre de l'instru" className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-fuchsia-500" />
+            <div>
+              <input type="file" accept=".mp3,.wav,audio/mpeg,audio/wav" onChange={e => setBf({ ...bf, file: e.target.files[0] || null })} className="w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-fuchsia-500 file:text-white" />
+              <p className="text-[10px] text-gray-500 mt-1.5">MP3 ou WAV, 15 Mo max. L'aperçu de 15 s est créé automatiquement ; le fichier complet reste privé.</p>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <label className="text-[10px] text-gray-400">BPM
+                <input inputMode="numeric" value={bf.bpm} onChange={e => setBf({ ...bf, bpm: e.target.value.replace(/\D/g, '').slice(0, 3) })} placeholder="95" className="mt-1 w-full bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-fuchsia-500" />
+              </label>
+              <label className="text-[10px] text-gray-400">Style
+                <select value={bf.style} onChange={e => setBf({ ...bf, style: e.target.value })} className="mt-1 w-full bg-[#1a1233] border border-white/10 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-fuchsia-500">
+                  {BEAT_STYLES.map(st => <option key={st} value={st}>{st}</option>)}
+                </select>
+              </label>
+              <label className="text-[10px] text-gray-400">Prix (€)
+                <input inputMode="decimal" value={bf.price} onChange={e => setBf({ ...bf, price: e.target.value.replace(/[^0-9.,]/g, '').slice(0, 6) })} placeholder="5" className="mt-1 w-full bg-white/5 border border-white/10 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-fuchsia-500" />
+              </label>
+            </div>
+            <p className="text-[10px] text-gray-500 -mt-2">Prix de 5 € à 500 €. ClipClap prélèvera une commission à l'ouverture des paiements.</p>
+            <label className="flex items-start gap-2.5 text-[11px] text-gray-300 leading-snug">
+              <input type="checkbox" checked={bf.rights} onChange={e => setBf({ ...bf, rights: e.target.checked })} className="mt-0.5 accent-fuchsia-500 w-4 h-4 flex-shrink-0" />
+              <span>Je certifie être l'auteur de cet instru et détenir tous les droits dessus.</span>
+            </label>
+            {bfBusy && <p className="text-xs text-fuchsia-300 text-center">{bfBusy}</p>}
+            <div className="flex gap-2">
+              <button type="button" disabled={!!bfBusy} onClick={() => setShowBeatForm(false)} className="flex-1 py-3 bg-white/10 rounded-xl text-xs font-bold disabled:opacity-50">Annuler</button>
+              <button disabled={!!bfBusy} className="flex-1 py-3 bg-gradient-to-r from-fuchsia-500 to-violet-600 rounded-xl text-xs font-extrabold disabled:opacity-60">{bfBusy ? 'Patiente…' : 'Publier'}</button>
+            </div>
+          </form>
+        </div>
+      )}
       {showClashInstruForm && (
         <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <form onSubmit={createClashInstru} className="w-full max-w-sm bg-[#120c24] border border-white/10 rounded-3xl p-6 space-y-4">
