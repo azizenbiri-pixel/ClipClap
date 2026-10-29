@@ -1739,14 +1739,10 @@ function ClipClapApp() {
 
       {/* ===== NAVIGATION ===== */}
       <div className="absolute bottom-0 left-0 right-0 h-16 bg-[#0d0820]/85 backdrop-blur-2xl border-t border-fuchsia-500/20 shadow-[0_-8px_30px_rgba(168,85,247,0.18)] flex items-center justify-around px-2 z-40">
-        {[['feed', 'home', 'Accueil'], ['search', 'flame', 'Battle']].map(([k, i, l]) => (
+        {[['feed', 'home', 'Accueil'], ['studio', 'mic', 'Studio'], ['search', 'flame', 'Battle'], ['clash', 'swords', 'Clash']].map(([k, i, l]) => (
           <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-fuchsia-400 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 'text-gray-400'}`}><Icon n={i} size={22} /><span className="text-[10px]">{l}</span></button>))}
-        <button onClick={() => { click(); setTab('clash'); setViewing(null); }} className="flex flex-col items-center gap-1 -mt-3">
-          <div className={`w-12 h-12 rounded-2xl bg-gradient-to-r from-fuchsia-500 to-violet-600 flex items-center justify-center clip-glow ${tab === 'clash' ? 'ring-2 ring-white' : ''}`}><Icon n="swords" size={26} className="text-white" /></div>
-          <span className={`text-[10px] ${tab === 'clash' ? 'text-fuchsia-400 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 'text-gray-400'}`}>Clash</span>
-        </button>
         <button onClick={() => { click(); setBeatShop(null); setTab('beats'); setViewing(null); }} aria-label="Beatmakers" className={`flex flex-col items-center gap-1 ${tab === 'beats' ? 'text-fuchsia-400 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 'text-gray-400'}`}><span className={tab === 'beats' ? 'vinyl-spin inline-flex' : 'inline-flex'}><Icon n="vinyl" size={22} /></span><span className="text-[10px]">BTM</span></button>
-        {[['studio', 'mic', 'Studio'], ['profile', 'user', 'Profil']].map(([k, i, l]) => (
+        {[['profile', 'user', 'Profil']].map(([k, i, l]) => (
           <button key={k} onClick={() => { click(); setTab(k); setViewing(null); }} className={`flex flex-col items-center gap-1 ${tab === k ? 'text-fuchsia-400 font-bold drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]' : 'text-gray-400'}`}><Icon n={i} size={22} /><span className="text-[10px]">{l}</span></button>))}
       </div>
 
