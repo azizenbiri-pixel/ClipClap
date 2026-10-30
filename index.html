@@ -1841,9 +1841,10 @@ function ClipClapApp() {
       {/* ===== TUTORIEL DE BIENVENUE ===== */}
       {showTour && (() => {
         const slides = [
-          { icon: 'clap', title: 'Freestyle', text: "Filme ton freestyle au Studio. Il passe sur l'accueil avec le filigrane ClipClap : partage-le partout." },
+          { icon: 'clap', title: 'Studio', text: "Filme ton freestyle au Studio. Ton freestyle passe sur l'accueil avec le filigrane ClipClap : partage-le partout." },
           { icon: 'flame', title: 'Battle', text: "Une instru imposée, un chrono, la communauté vote. Le plus de votes gagne un trophée." },
           { icon: 'swords', title: 'Clash', text: `Tag un rival : il a ${CLASH_REPLY_H} h pour te répondre. Vos deux vidéos côte à côte, la communauté tranche.` },
+          { icon: 'vinyl', title: 'BTM', text: "Écoute les aperçus des instrus des beatmakers et trouve ton prochain son. Tu produis ? Ouvre ta boutique et fixe ton prix." },
         ];
         const last = tourStep === slides.length - 1; const sl = slides[tourStep];
         const finish = () => { try { localStorage.setItem('cc_tour_done', '1'); } catch (e) {} setShowTour(false); setTourStep(0); };
