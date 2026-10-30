@@ -1292,6 +1292,22 @@ function ClipClapApp() {
     const { error } = await sb.from('beat_reports').insert({ reporter_id: uid, beat_id: b.id, reason: 'signalé' });
     say(error ? (error.code === '23505' ? 'Tu as déjà signalé cet instru' : 'Signalement impossible') : 'Merci, on regarde ça.');
   };
+  const closeShop = async () => {
+    if (!window.confirm("Fermer ta boutique ?\n\nTous tes instrus en vente seront supprimés définitivement. Tu pourras la rouvrir plus tard.")) return;
+    stopBeat(); say('Fermeture de la boutique…');
+    const { data: mine, error: e1 } = await sb.from('beats').select('id, preview_path, preview_url').eq('beatmaker_id', uid);
+    if (e1) return say('Erreur : ' + e1.message);
+    const ids = (mine || []).map(b => b.id);
+    if (ids.length) {
+      const { data: files } = await sb.from('beat_files').select('full_path').in('beat_id', ids);
+      if (files && files.length) await sb.storage.from('beat-files').remove(files.map(f => f.full_path));
+      await sb.storage.from('beat-previews').remove(mine.map(b => b.preview_path));
+      if ((mine || []).some(b => b.preview_url === instruUrl)) { setInstru(null); setInstruUrl(null); }
+    }
+    const { error } = await sb.from('beatmakers').delete().eq('user_id', uid);
+    if (error) return say('Fermeture impossible : ' + error.message);
+    setMyBm(null); setBeatShop(null); setBeatView('beats'); await loadBeats(); say('Boutique fermée');
+  };
   const testInStudio = (b) => {
     stopBeat(); setBattleMode(false); setClashMode(null);
     setInstru(b.title + ' (aperçu 15 s)'); setInstruUrl(b.preview_url); setTab('studio');
@@ -1593,7 +1609,7 @@ function ClipClapApp() {
           const vis = base.filter(b => !blocked[b.beatmaker_id] && (beatStyle === 'Tous' || b.style === beatStyle));
           const makers = bmList.filter(m => !blocked[m.user_id]);
           const openShop = (b) => setBeatShop(bmList.find(m => m.user_id === b.beatmaker_id) || { user_id: b.beatmaker_id, artist_name: b.artist_name, username: b.username, avatar_url: b.avatar_url, bio: '' });
-          const sellBtn = <button onClick={() => { click(); setShowBeatForm(true); }} className="w-full py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-extrabold text-sm flex items-center justify-center gap-2 mb-4"><Icon n="plus" size={16} /> Mettre un instru en vente</button>;
+          const sellBtn = <><button onClick={() => { click(); setShowBeatForm(true); }} className="w-full py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-violet-600 font-extrabold text-sm flex items-center justify-center gap-2 mb-2"><Icon n="plus" size={16} /> Mettre un instru en vente</button><button onClick={closeShop} className="w-full py-2 mb-4 text-[11px] text-gray-400 underline">Fermer ma boutique</button></>;
           const BeatCard = (b) => {
             const on = playingBeat === b.id; const mine = b.beatmaker_id === uid;
             return (
