@@ -1284,6 +1284,7 @@ function ClipClapApp() {
     await sb.storage.from('beat-previews').remove([b.preview_path]);
     const { error } = await sb.from('beats').delete().eq('id', b.id);
     if (error) return say('Suppression impossible : ' + error.message);
+    if (instruUrl === b.preview_url) { setInstru(null); setInstruUrl(null); }
     setBeats(bs => bs.filter(x => x.id !== b.id)); say('Instru supprimé');
   };
   const reportBeat = async (b) => {
@@ -1700,7 +1701,7 @@ function ClipClapApp() {
               📁 Importer un instrumental (MP3 / WAV)
               <input type="file" accept="audio/*" className="hidden" onChange={e => { const f = e.target.files[0]; if (f) { setInstru(f.name.replace(/\.[^/.]+$/, '')); setInstruUrl(URL.createObjectURL(f)); } }} />
             </label>}
-            {instru && !hostMode && <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-3 text-sm font-bold">🔥 {instru} <span className="text-emerald-400 text-xs font-medium">Sélectionné ✓</span></div>}
+            {instru && !hostMode && <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-3 text-sm font-bold flex items-center gap-2"><div className="min-w-0 flex-1">🔥 {instru} <span className="text-emerald-400 text-xs font-medium">Sélectionné ✓</span></div>{!battleMode && !clashMode && <button onClick={() => { click(); setInstru(null); setInstruUrl(null); }} aria-label="Retirer l'instru" className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-gray-200 flex-shrink-0 text-base leading-none">✕</button>}</div>}
             <textarea value={lyrics} onChange={e => setLyrics(e.target.value)} placeholder="Bloc-notes : écris tes rimes ici..." className="w-full h-32 bg-white/5 border border-white/10 rounded-2xl p-3 text-sm focus:outline-none focus:border-fuchsia-500 resize-none"></textarea>
             <button onClick={() => { click(); setRecMode(true); }} className="w-full bg-white text-black font-bold py-3 rounded-xl">🎥 {hostMode ? 'Lancer (présentation + décompte)' : "Lancer l'enregistrement"}</button>
           </div>
